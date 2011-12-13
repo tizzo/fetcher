@@ -143,7 +143,7 @@ class RESTClient {
    * @return
    *   This request object, allowing this method to be chainable.
    */
-  public function setBasicAuthCredentials($username, $password) {
+  public function setBasicAuth($username, $password) {
     $this->setHeader('Authorization', 'Basic ' .  base64_encode($username.':'.$password));
     return $this;
   }
@@ -218,8 +218,9 @@ class RESTClient {
     if (count($this->headers)) {
       $headers = '';
       foreach ($this->headers as $name => $value) {
-        $headers .= $name . ': ' . $header . "\r\n";
+        $headers .= $name . ': ' . $value . "\r\n";
       }
+      $context_parameters['http']['header'] = $headers;
     }
     $params = $this->params;
     if (count($params)) {
@@ -233,7 +234,7 @@ class RESTClient {
     }
 
     $context = stream_context_create($context_parameters);
-    $file_resource = fopen($request_url, 'rb', false, $context);
+    $file_resource = @fopen($request_url, 'rb', false, $context);
     if (!$file_resource) {
       $response = false;
     }
@@ -243,10 +244,6 @@ class RESTClient {
       $response = stream_get_contents($file_resource);
     }
 
-    if ($response === false) {
-      return FALSE;
-    }
-    
     $this->response = $response;
 
     return $this;
