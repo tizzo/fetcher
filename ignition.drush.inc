@@ -19,12 +19,6 @@ function ignition_drush_command() {
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_ROOT,
   );
 
-  $items['ignition'] = array(
-    'description' => 'This is my thing',
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
-    'aliases' => array('i'),
-  ) + $shared;
-
   $items['ignition-list'] = array(
     'description' => 'List all sites managed by Ignition.',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
@@ -37,9 +31,51 @@ function ignition_drush_command() {
   return $items;
 }
 
+/**
+ * Autoloader for initialization (init & rollout) dog commands.
+ *
+ */
+function ignition_autoload($class) {
+  static $search_paths;
 
-function ignition_drush_init() {
-  $command = drush_get_command();
-  drush_print_r($command);
+  // Only take action if searching for an Ignition class.
+  if (strpos($class, 'Ignition\\') === 0) {
+    if ($search_paths === NULL) {
+      // TODO: use a proper method for discovering the base path to the cmd file
+      $command = drush_get_command();
+      $search_paths = array(
+        // Classes in base Ignition install.
+        $command['path'] . '/lib/',
+      );
+    }
+
+    // Try the search paths in order.
+    foreach ($search_paths as $base_path) {
+      $file = $base_path . strtr($class, '\\', '/') . '.php';
+      if (is_file($file)) {
+        require $file;
+        return TRUE;
+      }
+    }
+  }
 }
 
+function ignition_drush_init() {
+  spl_autoload_register('ignition_autoload');
+}
+
+
+/**
+ * List sites in the ignition install.
+ */
+function drush_ignition_list() {
+  $rest = new Ignition\External\RESTRequest();
+  $rest->url = 'http://192.168.56.136:8081';
+  $rest->path = 'getObject';
+  $result = $rest
+    ->addParam('path', '/var/www/repoview/webroot/sites/all/modules/repoview/.git')
+    ->addParam('objectPath', 'plugins')
+    ->execute()
+    ->decode();
+  drush_print_r($result);
+}
