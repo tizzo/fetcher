@@ -19,9 +19,6 @@ function ignition_drush_command() {
   $items = array();
 
   $shared = array(
-    // 'callback' => 'dog_main',
-    // 'callback required prefix' => 'dog_',
-    // 'callback arguments' => 'normal',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_ROOT,
   );
 
