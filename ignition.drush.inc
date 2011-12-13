@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Implements hook_drush_help().
+ */
 function ignition_drush_help($section) {
   switch ($section) {
     case 'meta:ignition:title':
@@ -9,6 +12,9 @@ function ignition_drush_help($section) {
   }
 }
 
+/**
+ * Implements hook_drush_command().
+ */
 function ignition_drush_command() {
   $items = array();
 
@@ -32,8 +38,12 @@ function ignition_drush_command() {
 }
 
 /**
- * Autoloader for initialization (init & rollout) dog commands.
+ * Autoloader for Ignition.
  *
+ * @param $class
+ *   The name of the class to load.
+ * @return
+ *   True if the class was successfully loaded.
  */
 function ignition_autoload($class) {
   static $search_paths;
