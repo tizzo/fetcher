@@ -9,7 +9,7 @@
 
 namespace Ignition\Utility;
 
-class RESTRequest {
+class RESTClient {
 
   /**
    * The URL that will be used for the request.
