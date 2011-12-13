@@ -70,9 +70,10 @@ function ignition_drush_init() {
  */
 function drush_ignition_list() {
   $rest = new Ignition\External\RESTRequest();
-  $rest->url = 'http://192.168.56.136:8081';
-  $rest->path = 'getObject';
   $result = $rest
+    ->setURL('http://192.168.56.136:8081')
+    ->setPath('getObject')
+    ->setMethod('GET')
     ->addParam('path', '/var/www/repoview/webroot/sites/all/modules/repoview/.git')
     ->addParam('objectPath', 'plugins')
     ->execute()
