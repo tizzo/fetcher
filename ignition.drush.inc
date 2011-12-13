@@ -69,7 +69,7 @@ function ignition_drush_init() {
  * List sites in the ignition install.
  */
 function drush_ignition_list() {
-  $rest = new Ignition\External\RESTRequest();
+  $rest = new Ignition\Utility\RESTRequest();
   $result = $rest
     ->setURL('http://192.168.56.136:8081')
     ->setPath('getObject')

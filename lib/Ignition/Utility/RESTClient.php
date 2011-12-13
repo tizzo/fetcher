@@ -7,8 +7,7 @@
  *   enabling `allow_url_fopen` by using PHP streams.
  */
 
-// TODO: External is a stupid name.
-namespace Ignition\External;
+namespace Ignition\Utility;
 
 class RESTRequest {
 
