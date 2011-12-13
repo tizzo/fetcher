@@ -70,22 +70,27 @@ function ignition_autoload($class) {
   }
 }
 
+/**
+ * Implements hook_drush_init().
+ *
+ * Register our autoloader.
+ */
 function ignition_drush_init() {
   spl_autoload_register('ignition_autoload');
 }
-
 
 /**
  * List sites in the ignition install.
  */
 function drush_ignition_list() {
-  $rest = new Ignition\Utility\RESTRequest();
+  $rest = new Ignition\Utility\RESTClient();
   $result = $rest
-    ->setURL('http://192.168.56.136:8081')
+    ->setURL('http://192.168.56.136', 8081)
     ->setPath('getObject')
     ->setMethod('GET')
     ->addParam('path', '/var/www/repoview/webroot/sites/all/modules/repoview/.git')
     ->addParam('objectPath', 'plugins')
+    ->setTimeout(0, 0)
     ->execute()
     ->decode();
   drush_print_r($result);

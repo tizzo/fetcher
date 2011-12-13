@@ -44,6 +44,11 @@ class RESTClient {
   public $format = 'json';
 
   /**
+   * The timeout for this request.
+   */
+  public $timeout = FALSE;
+
+  /**
    * A container for the raw response of the request.
    */
   public $response = FALSE;
@@ -190,6 +195,9 @@ class RESTClient {
         'user_agent' => 'drush',
       )
     );
+    if ($this->timeout) {
+      $context_parameters['http']['timeout'] = ($this->timeout['seconds'] * 60) + $this->timeout['microseconds'];
+    }
     switch ($this->format) {
       default:
         $mime_type = 'text/plain';
@@ -227,7 +235,7 @@ class RESTClient {
     $context = stream_context_create($context_parameters);
     $file_resource = fopen($request_url, 'rb', false, $context);
     if (!$file_resource) {
-      $res = false;
+      $response = false;
     }
     else {
       // Track redirects and other metadata in a member variable.
@@ -244,6 +252,11 @@ class RESTClient {
     return $this;
   }
 
+  public function setTimeout($seconds, $microseconds = 0) {
+    $this->timeout = array('seconds' => $seconds, 'microseconds' => $microseconds);
+    return $this;
+  }
+
   /**
    * Decode the response.
    *
@@ -252,7 +265,7 @@ class RESTClient {
    * @return
    *  The decoded PHP representation of the data.
    */
-  function decode() {
+  public function decode() {
     if ($this->format && $this->response) {
       switch ($this->format) {
         case 'json':
@@ -275,5 +288,16 @@ class RESTClient {
       return $response;
     }
   }
-}
 
+  /**
+   * Get the result.
+   *
+   * Returns the raw result string.
+   *
+   * @return
+   *   The string returned from the request.
+   */
+  public function getResult() {
+    return $this->result;
+  }
+}
