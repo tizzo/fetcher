@@ -179,7 +179,7 @@ class RESTClient {
    * under the assumption that RESTRequest::decode() will likely be called immediately after.
    *
    * @return
-   *   This request object, allowing this method to be chainable.
+   *   The body of the request or FALSE of failure.
    */
   public function execute() {
     
@@ -243,10 +243,7 @@ class RESTClient {
       $this->meta = stream_get_meta_data($file_resource);
       $response = stream_get_contents($file_resource);
     }
-
-    $this->response = $response;
-
-    return $this;
+    return $this->response = $response;
   }
 
   public function setTimeout($seconds, $microseconds = 0) {
@@ -284,6 +281,16 @@ class RESTClient {
       }
       return $response;
     }
+  }
+
+  /**
+   * Make the request and decode the response.
+   *
+   * This is a convenience wrapper around execute() and decode().
+   */
+  public function fetch() {
+    $this->execute();
+    return $this->decode();
   }
 
   /**
