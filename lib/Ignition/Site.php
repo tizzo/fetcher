@@ -4,24 +4,52 @@ namespace Ignition;
 
 class site {
 
+  /**
+   * The system provider, a dependency injected into the constructor.
+   */
   protected $system = FALSE;
 
+  /**
+   * The database provider, a dependency injected into the constructor.
+   */
   protected $database = FALSE;
 
+  /**
+   * The vcs provider, a dependency injected into the constructor.
+   */
   protected $vcs = FALSE;
 
+  /**
+   * The server provider, a dependency injected into the constructor.
+   */
   protected $server = FALSE;
 
+
+  /**
+   * A stdClass object of whatever information is available about the site.
+   */
   protected $siteInfo = array();
 
+
+  /**
+   * The path on disk of the site's containing folder.
+   *
+   * Usually immediately inside the server's webroot and containing all code and files for the site.
+   */
   protected $workingDirectory = '';
 
+  /**
+   * The path within the working directory where we are placing code during this operation.
+   *
+   * For sites in development, this will usually be `code`.  For releases it will be a folder
+   * 
+   */
   protected $codeDirectory = '';
 
-  protected $siteDBPassword = '';
-
-  // TODO: Commit to this and use it?
-  protected $production = TRUE;
+  /**
+   * The path containing Drupal's index.php.
+   */
+  protected $drupalRoot = '';
 
   /**
    * Constructor function to allow dependency injection.
