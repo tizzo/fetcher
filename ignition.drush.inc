@@ -42,6 +42,31 @@ function ignition_drush_command() {
     ),
   );
 
+  $items['ignition-create'] = $environment_options + $shared + array(
+    'description' => 'Setup a site on this machine similar to an Ignition site.  Note this will not add the site to the Ignition server.',
+    'aliases' => array('ic'),
+    'arguments' => array(
+      'site' => 'The name of a site to create.',
+    ),
+  );
+
+  $items['ignition-release'] = $environment_options + $shared + array(
+    'description' => 'Release an Ignition managed site to a specific tag.',
+    'aliases' => array('ir'),
+    'arguments' => array(
+      'site' => 'The name of the site to release.',
+      'tag' => 'The tag to release.',
+    ),
+  );
+
+  $items['ignition-delete'] = $environment_options + $shared + array(
+    'description' => 'Remove an Ignition managed site from this server entirely.',
+    'aliases' => array('id'),
+    'arguments' => array(
+      'site' => 'The name of the site to delete.',
+    ),
+  );
+
   return $items;
 }
 
@@ -102,7 +127,8 @@ function drush_ignition_list($name = '') {
     $client->addParam('name', $name);
   }
   $result = $client->fetch();
-  if ($result !== FALSE) {
+  // TODO: We should have one common error status to check.
+  if ($result !== FALSE && $result !== NULL) {
     $rows[] = array(
       'Name',
       'Title',
@@ -118,6 +144,8 @@ function drush_ignition_list($name = '') {
   }
 }
 
+function drush_ignition_create($site_name) {
+}
 
 /**
  * Do all of the
@@ -126,58 +154,63 @@ function drush_ignition_get($site_name) {
 
   // TODO: Document installation instructions.
 
-  $client = drush_ignition_get_request_handler();
-  $site_info = $client->setPath("ignition/api/site/$site_name.json")
-    ->setMethod('GET')
-    ->setTimeout(3)
-    ->fetch();
-  if ($site_info === FALSE) {
+  $site_info = drush_ignition_get_site_info($site_name);
+  if ($site_info === NULL) {
     // TODO: Check for connectivity problems.
     //if ($client->meta
     drush_log('This site does not appear to exist.', 'error');
     return;
   }
-  drush_print_r($site_info);
 
-  // Detect the system we are running.
-  // TODO: Determine the plugin system.
+  // Instantiate the site object.
+  $site = drush_ignition_get_site($site_info);
 
-  // Attempt to load a plugin appropriate to the system.
-  $system = new Ignition\System\Ubuntu();
+  // Make sure that all hosting is properly configured on the server.
+  $site->setUp();
 
-  // Determine the path to use.
-  $webroot = $system->getWebRoot();
-  $working_directory = $webroot . '/' . $site_name;
+  // Checkout the site in the appropriate location.
+  $site->checkout();
+}
 
-  // Determine whether we have created this site in the past.
-  $create = !is_dir($working_directory);
+function drush_ignition_get_site_info($site_name) {
+  $client = drush_ignition_get_request_handler();
+  return $client
+    ->setPath("ignition/api/site/$site_name.json")
+    ->fetch();
+}
 
-  // Create the working directory if it does not already exist.
-  $system->ensureFolderExists($working_directory);
 
-  if ($create) {
-    $mysql->createDatabase();
+function drush_ignition_delete($site_name) {
+  if (drush_confirm()) {
+    $site_info = new stdClass;
+    $site_info->name = $site_name;
+    $result = drush_ignition_get_site($site_info)->delete();
   }
+}
 
-/*
-  sql = "mysql -e 'create database %s'" % (siteName)
-  subprocess.call(sql, shell=options.verbose)
-  # Generate a random password
-  password = randomPassword.makeRandomPassword()
-  sql = "mysql -e 'create user \"%s\"@\"localhost\" identified by \"%s\"'" % (siteName, password)
-  subprocess.call(sql, shell=options.verbose)
-  sql = "mysql -e 'grant all on %s.* to \"%s\"@\"localhost\"'" % (siteName, siteName)
-  subprocess.call(sql, shell=options.verbose)
-  sql = "mysql -e 'flush privileges'"
-  subprocess.call(sql, shell=options.verbose)
-  */
+/**
+ * Factory function for creating a new site.
+ */
+function drush_ignition_get_site($site_info) {
+  // TODO: Detect the system we are running.
+  // Attempt to load a plugin appropriate to the system.
+  $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-environment'));
+  // Attempt to load a plugin appropriate to the server.
+  $config['server'] = drush_ignition_get_handler('Server', drush_get_option('ignition-server', 'Apache2'));
+  // Load a database plugin.
+  $config['database'] = drush_ignition_get_handler('DB', drush_get_option('ignition-db'));
+  // Load the appropriate VCS plugin.
+  $config['vcs'] = drush_ignition_get_handler('VCS', $site_info->vcs);
+  // Add the loaded site information.
+  $config['siteInfo'] = $site_info;
+  return new Ignition\Site($config);
+}
 
-
-  // Create the database
-  // Load the appropriate VCS handler.
-
-  // TODO: Create settings for user:group that should own the code & files
-  // directories.
+function drush_ignition_release() {
+  // Optionally create a MySQL backup.
+  // Checkout a new tag.
+  // Create settings.php and files symlinks.
+  // Update the webroot symlink.
 }
 
 /**
@@ -189,9 +222,54 @@ function drush_ignition_get_request_handler() {
     drush_log('The ignition server and ignition key options must be set, recommend setting them in your .drushrc.php file.', 'error');
     return FALSE;
   }
-  $client->setURL(drush_get_option('ignition-server'))
-    ->addParam('ignition-key', drush_get_option('ignition-key'))
+  $client->setURL(drush_get_option('ignition-host'))
+    //->addParam('ignition-key', drush_get_option('ignition-key'))
+    ->setMethod('GET')
+    ->setTimeout(3)
     ->setFormat('json');
   // TODO: Add authentication.
   return $client;
+}
+
+/**
+ * eseentially just stolen from Drupal 7's `drupal_random_bytes`.
+ */
+function drush_ignition_make_random_password() {
+  $count = 55;
+  // $random_state does not use drupal_static as it stores random bytes.
+  static $random_state, $bytes;
+  // Initialize on the first call. The contents of $_SERVER includes a mix of
+  // user-specific and system information that varies a little with each page.
+  if (!isset($random_state)) {
+    $random_state = print_r($_SERVER, TRUE);
+    if (function_exists('getmypid')) {
+      // Further initialize with the somewhat random PHP process ID.
+      $random_state .= getmypid();
+    }
+    $bytes = '';
+  }
+  if (strlen($bytes) < $count) {
+    if ($fh = @fopen('/dev/urandom', 'rb')) {
+      $bytes .= fread($fh, max(4096, $count));
+      fclose($fh);
+    }
+    while (strlen($bytes) < $count) {
+      $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
+      $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
+    }
+  }
+  $data = substr($bytes, 0, $count);
+  $bytes = substr($bytes, $count);
+  $hash = base64_encode(hash('sha256', $data, TRUE));
+  return strtr($hash, array('+' => '-', '/' => '_', '=' => ''));
+}
+
+function drush_ignition_get_handler($type, $handler) {
+  // TODO: Determine whether we could have a much better plugin system (hint: we can).
+  // Create the database
+  // Load the appropriate VCS handler.
+  $handler = strtolower($handler);
+  $handler[0] = strtoupper($handler[0]);
+  $class = 'Ignition\\' . $type . '\\' . $handler;
+  return new $class;
 }
