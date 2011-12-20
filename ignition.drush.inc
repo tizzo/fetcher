@@ -173,10 +173,17 @@ function drush_ignition_get($site_name) {
   $site = drush_ignition_get_site($site_info);
 
   // Make sure that all hosting is properly configured on the server.
-  $site->setUp();
+  $success = $site->setUp();
 
   // Checkout the site in the appropriate location.
-  $site->checkout();
+  $success = $site->checkout();
+
+  if ($success) {
+    drush_log('Your site has been setup!', 'success');
+  }
+  else {
+    drush_log('Something went wrong along the way, try running with `--verbose` to find the problem.', 'error');
+  }
 }
 
 function drush_ignition_get_site_info($site_name) {
