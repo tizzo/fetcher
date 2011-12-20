@@ -26,6 +26,13 @@ function ignition_drush_command() {
     ),
   );
 
+  $environment_options = array(
+    'options' => array(
+      'ignition-environment' => 'The type of server used (currently only supports Ubuntu).',
+      'ignition-db' => 'The type of database to use (currently only supports MySQL).',
+    ),
+  );
+
   $items['ignition-list'] = $shared + array(
     'description' => 'List all sites managed by Ignition.',
     'aliases' => array('il'),
@@ -34,7 +41,7 @@ function ignition_drush_command() {
     ),
   );
 
-  $items['ignition-get'] = $shared + array(
+  $items['ignition-get'] = $environment_options + $shared + array(
     'description' => 'Setup a site on this machine managed by Ignition.',
     'aliases' => array('ig'),
     'arguments' => array(
