@@ -61,6 +61,7 @@ class site {
       }
     }
     // TODO: What if our construct method didn't receive all this data?
+    // TODO: Should we be doing this here?
     if ($this->workingDirectory == '') {
       // TODO: Add optional webroot.
       //if (isset($this->siteInfo->
@@ -84,11 +85,15 @@ class site {
   }
 
   public function setUp() {
-    // Create the working directory if it does not already exist.
+
+    // Ensure we have our working directory.
     $this->system->ensureFolderExists($this->workingDirectory);
-    // Create a log directory if it does not already exist.
+
+    // Ensure we have a log directory.
     $this->system->ensureFolderExists($this->workingDirectory . '/logs');
-    // Create log files if they do not already exist.
+
+    // Ensure we have our log files.
+    // TODO: We probably only want these on dev.
     $this->system->ensureFileExists($this->workingDirectory . '/logs/access.log');
     $this->system->ensureFileExists($this->workingDirectory . '/logs/mail.log');
     $this->system->ensureFileExists($this->workingDirectory . '/logs/watchdog.log');
@@ -100,10 +105,22 @@ class site {
       $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->system->getWebUser());
       chmod($this->workingDirectory . '/public_files', 0775);
     }
+
+    // TODO: Support multisite?
+    $settings_file = $this->siteRoot . '/sites/default/settings.php';
+    if (!is_file($settings_file)) {
+      $settings_php_contents = '';
+      // TODO: Get the settings.php for the appropriate version.
+      //ignition_get_asset('settings.php', '');
+      ignition_write_file($settings_file, $settings_php_contents);
+    }
+
+    // Create symlinks.
+    $this->system->createSymlink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
   }
 
   public function checkout() {
-    //$this->vcs->checkout();
+    $this->vcs->checkout();
   }
 
   public function update() {
