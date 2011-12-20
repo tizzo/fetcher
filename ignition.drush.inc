@@ -34,6 +34,14 @@ function ignition_drush_command() {
     ),
   );
 
+  $items['ignition-get'] = $shared + array(
+    'description' => 'Setup a site on this machine managed by Ignition.',
+    'aliases' => array('ig'),
+    'arguments' => array(
+      'site' => 'The name of a site to search install.',
+    ),
+  );
+
   return $items;
 }
 
@@ -84,6 +92,9 @@ function ignition_drush_init() {
  */
 function drush_ignition_list($name = '') {
   $client = drush_ignition_get_request_handler();
+  if (!$client) {
+    return;
+  }
   $client->setPath('ignition/api/site.json')
     ->setMethod('GET')
     ->setTimeout(3);
@@ -107,14 +118,80 @@ function drush_ignition_list($name = '') {
   }
 }
 
+
 /**
- * Issue a request 
+ * Do all of the
+ */
+function drush_ignition_get($site_name) {
+
+  // TODO: Document installation instructions.
+
+  $client = drush_ignition_get_request_handler();
+  $site_info = $client->setPath("ignition/api/site/$site_name.json")
+    ->setMethod('GET')
+    ->setTimeout(3)
+    ->fetch();
+  if ($site_info === FALSE) {
+    // TODO: Check for connectivity problems.
+    //if ($client->meta
+    drush_log('This site does not appear to exist.', 'error');
+    return;
+  }
+  drush_print_r($site_info);
+
+  // Detect the system we are running.
+  // TODO: Determine the plugin system.
+
+  // Attempt to load a plugin appropriate to the system.
+  $system = new Ignition\System\Ubuntu();
+
+  // Determine the path to use.
+  $webroot = $system->getWebRoot();
+  $working_directory = $webroot . '/' . $site_name;
+
+  // Determine whether we have created this site in the past.
+  $create = !is_dir($working_directory);
+
+  // Create the working directory if it does not already exist.
+  $system->ensureFolderExists($working_directory);
+
+  if ($create) {
+    $mysql->createDatabase();
+  }
+
+/*
+  sql = "mysql -e 'create database %s'" % (siteName)
+  subprocess.call(sql, shell=options.verbose)
+  # Generate a random password
+  password = randomPassword.makeRandomPassword()
+  sql = "mysql -e 'create user \"%s\"@\"localhost\" identified by \"%s\"'" % (siteName, password)
+  subprocess.call(sql, shell=options.verbose)
+  sql = "mysql -e 'grant all on %s.* to \"%s\"@\"localhost\"'" % (siteName, siteName)
+  subprocess.call(sql, shell=options.verbose)
+  sql = "mysql -e 'flush privileges'"
+  subprocess.call(sql, shell=options.verbose)
+  */
+
+
+  // Create the database
+  // Load the appropriate VCS handler.
+
+  // TODO: Create settings for user:group that should own the code & files
+  // directories.
+}
+
+/**
+ * Create an HTTP Request.
  */
 function drush_ignition_get_request_handler() {
   $client = new Ignition\Utility\RESTClient();
-  $client->setURL('http://extranet.local')
+  if (!drush_get_option('ignition-server', FALSE) || !drush_get_option('ignition-key', FALSE)) {
+    drush_log('The ignition server and ignition key options must be set, recommend setting them in your .drushrc.php file.', 'error');
+    return FALSE;
+  }
+  $client->setURL(drush_get_option('ignition-server'))
+    ->addParam('ignition-key', drush_get_option('ignition-key'))
     ->setFormat('json');
   // TODO: Add authentication.
-  // $client->addParam('ignition_key': $key);
   return $client;
 }
