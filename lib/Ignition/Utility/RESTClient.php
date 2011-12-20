@@ -232,7 +232,6 @@ class RESTClient {
         $request_url .= '?' . $params;
       }
     }
-
     $context = stream_context_create($context_parameters);
     $file_resource = @fopen($request_url, 'rb', false, $context);
     if (!$file_resource) {

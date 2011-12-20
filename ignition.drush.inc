@@ -19,17 +19,20 @@ function ignition_drush_command() {
   $items = array();
 
   $shared = array(
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_ROOT,
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
+    'options' => array(
+      'ignition-server' => 'The URL of the ignition server.',
+      'ignition-key' => 'The URL of the ignition server.',
+    ),
   );
 
-  $items['ignition-list'] = array(
+  $items['ignition-list'] = $shared + array(
     'description' => 'List all sites managed by Ignition.',
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
     'aliases' => array('il'),
-    'options' => array(
-      'hostname' => 'The hostname of the ignition server.',
+    'arguments' => array(
+      'search' => 'The name of a site to search for.',
     ),
-  ) + $shared;
+  );
 
   return $items;
 }
@@ -79,16 +82,39 @@ function ignition_drush_init() {
 /**
  * List sites in the ignition install.
  */
-function drush_ignition_list() {
-  $rest = new Ignition\Utility\RESTClient();
-  $result = $rest
-    ->setURL('http://192.168.56.136', 8081)
-    ->setPath('getObject')
+function drush_ignition_list($name = '') {
+  $client = drush_ignition_get_request_handler();
+  $client->setPath('ignition/api/site.json')
     ->setMethod('GET')
-    ->addParam('path', '/var/www/repoview/webroot/sites/all/modules/repoview/.git')
-    ->addParam('objectPath', 'plugins')
-    ->setTimeout(0, 0)
-    ->execute()
-    ->decode();
-  drush_print_r($result);
+    ->setTimeout(3);
+  if ($name != '') {
+    $client->addParam('name', $name);
+  }
+  $result = $client->fetch();
+  if ($result !== FALSE) {
+    $rows[] = array(
+      'Name',
+      'Title',
+      //t('client'),
+    );
+    foreach($result as $name => $info) {
+      $rows[] = array($name, $info->name);
+    }
+    drush_print_table($rows, TRUE);
+  }
+  else {
+    drush_log('The data could not be retrieved from the server.', 'error');
+  }
+}
+
+/**
+ * Issue a request 
+ */
+function drush_ignition_get_request_handler() {
+  $client = new Ignition\Utility\RESTClient();
+  $client->setURL('http://extranet.local')
+    ->setFormat('json');
+  // TODO: Add authentication.
+  // $client->addParam('ignition_key': $key);
+  return $client;
 }
