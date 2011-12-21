@@ -301,3 +301,11 @@ function drush_ignition_get_handler($type, $handler) {
   $class = 'Ignition\\' . $type . '\\' . $handler;
   return new $class;
 }
+
+/**
+ *
+ */
+function drush_ignition_write_file($path, $contents) {
+  drush_log("Writing file to $path");
+//  file_put_contents($path, $contents);
+}
