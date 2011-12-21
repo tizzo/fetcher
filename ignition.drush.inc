@@ -161,7 +161,7 @@ function drush_ignition_list($name = '') {
   }
 }
 
-function drush_ignition_create($site_name) {
+function drush_ignition_create($site_name, $version) {
 }
 
 /**
@@ -170,7 +170,6 @@ function drush_ignition_create($site_name) {
 function drush_ignition_get($site_name) {
 
   // TODO: Document installation instructions.
-
   $site_info = drush_ignition_get_site_info($site_name);
   if ($site_info === NULL) {
     // TODO: Check for connectivity problems.
