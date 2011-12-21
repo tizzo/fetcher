@@ -182,11 +182,16 @@ function drush_ignition_get($site_name) {
   $site = drush_ignition_get_site($site_info);
 
   // Make sure that all hosting is properly configured on the server.
-  $success = $site->setUp();
+  $success = $site->setUpWorkingDirectory();
 
   // Checkout the site in the appropriate location.
-  $success = $site->checkout();
+  $success = $site->checkout(drush_get_option('branch', NULL));
 
+  // Create symlinks and ensure we have a settings.php.
+  $success = $site->ensureSymLinks();
+  //$success = $site->ensureSettingsFileExists();
+
+  // TODO: Actually set this to a failure if any of the items above fail.
   if ($success) {
     drush_log('Your site has been setup!', 'success');
   }
