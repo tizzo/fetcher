@@ -2,8 +2,7 @@
 
 namespace Ignition\DB;
 
-// 
-class Mysql /*extends Posix implements Ignition\System\SystemInterface*/ {
+class Mysql {
 
   private $username = FALSE;
 
@@ -11,11 +10,24 @@ class Mysql /*extends Posix implements Ignition\System\SystemInterface*/ {
 
   private $database = FALSE;
 
-  public function __construct($config = FALSE) {
+  /**
+   *
+   */
+  public function configure($configure) {
+    foreach ($config as $name => $value) {
+      if (isset($this->{$name})) {
+        $this->{$name} = $value;
+      }
+    }
+  }
+
+  public function exists() {
+    $sql = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "%s"';
   }
   
   public function createDatabase($database) {
-    //$sql = "mysql -e 'create database %s'" % (siteName)
+    // TODO: escape database name.
+    shell_exec(sprintf("mysql -e 'create database %s'", $database));
   }
 
   public function createUser($database, $password) {
