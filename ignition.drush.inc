@@ -41,13 +41,19 @@ function ignition_drush_command() {
     ),
   );
 
-  $items['ignition-get'] = $environment_options + $shared + array(
+  $items['ignition-get'] = $shared + array(
     'description' => 'Setup a site on this machine managed by Ignition.',
     'aliases' => array('ig'),
     'arguments' => array(
       'site' => 'The name of a site to search install.',
+      'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
+    ),
+    'options' => array(
+      'branch' => 'The branch of the repository to checkout',
+      'tag' => 'The tag of the repository to checkout',
     ),
   );
+  $items['ignition-get']['options'] = array_merge($items['ignition-get']['options'], $shared['options'], $environment_options['options']);
 
   $items['ignition-create'] = $environment_options + $shared + array(
     'description' => 'Setup a site on this machine similar to an Ignition site.  Note this will not add the site to the Ignition server.',
@@ -55,7 +61,11 @@ function ignition_drush_command() {
     'arguments' => array(
       'site' => 'The name of a site to create.',
     ),
+    'options' => array(
+      'version' => 'The version of the Drupal site to install (should be an integer, 6 & 7 are supported) 7 is the default.',
+    ),
   );
+  $items['ignition-create']['options'] = array_merge($items['ignition-create']['options'], $shared['options'], $environment_options['options']);
 
   $items['ignition-release'] = $environment_options + $shared + array(
     'description' => 'Release an Ignition managed site to a specific tag.',
