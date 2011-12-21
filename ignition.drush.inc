@@ -251,16 +251,16 @@ function drush_ignition_get_request_handler() {
     return FALSE;
   }
   $client->setURL(drush_get_option('ignition-host'))
+    // TODO: Add authentication.
     //->addParam('ignition-key', drush_get_option('ignition-key'))
     ->setMethod('GET')
     ->setTimeout(3)
     ->setFormat('json');
-  // TODO: Add authentication.
   return $client;
 }
 
 /**
- * eseentially just stolen from Drupal 7's `drupal_random_bytes`.
+ * Eseentially stolen from Drupal 7's `drupal_random_bytes`.
  */
 function drush_ignition_make_random_password() {
   $count = 55;
