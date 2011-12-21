@@ -209,7 +209,8 @@ function drush_ignition_get_site_info($site_name) {
 
 
 function drush_ignition_delete($site_name) {
-  if (drush_confirm()) {
+  // TODO: Validate $site_name.
+  if (drush_confirm("Are you sure you want to delete $site_name?")) {
     $site_info = new stdClass;
     $site_info->name = $site_name;
     $result = drush_ignition_get_site($site_info)->delete();
@@ -228,7 +229,12 @@ function drush_ignition_get_site($site_info) {
   // Load a database plugin.
   $config['database'] = drush_ignition_get_handler('DB', drush_get_option('ignition-db'));
   // Load the appropriate VCS plugin.
-  $config['vcs'] = drush_ignition_get_handler('VCS', $site_info->vcs);
+  if (isset($site_info->vcs)) {
+    $config['vcs'] = drush_ignition_get_handler('VCS', $site_info->vcs);
+  }
+  else {
+    $config['vcs'] = drush_ignition_get_handler('VCS', 'Git');
+  }
   // Add the loaded site information.
   $config['siteInfo'] = $site_info;
   return new Ignition\Site($config);
