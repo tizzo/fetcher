@@ -30,7 +30,6 @@ class site {
    */
   protected $siteInfo = array();
 
-
   /**
    * The path on disk of the site's containing folder.
    *
@@ -69,22 +68,38 @@ class site {
     }
     if ($this->codeDirectory == '') {
       // TODO: This needs to be smarter:
-      $code_directory = $this->workingDirectory . '/' . 'code';
+      $this->codeDirectory = $this->workingDirectory . '/' . 'code';
     }
+    // Configure the vcs plugin.
+    if ($this->vcs) {
+      $this->vcs->configure(array('codeDirectory' => $this->codeDirectory, 'vcsURL' => $this->siteInfo->vcs_url));
+    }
+  }
+
+  public function install() {
+    $this->setup();
+    $this->downloadDrupal();
   }
 
   /**
    * Create a new database
    */
-  public function createNewDatabase() {
-    $name = $this->siteInfo->name;
-    $this->database->createDatabase($name);
-    $this->siteDBPassword = drush_ignition_make_random_password();
-    $this->database->createUser($name, $this->siteDBPassword);
-    $this->database->grantAccessToUser($name, $name);
+  public function ensureDatabaseExists() {
+    if (!$this->database->exists()) {
+      $this->database->createDatabase($name);
+    }
+    if (!$this->database->userExists()) {
+      $name = $this->siteInfo->name;
+      $this->siteDBPassword = drush_ignition_make_random_password();
+      $this->database->createUser($name, $this->siteDBPassword);
+      $this->database->grantAccessToUser($name, $name);
+    }
   }
 
-  public function setUp() {
+  /**
+   * Setup our basic working directory.
+   */
+  public function setUpWorkingDirectory() {
 
     // Ensure we have our working directory.
     $this->system->ensureFolderExists($this->workingDirectory);
@@ -106,21 +121,53 @@ class site {
       chmod($this->workingDirectory . '/public_files', 0775);
     }
 
-    // TODO: Support multisite?
-    $settings_file = $this->siteRoot . '/sites/default/settings.php';
-    if (!is_file($settings_file)) {
-      $settings_php_contents = '';
-      // TODO: Get the settings.php for the appropriate version.
-      //ignition_get_asset('settings.php', '');
-      ignition_write_file($settings_file, $settings_php_contents);
-    }
-
-    // Create symlinks.
-    $this->system->createSymlink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
+    // TODO: Don't lie quite so much.
+    return TRUE;
   }
 
-  public function checkout() {
-    $this->vcs->checkout();
+  /**
+   * Checks to see whether settings.php exists and creates it if it does not.
+   */
+  public function ensureSettingsFileExists() {
+    // TODO: Remove this once we get the vcs checkout rockin' and rollin'.
+    return TRUE;
+    // TODO: Support multisite?
+    $settings_file = $this->drupalRoot . '/sites/default/settings.php';
+    if (!is_file($settings_file)) {
+      // TODO: Get the settings.php for the appropriate version.
+      $settings_php_contents = '';
+      //$settings_php_contents = ignition_get_asset('settings.php', '');
+      // Allow settings to be checked into versioncontrol and automatically included from settings.php.
+      if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
+        $settings_php_contents .= "\r\n  require_once('site-settings.php');";
+      }
+      drush_ignition_write_file($settings_php_file_path, $settings_php_contents);
+    }
+  }
+
+
+  /**
+   *
+   */
+  public function checkout($branch = NULL) {
+    // TODO: Populate vcs with the necessary info (remote URL & local URL).
+    if (!is_dir($this->codeDirectory)) {
+      $this->vcs->initialCheckout($branch);
+      if (is_dir($this->codeDirectory . '/webroot')) {
+        $this->drupalRoot = $this->codeDirectory . '/webroot';
+      }
+      else {
+        $this->drupalRoot = $this->codeDirectory;
+      }
+    }
+    else {
+      //$this->vcs::checkout($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
+    }
+  }
+
+  public function ensureSymLinks() {
+    // Create symlinks.
+    return $this->system->createSymlink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
   }
 
   public function update() {
@@ -134,5 +181,4 @@ class site {
 
   public function delete() {
   }
-
 }
