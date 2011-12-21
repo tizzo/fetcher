@@ -2,7 +2,7 @@
 
 namespace Ignition;
 
-class site {
+class Site {
 
   /**
    * The system provider, a dependency injected into the constructor.
@@ -62,7 +62,7 @@ class site {
     // TODO: What if our construct method didn't receive all this data?
     // TODO: Should we be doing this here?
     if ($this->workingDirectory == '') {
-      // TODO: Add optional webroot.
+      // TODO: Add optional webroot from siteInfo.
       //if (isset($this->siteInfo->
       $this->workingDirectory = $this->system->getWebRoot() . '/' . $this->siteInfo->name;
     }
@@ -72,7 +72,12 @@ class site {
     }
     // Configure the vcs plugin.
     if ($this->vcs) {
-      $this->vcs->configure(array('codeDirectory' => $this->codeDirectory, 'vcsURL' => $this->siteInfo->vcs_url));
+      $config = array();
+      $config['codeDirectory'] = $this->codeDirectory;
+      if (isset($this->siteInfo->vcs_url)) {
+        $config['vcsURL'] = $this->siteInfo->vcs_url;
+      }
+      $this->vcs->configure($config);
     }
   }
 
@@ -179,6 +184,11 @@ class site {
   public function loadDatabaseBackup() {
   }
 
+  /**
+   * Removes all traces of this site from this system.
+   */
   public function delete() {
+    $this->system->ensureDeleted($this->workingDirectory);
+    $this->system->removeSite($this->siteInfo->name);
   }
 }
