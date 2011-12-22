@@ -1,8 +1,9 @@
 <?php
 
 namespace Ignition\DB;
+use Ignition\Base as Base;
 
-class Mysql {
+class Mysql extends Base {
 
   private $username = FALSE;
 

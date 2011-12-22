@@ -1,19 +1,12 @@
 <?php
 
 namespace Ignition\VCS;
+use Ignition\Base as Base;
 
-class Git {
+class Git extends Base {
 
   protected $vcsURL = '';
   protected $codeDirectory = '';
-
-  public function configure($config) {
-    foreach ($config as $name => $value) {
-      if (isset($this->{$name}) && $value != '') {
-        $this->{$name} = $value;
-      }
-    }
-  }
 
   public function initialCheckout($branch) {
     if (is_null($branch)) {
