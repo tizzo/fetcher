@@ -52,6 +52,8 @@ function ignition_drush_command() {
     'options' => array(
       'branch' => 'The branch of the repository to checkout',
       'tag' => 'The tag of the repository to checkout',
+      'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
+      'environment' => 'The environment to use (defaults to dev if it exists).',
     ),
   );
   $items['ignition-get']['options'] = array_merge($items['ignition-get']['options'], $shared['options'], $environment_options['options']);
@@ -76,6 +78,7 @@ function ignition_drush_command() {
       'tag' => 'The tag to release.',
     ),
   );
+  $items['ignition-release']['options'] = array_merge($items['ignition-release']['options'], $shared['options'], $environment_options['options']);
 
   $items['ignition-delete'] = $environment_options + $shared + array(
     'description' => 'Remove an Ignition managed site from this server entirely.',
@@ -84,6 +87,7 @@ function ignition_drush_command() {
       'site' => 'The name of the site to delete.',
     ),
   );
+  $items['ignition-delete']['options'] = array_merge($items['ignition-delete']['options'], $shared['options'], $environment_options['options']);
 
   return $items;
 }
