@@ -28,8 +28,9 @@ function ignition_drush_command() {
 
   $environment_options = array(
     'options' => array(
-      'ignition-environment' => 'The type of server used (currently only supports Ubuntu).',
-      'ignition-db' => 'The type of database to use (currently only supports MySQL).',
+      'ignition-system' => 'The type of system used (currently only supports Ubuntu).',
+      'ignition-server' => 'The type of server to use (currently only supports Apache2).',
+      'ignition-database' => 'The type of database to use (currently only supports MySQL).',
     ),
   );
 
@@ -218,18 +219,18 @@ function drush_ignition_delete($site_name) {
 }
 
 /**
- * Factory function for creating a new site.
+ * Factory function for instatiating a site object.
  */
-function drush_ignition_get_site($site_info) {
+function drush_ignition_get_site($site_info = NULL) {
   // TODO: Detect the system we are running.
   // Attempt to load a plugin appropriate to the system.
-  $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-environment'));
+  $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-system'));
   // Attempt to load a plugin appropriate to the server.
   $config['server'] = drush_ignition_get_handler('Server', drush_get_option('ignition-server', 'Apache2'));
   // Load a database plugin.
-  $config['database'] = drush_ignition_get_handler('DB', drush_get_option('ignition-db'));
+  $config['database'] = drush_ignition_get_handler('DB', drush_get_option('ignition-database'));
   // Load the appropriate VCS plugin.
-  if (isset($site_info->vcs)) {
+  if (!is_null($site_info) && isset($site_info->vcs)) {
     $config['vcs'] = drush_ignition_get_handler('VCS', $site_info->vcs);
   }
   else {
@@ -266,7 +267,7 @@ function drush_ignition_get_request_handler() {
 }
 
 /**
- * Eseentially stolen from Drupal 7's `drupal_random_bytes`.
+ * Essentially stolen from Drupal 7's `drupal_random_bytes`.
  */
 function drush_ignition_make_random_password() {
   $count = 55;
@@ -300,8 +301,6 @@ function drush_ignition_make_random_password() {
 
 function drush_ignition_get_handler($type, $handler) {
   // TODO: Determine whether we could have a much better plugin system (hint: we can).
-  // Create the database
-  // Load the appropriate VCS handler.
   $handler = strtolower($handler);
   $handler[0] = strtoupper($handler[0]);
   $class = 'Ignition\\' . $type . '\\' . $handler;
@@ -313,5 +312,5 @@ function drush_ignition_get_handler($type, $handler) {
  */
 function drush_ignition_write_file($path, $contents) {
   drush_log("Writing file to $path");
-//  file_put_contents($path, $contents);
+  //file_put_contents($path, $contents);
 }
