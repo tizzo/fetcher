@@ -236,11 +236,17 @@ function drush_ignition_get($site_name) {
   $success = $site->setUpWorkingDirectory();
 
   // Checkout the site in the appropriate location.
+  // TODO: Our options support branches and tags, don't hard code branch here.
   $success = $site->checkout(drush_get_option('branch', NULL));
 
   // Create symlinks and ensure we have a settings.php.
   $success = $site->ensureSymLinks();
   //$success = $site->ensureSettingsFileExists();
+
+
+  // Ensure we have a database and user.
+  $success = $site->ensureDatabase();
+
 
   // TODO: Actually set this to a failure if any of the items above fail.
   if ($success) {
@@ -261,6 +267,7 @@ function drush_ignition_get_site_info($site_name) {
 
 function drush_ignition_delete($site_name) {
   // TODO: Validate $site_name.
+  // TODO: Allow deletion of other webroots (check site info?).
   if (drush_confirm("Are you sure you want to delete $site_name?")) {
     $site_info = new stdClass;
     $site_info->name = $site_name;
