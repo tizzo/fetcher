@@ -181,7 +181,7 @@ function drush_ignition_get($site_name) {
   // Instantiate the site object.
   $site = drush_ignition_get_site($site_info);
 
-  // Make sure that all hosting is properly configured on the server.
+  // Make sure that the project direcotry is properly configured on the server.
   $success = $site->setUpWorkingDirectory();
 
   // Checkout the site in the appropriate location.
