@@ -167,6 +167,48 @@ function drush_ignition_list($name = '') {
 }
 
 function drush_ignition_create($site_name, $version) {
+  return;
+
+  // TODO: Most of this should probably be moved into the site class iteslf.
+
+  // Build a new site object.
+  $site_info = new stdClass;
+  $site_info->name = $site_name;
+  $site_info->version = $version;
+  $site = drush_ignition_get_site($site_info);
+
+  $commandline_args = array(
+    'Drupal-' . $version,
+  );
+  $commandline_options = array(
+    // Default our package hander to drupalorg_git.
+    'package-handler' => drush_get_option('package-handler', 'drupalorg_git'),
+    // TODO: Get this from the site.
+    'drupal-project-rename' => 'code',
+    // TODO: Get this from the site.
+    'destination' => '',
+  );
+  drush_invoke_process('@self', 'dl', $commandline_args, $commandline_options, TRUE);
+
+  // Create symlinks and ensure we have a settings.php.
+  $success = $site->ensureSymLinks();
+
+  // Make sure that the project direcotry is properly configured on the server.
+  $success = $site->setUpWorkingDirectory();
+
+  // Checkout the site in the appropriate location.
+  $success = $site->checkout(drush_get_option('branch', NULL));
+
+  // Install the site
+  $commandline_args = array();
+  $commandline_options = array(
+    'root' => $site->getCodePath(),
+    'db-url' => '',
+    'account-name' => 'admin',
+    'account-pass' => 'pass',
+    'site-name' => $ite_name,
+  );
+  drush_invoke_process('@self', 'site-install', $commandline_args, $commandline_options, TRUE);
 }
 
 /**
