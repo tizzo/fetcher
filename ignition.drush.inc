@@ -53,7 +53,10 @@ function ignition_drush_command() {
       'branch' => 'The branch of the repository to checkout',
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
-      'environment' => 'The environment to use (defaults to dev if it exists).',
+      // TODO: Implement this:
+      //'environment' => 'The environment to use for database and file syncing (defaults to dev if it exists).',
+      // TODO: Implement this:
+      //'deploy-name' => 'The name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
     ),
   );
   $items['ignition-get']['options'] = array_merge($items['ignition-get']['options'], $shared['options'], $environment_options['options']);
@@ -62,20 +65,21 @@ function ignition_drush_command() {
     'description' => 'Setup a site on this machine similar to an Ignition site.  Note this will not add the site to the Ignition server.',
     'aliases' => array('ic'),
     'arguments' => array(
-      'site' => 'The name of a site to create.',
+      'site_name' => 'The name of a site to create.',
     ),
     'options' => array(
       'version' => 'The version of the Drupal site to install (should be an integer, 6 & 7 are supported) 7 is the default.',
     ),
   );
+
   $items['ignition-create']['options'] = array_merge($items['ignition-create']['options'], $shared['options'], $environment_options['options']);
 
   $items['ignition-release'] = $environment_options + $shared + array(
     'description' => 'Release an Ignition managed site to a specific tag.',
     'aliases' => array('ir'),
     'arguments' => array(
-      'site' => 'The name of the site to release.',
-      'tag' => 'The tag to release.',
+      'site name' => 'The name of the site to release.',
+      'tag' => 'The tag to release. Branches are not supported.',
     ),
   );
   $items['ignition-release']['options'] = array_merge($items['ignition-release']['options'], $shared['options'], $environment_options['options']);
