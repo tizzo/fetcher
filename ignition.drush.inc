@@ -16,34 +16,43 @@ function ignition_drush_help($section) {
  * Implements hook_drush_command().
  */
 function ignition_drush_command() {
+
   $items = array();
 
+  // Options necessary for all commands connecting to the Ignitions server.
   $shared = array(
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
-    'options' => array(
-      'ignition-server' => 'The URL of the ignition server.',
-      'ignition-key' => 'The URL of the ignition server.',
-    ),
+    'ignition-server' => 'The URL of the ignition server.',
+    'ignition-key' => 'The URL of the ignition server.',
   );
 
+  // Options necessary for interacting with sites on this server.
   $environment_options = array(
-    'options' => array(
-      'ignition-system' => 'The type of system used (currently only supports Ubuntu).',
-      'ignition-server' => 'The type of server to use (currently only supports Apache2).',
-      'ignition-database' => 'The type of database to use (currently only supports MySQL).',
-    ),
+    'ignition-system' => 'The type of system used (currently only supports Ubuntu).',
+    'ignition-server' => 'The type of server to use (currently only supports Apache2).',
+    'ignition-database' => 'The type of database to use (currently only supports MySQL).',
+    'ignition-sql-user' => 'The database username to use for administration commands.',
+    'ignition-sql-password' => 'The database password to use for administration commands.',
   );
 
-  $items['ignition-list'] = $shared + array(
-    'description' => 'List all sites managed by Ignition.',
+  $items['ignition-list'] = array(
+    'description' => 'List all sites available to Ignition that this user has access to.',
     'aliases' => array('il'),
     'arguments' => array(
-      'search' => 'The name of a site to search for.',
+      'search' => 'Any part of the name of a site to search for.',
+      'page' => 'The page of listings starting from zero.  Necessary only if there are too many results to display on a page of 100.',
     ),
   );
 
-  $items['ignition-get'] = $shared + array(
-    'description' => 'Setup a site on this machine managed by Ignition.',
+  $items['ignition-info'] = array(
+    'description' => 'List known information about a site managed by Ignition.',
+    'aliases' => array('if'),
+    'arguments' => array(
+      'search' => 'The name of a site to list information for.',
+    ),
+  );
+
+  $environment_items['ignition-get'] = array(
+    'description' => 'Setup a site on this machine managed by Ignition synchronizing the database and files if desired.',
     'aliases' => array('ig'),
     'arguments' => array(
       'site' => 'The name of a site to search install.',
@@ -59,40 +68,60 @@ function ignition_drush_command() {
       //'deploy-name' => 'The name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
     ),
   );
-  $items['ignition-get']['options'] = array_merge($items['ignition-get']['options'], $shared['options'], $environment_options['options']);
 
-  $items['ignition-create'] = $environment_options + $shared + array(
+  $environment_items['ignition-create'] =  array(
     'description' => 'Setup a site on this machine similar to an Ignition site.  Note this will not add the site to the Ignition server.',
     'aliases' => array('ic'),
     'arguments' => array(
       'site_name' => 'The name of a site to create.',
+      'version' => 'The version of Drupal to install (the same options that would be passed to pm-download without the `drupal-` prefix).',
     ),
     'options' => array(
-      'version' => 'The version of the Drupal site to install (should be an integer, 6 & 7 are supported) 7 is the default.',
+      'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
     ),
   );
 
-  $items['ignition-create']['options'] = array_merge($items['ignition-create']['options'], $shared['options'], $environment_options['options']);
 
-  $items['ignition-release'] = $environment_options + $shared + array(
+  $environment_items['ignition-release'] = array(
     'description' => 'Release an Ignition managed site to a specific tag.',
     'aliases' => array('ir'),
     'arguments' => array(
       'site name' => 'The name of the site to release.',
       'tag' => 'The tag to release. Branches are not supported.',
     ),
+    'options' => array(
+      'backup' => 'Flag to determine whether to create a backup.',
+      'backup-dir' => 'Path to create a SQL dump.',
+    ),
   );
-  $items['ignition-release']['options'] = array_merge($items['ignition-release']['options'], $shared['options'], $environment_options['options']);
 
-  $items['ignition-delete'] = $environment_options + $shared + array(
+  $environment_items['ignition-delete'] = array(
     'description' => 'Remove an Ignition managed site from this server entirely.',
     'aliases' => array('id'),
     'arguments' => array(
       'site' => 'The name of the site to delete.',
     ),
+    'options' => array(
+    ),
   );
-  $items['ignition-delete']['options'] = array_merge($items['ignition-delete']['options'], $shared['options'], $environment_options['options']);
 
+  // Add environment specific options relevant to the server
+  // on which ignition is being run for the appropriate commands.
+  foreach ($environment_items as $name => $item) {
+    $items[$name] = $item;
+    $item[$name]['options'] = array_merge($environment_options, $item['options']);
+  }
+
+  // Add the base options for all Ignition commands.
+  foreach ($items as &$item) {
+    $item['bootstrap'] = DRUSH_BOOTSTRAP_DRUSH;
+    if (isset($item['options'])) {
+      $item['options'] = array_merge($shared, $item['options']);
+    }
+    else {
+      $item['options'] = $shared;
+    }
+  }
   return $items;
 }
 
@@ -143,14 +172,12 @@ function ignition_drush_init() {
  */
 function drush_ignition_list($name = '') {
   $client = drush_ignition_get_request_handler();
-  if (!$client) {
-    return;
-  }
-  $client->setPath('ignition/api/site.json')
-    ->setMethod('GET')
-    ->setTimeout(3);
+  $client->setPath('ignition/api/site.json');
   if ($name != '') {
     $client->addParam('name', $name);
+  }
+  if ($page != '') {
+    $client->addParam('page', $page);
   }
   $result = $client->fetch();
   // TODO: We should have one common error status to check.
@@ -170,8 +197,20 @@ function drush_ignition_list($name = '') {
   }
 }
 
+/**
+ * Print out information about a single site.
+ */
+function drush_ignition_info($site_name) {
+
+  drush_ignition_load_private_key_from_ssh_agent();
+
+  $site_info = drush_ignition_get_site_info($site_name);
+  if ($site_info) {
+    drush_print_r($site_info);
+  }
+}
+
 function drush_ignition_create($site_name, $version) {
-  return;
 
   // TODO: Most of this should probably be moved into the site class iteslf.
 
@@ -181,27 +220,33 @@ function drush_ignition_create($site_name, $version) {
   $site_info->version = $version;
   $site = drush_ignition_get_site($site_info);
 
-  $commandline_args = array(
-    'Drupal-' . $version,
-  );
-  $commandline_options = array(
-    // Default our package hander to drupalorg_git.
-    'package-handler' => drush_get_option('package-handler', 'drupalorg_git'),
-    // TODO: Get this from the site.
-    'drupal-project-rename' => 'code',
-    // TODO: Get this from the site.
-    'destination' => '',
-  );
-  drush_invoke_process('@self', 'dl', $commandline_args, $commandline_options, TRUE);
-
-  // Create symlinks and ensure we have a settings.php.
-  $success = $site->ensureSymLinks();
-
   // Make sure that the project direcotry is properly configured on the server.
   $success = $site->setUpWorkingDirectory();
 
   // Checkout the site in the appropriate location.
-  $success = $site->checkout(drush_get_option('branch', NULL));
+  //$success = $site->checkout(drush_get_option('branch', NULL));
+
+  $commandline_args = array(
+    'drupal-' . $version,
+  );
+  $commandline_options = array(
+    // Default our package hander to git_drupalorg.
+    'package-handler' => drush_get_option('package-handler', 'git_drupalorg'),
+    'drupal-project-rename' => 'code',
+    'destination' => $site->getWorkingDirectory(),
+  );
+  foreach ($commandline_options as $name => $value) {
+    drush_set_option($name, $value);
+  }
+  // Note we don't use drush_invoke_process() because it requires an existinge
+  // site.
+  drush_invoke('pm-download', $commandline_args);
+  return;
+
+  // Create symlinks and ensure we have a settings.php.
+  $success = $site->ensureSymLinks();
+
+
 
   // Install the site
   $commandline_args = array();
@@ -261,6 +306,10 @@ function drush_ignition_get_site_info($site_name) {
   $client = drush_ignition_get_request_handler();
   return $client
     ->setPath("ignition/api/site/$site_name.json")
+    // Most of our requests retrieve information, so default to a GET request.
+    ->setMethod('GET')
+    // Set a 3 second timeout.
+    ->setTimeout(3)
     ->fetch();
 }
 
