@@ -359,7 +359,22 @@ function drush_ignition_release() {
   // Optionally create a MySQL backup.
   // Checkout a new tag.
   // Create settings.php and files symlinks.
+  // Put the site in offline mode.
   // Update the webroot symlink.
+  // Run update.php
+  // Take the site out of offline mode.
+}
+
+// TODO: Add this to the hook_command implementation above.
+function drush_ignition_subcommand() {
+  // Just planning the available subcommands.
+  $subcommands = array(
+    'create-working-directory' => '',
+    'get-code' => '',
+    'create-database' => '',
+    'sync-database' => '',
+    'sync-files' => '',
+  );
 }
 
 /**
