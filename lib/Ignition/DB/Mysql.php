@@ -30,7 +30,9 @@ class Mysql extends Base {
 
   public function exists() {
     $db_spec = $this->getAdminDbSpec();
-    return drush_sql_db_exists($db_spec);
+    $exists = drush_sql_db_exists($db_spec);
+    $exists ? drush_log('exists') : drush_log('not exists');
+    return ;
   }
 
   public function getAdminDbSpec() {

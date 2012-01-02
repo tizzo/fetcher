@@ -328,7 +328,6 @@ function drush_ignition_delete($site_name) {
  * Factory function for instatiating a site object.
  */
 function drush_ignition_get_site($site_info = NULL) {
-  // TODO: Detect the system we are running.
   // Attempt to load a plugin appropriate to the system.
   $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-system'));
   // Attempt to load a plugin appropriate to the server.
@@ -342,6 +341,15 @@ function drush_ignition_get_site($site_info = NULL) {
   else {
     $config['vcs'] = drush_ignition_get_handler('VCS', 'Git');
   }
+  // TODO: This still doesn't feel right.  We shouldn't load the db data here.
+  $config['dbSpec'] = array(
+    'database' => drush_get_option('database', $site_info->name),
+    'port' => drush_get_option('database-port', 3306),
+    'username' => drush_get_option('database-user', $site_info->name),
+    'password' => drush_get_option('database-password', drush_ignition_make_random_password()),
+    'host' => 'localhost',
+    'driver' => $config['database']->getDriver(),
+  );
   // Add the loaded site information.
   $config['siteInfo'] = $site_info;
   return new Ignition\Site($config);
