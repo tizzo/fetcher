@@ -51,6 +51,11 @@ class Site {
   protected $drupalRoot = '';
 
   /**
+   * A drush compatible $db_spec array as would be generaged by _drush_sql_get_db_spec().
+   */
+  protected $dbSpec = array();
+
+  /**
    * Constructor function to allow dependency injection.
    */
   public function __construct($config) {
@@ -79,23 +84,27 @@ class Site {
       }
       $this->vcs->configure($config);
     }
-  }
-
-  public function install() {
-    $this->setup();
-    $this->downloadDrupal();
+    if ($this->database) {
+      $db_spec = array();
+      // TODO: make this in some way configurable?
+      // If we have credentials, use them?
+      if (count($this->dbSpec)) {
+        $db_spec = $this->dbSpec;
+      }
+      $this->database->configure(array('db_spec' => $db_spec));
+    }
   }
 
   /**
    * Create a new database
    */
-  public function ensureDatabaseExists() {
+  public function ensureDatabase() {
     if (!$this->database->exists()) {
-      $this->database->createDatabase($name);
+      return $this->database->createDatabase();
     }
+    return TRUE;
     if (!$this->database->userExists()) {
       $name = $this->siteInfo->name;
-      $this->siteDBPassword = drush_ignition_make_random_password();
       $this->database->createUser($name, $this->siteDBPassword);
       $this->database->grantAccessToUser($name, $name);
     }
@@ -158,21 +167,24 @@ class Site {
     // TODO: Populate vcs with the necessary info (remote URL & local URL).
     if (!is_dir($this->codeDirectory)) {
       $this->vcs->initialCheckout($branch);
-      if (is_dir($this->codeDirectory . '/webroot')) {
-        $this->drupalRoot = $this->codeDirectory . '/webroot';
-      }
-      else {
-        $this->drupalRoot = $this->codeDirectory;
-      }
     }
     else {
-      //$this->vcs::checkout($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
+      // TODO: Switch to the right branch or something?
+      // $this->vcs->update($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
+    }
+    if (is_dir($this->codeDirectory . '/webroot')) {
+      $this->drupalRoot = $this->codeDirectory . '/webroot';
+    }
+    else {
+      $this->drupalRoot = $this->codeDirectory;
     }
   }
 
+  /**
+   * Ensure that all symlinks besides the webroot symlink have been created.
+   */
   public function ensureSymLinks() {
-    // Create symlinks.
-    return $this->system->createSymlink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
+    return $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
   }
 
   public function update() {
