@@ -171,15 +171,22 @@ function ignition_drush_init() {
  * List sites in the ignition install.
  */
 function drush_ignition_list($name = '') {
+
   $client = drush_ignition_get_request_handler();
   $client->setPath('ignition/api/site.json');
+
+  // If we have a name to search for add it to the query.
   if ($name != '') {
     $client->addParam('name', $name);
   }
+  // If we are paging past the first 100 results, add the page.
   if ($page != '') {
     $client->addParam('page', $page);
   }
+
+  // Execute the request and decode the response.
   $result = $client->fetch();
+
   // TODO: We should have one common error status to check.
   if ($result !== FALSE && $result !== NULL) {
     $rows[] = array(
@@ -261,7 +268,9 @@ function drush_ignition_create($site_name, $version) {
 }
 
 /**
- * Do all of the
+ * Do all of the work to setup a local copy of a site tracked
+ * by Ignition, optionally syncronizing database and file with
+ * an environment tracked by Ignition.
  */
 function drush_ignition_get($site_name) {
 
