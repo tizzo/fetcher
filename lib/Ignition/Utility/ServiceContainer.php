@@ -46,22 +46,22 @@ class ServiceContainer extends \Pimple {
       return $client;
     };
 
-    // Attempt to load a plugin appropriate to the system.
+    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
     $container['system'] = $container->share(function($c) {
-      return drush_ignition_get_handler('System', drush_get_option('ignition-system', 'ubuntu', $c)); 
+      return drush_ignition_get_handler('System', drush_get_option('ignition-system', 'Ubuntu', $c)); 
     });
 
-    // Attempt to load a plugin appropriate to the server.
+    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
     $container['server'] = $container->share(function($c) {
       return drush_ignition_get_handler('Server', drush_get_option('ignition-server', 'Apache2', $c));
     });
 
-    // Load a database plugin.
+    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
     $container['database'] = $container->share(function($c) {
-      return drush_ignition_get_handler('DB', drush_get_option('ignition-database'), $c);
+      return drush_ignition_get_handler('DB', drush_get_option('ignition-database', 'Mysql'), $c);
     });
 
-    // Default to the git vcs handler.
+    // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
     $container['vcs'] = $container->share(function($c) {
       return drush_ignition_get_handler('VCS', 'Git', $c);
     });
