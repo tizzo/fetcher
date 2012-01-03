@@ -76,7 +76,7 @@ class HTTPClient {
     $this->registerEncoding('plain', 'text/plain', $plainTextDecode);
 
     // Default our decoding to plain
-    $this->format = 'plain';
+    $this->setFormat('plain');
 
     // Register our json decoding.
     $jsonDecode = function($jsonString) {
@@ -145,14 +145,21 @@ class HTTPClient {
    * Set the format to be used.
    *
    * @param $format
-   *   The format with which to send and receive data.  Acceptable values are `json`
-   *   and `xml` defaulting to `json`.
+   *   The format with which to send and receive data.  Acceptable values
+   *   by default are `plain`, `xml` and `json` defaulting to `plain`.  New
+   *   formats may be added via the HTTPClient::registerEncoding() method.
    * @return
-   *   This request object, allowing this method to be chainable.
+   *   This request object, allowing this method to be chainable on success,
+   *   FALSE on failure.
    */
   public function setFormat($format) {
-    $this->format = $format;
-    return $this;
+    if (isset($this->formats[$format])) {
+      $this->format = $format;
+      return $this;
+    }
+    else {
+      return FALSE;
+    }
   }
 
   /**
@@ -337,7 +344,8 @@ class HTTPClient {
    * Register a format and provide a function to deal with it.
    */
   public function registerEncoding($name, $mimeType, Closure $function) {
-    // It would be cool to allow decode callbacks to be injected to allow support for arbitrary formats.
+    // It would be cool to allow decode callbacks to be injected to allow
+    // support for arbitrary formats.
     // TODO: The body of this function :D.
     $this->formats[$name] = array(
       'function' => $function,
