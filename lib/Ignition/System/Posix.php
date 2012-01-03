@@ -44,9 +44,26 @@ class Posix {
     }
   }
 
-  public function createSymLink($realLink, $destination) {
-    drush_log("Creating a symlink to point from $destination to $realLink");
-    return symlink($realLink, $destination);
+  public function ensureSymLink($realPath, $destination) {
+    $pathParts = explode('/', $destination);
+    array_pop($pathParts);
+    $destinationDirectory = implode('/', $pathParts);
+    if (is_dir($destinationDirectory) && !is_link($destination)) {
+      drush_log("Creating a symlink to point from $destination to $realPath");
+      return symlink($realPath, $destination);
+    }
+    else if (!is_dir($destinationDirectory)) {
+      drush_log(dt('The directory where the symlink is desired (!path) does not exist.', array('!path' => $destinationDirectory)), 'error');
+      return FALSE;
+    }
+    else if (readlink($destination) != $realPath) {
+      $error = 'A symlink already exists at !destination but it points to !current rather than !desired.';
+      $tokens = array('!path' => $destination, '!current' => readlink($destination), '!desired' => $realPath);
+      drush_log(dt($error, $tokens, 'error'));
+    }
+    else {
+      return TRUE;
+    }
   }
 
  /**
