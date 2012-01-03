@@ -39,9 +39,14 @@ class RESTClient {
   public $method = 'GET';
 
   /**
+   * An array of supported formats and their decode functions.
+   */
+  protected $formats = array();
+
+  /**
    * The format to be requested, acceptable values are json and xml.
    */
-  public $format = 'json';
+  public $format = FALSE;
 
   /**
    * The timeout for this request.
@@ -58,6 +63,41 @@ class RESTClient {
    * useful for tracking down redirects and the like.
    */
   public $meta = FALSE;
+
+  /**
+   * A constructor function to register our default encodings and set a default format.
+   */
+  public function __construct() {
+
+    // Register plaintext decoding (the default).
+    $plainTextDecode = function($textString) {
+      return (string) $textString;
+    };
+    $this->registerEncoding('plain', 'text/plain', $plainTextDecode);
+
+    // Default our decoding to plain
+    $this->format = 'plain';
+
+    // Register our json decoding.
+    $jsonDecode = function($jsonString) {
+      $response = json_decode($jsonString);
+      if ($response === null) {
+        $response = FALSE;
+      }
+      return $response;
+    };
+    $this->registerEncoding('json', 'application/json', $jsonDecode);
+
+    // Register xml decoding.
+    $xmlDecode = function($xmlString) {
+      $response = simplexml_load_string($xmlString);
+      if ($response === null) {
+        $response = FALSE;
+      }
+      return $response;
+    }
+    $this->registerEncoding('xml', 'application/xml', $xmlDecode);
+  }
 
   /**
    * Set the URL for this request.
@@ -206,25 +246,19 @@ class RESTClient {
         'user_agent' => 'drush',
       )
     );
+
     if ($this->timeout) {
       $context_parameters['http']['timeout'] = ($this->timeout['seconds'] * 60) + $this->timeout['microseconds'];
     }
-    switch ($this->format) {
-      default:
-        $mime_type = 'text/plain';
-        break;
-      case 'json':
-        $mime_type = 'application/json';
-        break;
-      case 'xml':
-        $mime_type = 'application/xml';
-        break;
-    }
+
+    // Use the configured mime type, this shuold always be set because we default
+    // to plain.
+    $mimeType = $this->formats[$this->format]['mime type'];
     if (!isset($this->headers['Content Type'])) {
-      $this->setHeader('Content Type', $mime_type);
+      $this->setHeader('Content Type', $mimeType);
     }
     if (!isset($this->headers['Accept'])) {
-      $this->setHeader('Accept', $mime_type);
+      $this->setHeader('Accept', $mimeType);
     }
     if (count($this->headers)) {
       $headers = '';
@@ -266,30 +300,14 @@ class RESTClient {
    *
    * If format is set to something we understand, decode the response.
    *
+   * See RESTClient::registerEncoding() to add formats.
+   *
    * @return
    *  The decoded PHP representation of the data.
    */
   public function decode() {
-    if ($this->format && $this->response) {
-      switch ($this->format) {
-        case 'json':
-          $response = json_decode($this->response);
-          if ($response === null) {
-            $response = FALSE;
-          }
-          break;
-
-        case 'xml':
-          $response = simplexml_load_string($this->response);
-          if ($r === null) {
-            $response = FALSE;
-          }
-          break;
-
-        default:
-          $response = $this->response;
-      }
-      return $response;
+    if ($this->format && isset($this->formats[$this->format]) && $this->response) {
+      return $this->formats[$this->format]['function']($this->response);
     }
   }
 
@@ -313,5 +331,17 @@ class RESTClient {
    */
   public function getResult() {
     return $this->result;
+  }
+
+  /**
+   * Register a format and provide a function to deal with it.
+   */
+  public function registerEncoding($name, $mimeType, Closure $function) {
+    // It would be cool to allow decode callbacks to be injected to allow support for arbitrary formats.
+    // TODO: The body of this function :D.
+    $this->formats[$name] = array(
+      'function' => $function,
+      'mime type' => $mimeType,
+    );
   }
 }
