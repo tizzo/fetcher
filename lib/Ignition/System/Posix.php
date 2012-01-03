@@ -80,8 +80,24 @@ class Posix {
     }
   }
 
-  public function removeSite($site_name) {
-    //$this->ensureDeleted($path);
+  /**
+   * Write a file to disk.
+   *
+   * @param $path
+   *   A string representing the absolute path on disk.
+   * @param $content
+   *   The content to write into the file.
+   * @return
+   *   Boolean, the result of the file write.
+   */
+  public function writeFile($path, $content) {
+    if (is_dir($path)) {
+      drush_log("Writing file to $path");
+      return file_put_contents($path, $content);
+    }
+    else {
+      return FALSE;
+    }
   }
 
 }
