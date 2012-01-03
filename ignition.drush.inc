@@ -166,9 +166,6 @@ function drush_ignition_list($name = '') {
  * Print out information about a single site.
  */
 function drush_ignition_info($site_name) {
-
-  drush_ignition_load_private_key_from_ssh_agent();
-
   $site_info = drush_ignition_get_site_info($site_name);
   if ($site_info) {
     drush_print_r($site_info);
