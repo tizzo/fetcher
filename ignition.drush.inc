@@ -428,6 +428,16 @@ function drush_ignition_make_random_password() {
   return strtr($hash, array('+' => '-', '/' => '_', '=' => ''));
 }
 
+/**
+ * Retrieve a specific handler object.
+ *
+ * @param $type
+ *   The type of handler we are loading (e.g. System, DB, etc.).
+ * @param
+ *   The specific handler to load, this should map directly to a class.
+ * @return
+ *   A loaded handler object.
+ */
 function drush_ignition_get_handler($type, $handler) {
   // TODO: Determine whether we could have a much better plugin system (hint:
   // we can).
