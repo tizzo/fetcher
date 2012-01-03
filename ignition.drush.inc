@@ -166,7 +166,13 @@ function drush_ignition_list($name = '') {
 /**
  * Print out information about a single site.
  */
-function drush_ignition_info($site_name) {
+function drush_ignition_info($site_name = NULL) {
+  if (is_null($site_name)) {
+    $site_name = drush_prompt(dt('Please enter the site name you would like to view, use ignition-list for available options or N/n to cancel'));
+    if (strtoLower($site_name) == 'n') {
+      return;
+    }
+  }
   $site_info = drush_ignition_get_site_info($site_name);
   if ($site_info) {
     drush_print_r($site_info);
