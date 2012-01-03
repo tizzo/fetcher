@@ -130,7 +130,8 @@ function ignition_drush_command() {
  */
 function drush_ignition_list($name = '') {
 
-  $client = drush_ignition_get_request_handler();
+  $container = drush_ignition_get_service_container();
+  $client = $container['ignition client'];
   $client->setPath('ignition/api/site.json');
 
   // If we have a name to search for add it to the query.
@@ -292,6 +293,10 @@ function drush_ignition_delete($site_name) {
  * Factory function for instatiating a site object.
  */
 function drush_ignition_get_site($site_info = NULL) {
+
+  $container = drush_ignition_get_service_container();
+  $container->configureWithSiteInfo($site_info);
+
   // Attempt to load a plugin appropriate to the system.
   $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-system'));
   // Attempt to load a plugin appropriate to the server.
@@ -316,6 +321,8 @@ function drush_ignition_get_site($site_info = NULL) {
   );
   // Add the loaded site information.
   $config['siteInfo'] = $site_info;
+
+  //return $container['site'];
   return new Ignition\Site($config);
 }
 
@@ -333,7 +340,7 @@ function drush_ignition_release() {
 function drush_ignition_subcommand() {
   // Just planning the available subcommands.
   $subcommands = array(
-    'create-working-directory' => '',
+    'setup-working-directory' => '',
     'get-code' => '',
     'create-database' => '',
     'sync-database' => '',
@@ -387,6 +394,20 @@ function ignition_autoload($class) {
 }
 
 /**
+ *
+ */
+function drush_ignition_get_service_container($handler = FALSE) {
+  static $container = FALSE;
+  if ($handler) {
+    return $container = $handler;
+  }
+  if (!$container) {
+    $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
+  }
+  return $container;
+}
+
+/**
  * Create an HTTP Request.
  */
 function drush_ignition_get_request_handler() {
@@ -397,44 +418,10 @@ function drush_ignition_get_request_handler() {
   }
   $client->setURL(drush_get_option('ignition-host'))
     // TODO: Add authentication.
-    //->addParam('ignition-key', drush_get_option('ignition-key'))
     ->setMethod('GET')
     ->setTimeout(3)
     ->setFormat('json');
   return $client;
-}
-
-/**
- * Essentially stolen from Drupal 7's `drupal_random_bytes`.
- */
-function drush_ignition_make_random_password() {
-  $count = 55;
-  // $random_state does not use drupal_static as it stores random bytes.
-  static $random_state, $bytes;
-  // Initialize on the first call. The contents of $_SERVER includes a mix of
-  // user-specific and system information that varies a little with each page.
-  if (!isset($random_state)) {
-    $random_state = print_r($_SERVER, TRUE);
-    if (function_exists('getmypid')) {
-      // Further initialize with the somewhat random PHP process ID.
-      $random_state .= getmypid();
-    }
-    $bytes = '';
-  }
-  if (strlen($bytes) < $count) {
-    if ($fh = @fopen('/dev/urandom', 'rb')) {
-      $bytes .= fread($fh, max(4096, $count));
-      fclose($fh);
-    }
-    while (strlen($bytes) < $count) {
-      $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
-      $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
-    }
-  }
-  $data = substr($bytes, 0, $count);
-  $bytes = substr($bytes, $count);
-  $hash = base64_encode(hash('sha256', $data, TRUE));
-  return strtr($hash, array('+' => '-', '/' => '_', '=' => ''));
 }
 
 /**
@@ -454,12 +441,4 @@ function drush_ignition_get_handler($type, $handler) {
   $handler[0] = strtoupper($handler[0]);
   $class = 'Ignition\\' . $type . '\\' . $handler;
   return new $class;
-}
-
-/**
- *
- */
-function drush_ignition_write_file($path, $contents) {
-  drush_log("Writing file to $path");
-  //file_put_contents($path, $contents);
 }
