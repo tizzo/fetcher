@@ -283,9 +283,12 @@ function drush_ignition_get($site_name) {
   }
 }
 
+/**
+ * Issue a request against 
+ */
 function drush_ignition_get_site_info($site_name) {
-  $client = drush_ignition_get_request_handler();
-  return $client
+  $container = drush_ignition_get_service_container();
+  return $container['ignition client']
     ->setPath("ignition/api/site/$site_name.json")
     // Most of our requests retrieve information, so default to a GET request.
     ->setMethod('GET')
@@ -421,23 +424,6 @@ function drush_ignition_get_service_container($handler = FALSE) {
     $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
   }
   return $container;
-}
-
-/**
- * Create an HTTP Request.
- */
-function drush_ignition_get_request_handler() {
-  $client = new Ignition\Utility\HTTPClient();
-  if (!drush_get_option('ignition-server', FALSE) || !drush_get_option('ignition-key', FALSE)) {
-    drush_log('The ignition server and ignition key options must be set, recommend setting them in your .drushrc.php file.', 'error');
-    return FALSE;
-  }
-  $client->setURL(drush_get_option('ignition-host'))
-    // TODO: Add authentication.
-    ->setMethod('GET')
-    ->setTimeout(3)
-    ->setFormat('json');
-  return $client;
 }
 
 /**
