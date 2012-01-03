@@ -130,7 +130,7 @@ class Site {
     // Ensure we have our files folders.
     $this->system->ensureFolderExists($this->workingDirectory . '/public_files', NULL, $this->system->getWebUser());
     chmod($this->workingDirectory . '/public_files', 0775);
-    if ($this->siteInfo->{'private files'}) {
+    if (isset($this->siteInfo->{'private files'})) {
       $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->system->getWebUser());
       chmod($this->workingDirectory . '/public_files', 0775);
     }
@@ -187,7 +187,7 @@ class Site {
     return $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
   }
 
-  public function update() {
+  public function updateCode() {
   }
 
   public function syncEnvDatabase() {
@@ -202,5 +202,29 @@ class Site {
   public function delete() {
     $this->system->ensureDeleted($this->workingDirectory);
     $this->system->removeSite($this->siteInfo->name);
+  }
+
+  /**
+   * Get the code directory.
+   *
+   * @return string
+   */
+  public function getCodeDirectory() {
+    return $this->codeDirectory;
+  }
+
+  /**
+   * Get the working directory.
+   *
+   * @return string
+   */
+  public function getWorkingDirectory() {
+    return $this->workingDirectory;
+  }
+
+  public function writeSiteInfoFile() {
+    $siteInfo = $this->siteInfo;
+    $string = json_encode($siteInfo);
+    $this->system->writeFile($this->workingDirectory . '/site_info.json', $string);
   }
 }
