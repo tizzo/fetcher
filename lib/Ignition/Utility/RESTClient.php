@@ -173,6 +173,17 @@ class RESTClient {
   }
 
   /**
+   * Remove a parameter from this request.
+   *
+   * @return
+   *   This request object, allowing this method to be chainable.
+   */
+  public function removeParam($name, $value) {
+    unset($this->params[$name]);
+    return $this;
+  }
+
+  /**
    * Execute the request and return the response object.
    *
    * This method returns this request object rather than the response
