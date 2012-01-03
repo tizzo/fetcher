@@ -381,7 +381,7 @@ function drush_ignition_subcommand() {
  * Create an HTTP Request.
  */
 function drush_ignition_get_request_handler() {
-  $client = new Ignition\Utility\RESTClient();
+  $client = new Ignition\Utility\HTTPClient();
   if (!drush_get_option('ignition-server', FALSE) || !drush_get_option('ignition-key', FALSE)) {
     drush_log('The ignition server and ignition key options must be set, recommend setting them in your .drushrc.php file.', 'error');
     return FALSE;

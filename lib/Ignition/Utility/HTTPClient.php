@@ -2,14 +2,14 @@
 
 /**
  * @file
- *   Provide a convenient and fully featured REST client without any
+ *   Provide a convenient and fully featured HTTP client without any
  *   reliance on bootstrapping Drupal (drupal_http_request) curl, or
  *   enabling `allow_url_fopen` by using PHP streams.
  */
 
 namespace Ignition\Utility;
 
-class RESTClient {
+class HTTPClient {
 
   /**
    * The URL that will be used for the request.
@@ -95,7 +95,7 @@ class RESTClient {
         $response = FALSE;
       }
       return $response;
-    }
+    };
     $this->registerEncoding('xml', 'application/xml', $xmlDecode);
   }
 
@@ -227,7 +227,7 @@ class RESTClient {
    * Execute the request and return the response object.
    *
    * This method returns this request object rather than the response
-   * under the assumption that RESTRequest::decode() will likely be called immediately after.
+   * under the assumption that HTTPRequest::decode() will likely be called immediately after.
    *
    * @return
    *   The body of the request or FALSE of failure.
@@ -300,7 +300,7 @@ class RESTClient {
    *
    * If format is set to something we understand, decode the response.
    *
-   * See RESTClient::registerEncoding() to add formats.
+   * See HTTPClient::registerEncoding() to add formats.
    *
    * @return
    *  The decoded PHP representation of the data.
