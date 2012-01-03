@@ -413,3 +413,130 @@ function drush_ignition_get_handler($type, $handler) {
   $class = 'Ignition\\' . $type . '\\' . $handler;
   return new $class;
 }
+
+function drush_ignition_load_private_key_from_ssh_agent() {
+  
+  //*
+  // TODO: make the location or key to use dynamic
+  $private_key = `openssl rsa -in ~/.ssh/id_rsa`;
+  $private_key_id = openssl_get_privatekey($private_key);
+  // TODO: Dynamically generate the source to prevent replay attacks.
+  $source = 'How now brown cow';
+  $signature = '';
+  openssl_sign($source, $signature, $private_key_id);
+
+  /*
+  // TODO: This is what we would need to do to encrypt the traffic sent over the
+  // wire, might be a good idea?
+  $crypttext = '';
+  openssl_private_encrypt($source, $crypttext, $private_key);
+  */
+
+  /*
+  // TODO: Move this section into a services module.
+  // TODO: Load the SSH key from the sshkey module.
+  $public_key = openssh2pem('/home/webadmin/.ssh/id_rsa.pub');
+  //drush_print($public_key);
+  $key_id = openssl_get_publickey($public_key);
+  // Verify that the source was properly signed.
+  openssl_verify($source, $signature, $key_id) ? drush_print('verfiied') : drush_print('unverified');
+  */
+  /*
+  // TODO: This is what we'd need to do to decrypt the 
+  $cleartext = '';
+  openssl_public_decrypt($crypttext, $cleartext, $key_id);
+  drush_print($cleartext);
+  */
+
+  // TODO: This is a start at getting ssh-agent to do the signing for us.
+  // Finish it to prevent password mutiny.
+  // This is based on http://ptspts.blogspot.com/2010/06/how-to-use-ssh-agent-programmatically.html
+
+  /*
+  // Attempt 1:
+  $address = getenv('SSH_AUTH_SOCK');
+  //$fp = fsockopen($address, 80, $errno, $errstr, 30);
+  $fp = stream_socket_client('unix://' . $address, $errno, $errstr, 5);
+  if (!$fp) {
+      drush_print("$errstr ($errno)<br />\n");
+      drush_print('fail');
+  }
+  else {
+      drush_print('success');
+      $message = "\0\0\0\1\v";
+      fwrite($fp, $message);
+      $result = array();
+      while (!feof($fp)) {
+        $result[] = fgets($fp, 128);
+      }
+      fclose($fp);
+      drush_print_r($result);
+  }
+  //*/
+
+  /*/
+  // Attempt 2:
+  $address = getenv('SSH_AUTH_SOCK');
+  if ($address !== FALSE) {
+    $socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+    $connction = socket_connect($socket, $address);
+    $message = "\0\0\0\1\v";
+    $result = socket_send($socket, $message, strlen($message), MSG_EOR);
+    $write  = $except = $read = array($socket);
+    // For now we grab everything from the socket, this is the max length.
+    $result = socket_read($socket, 133693415);
+    // The response string comes back with is binary.  We need to unpack it.
+    $result = unpack('N', $result);
+    if (($position = strpos($result, "\0\0\3\5\f")) !== FALSE) {
+      drush_print($position);
+      drush_print('contained');
+    }
+    else {
+      drush_print('not contained');
+    }
+    $result ? drush_print_r($result) : drush_print('something failed');
+  }
+  //*/
+}
+
+function len($s) {
+    $len = strlen($s);
+
+    if ($len < 0x80) {
+        return chr($len);
+    }
+
+    $data = dechex($len);
+    $data = pack('H*', (strlen($data) & 1 ? '0' : '') . $data);
+    return chr(strlen($data) | 0x80) . $data;
+}
+
+function openssh2pem($file) {
+    list(,$data) = explode(' ', trim(file_get_contents($file)), 3);
+    $data = base64_decode($data);
+
+    list(,$alg_len) = unpack('N', substr($data, 0, 4));
+    $alg = substr($data, 4, $alg_len);
+
+    if ($alg !== 'ssh-rsa') {
+        return FALSE;
+    }
+
+    list(,$e_len) = unpack('N', substr($data, 4 + strlen($alg), 4));
+    $e = substr($data, 4 + strlen($alg) + 4, $e_len);
+    list(,$n_len) = unpack('N', substr($data, 4 + strlen($alg) + 4 + strlen($e), 4));
+    $n = substr($data, 4 + strlen($alg) + 4 + strlen($e) + 4, $n_len);
+
+    $algid = pack('H*', '06092a864886f70d0101010500');                // algorithm identifier (id, null)
+    $algid = pack('Ca*a*', 0x30, len($algid), $algid);                // wrap it into sequence
+    $data = pack('Ca*a*Ca*a*', 0x02, len($n), $n, 0x02, len($e), $e); // numbers
+    $data = pack('Ca*a*', 0x30, len($data), $data);                   // wrap it into sequence
+    $data = "\x00" . $data;                                           // don't know why, but needed
+    $data = pack('Ca*a*', 0x03, len($data), $data);                   // wrap it into bitstring
+    $data = $algid . $data;                                           // prepend algid
+    $data = pack('Ca*a*', 0x30, len($data), $data);                   // wrap it into sequence
+
+    return "-----BEGIN PUBLIC KEY-----\n" .
+           chunk_split(base64_encode($data), 64, "\n") .
+           "-----END PUBLIC KEY-----\n";
+}
