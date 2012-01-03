@@ -17,7 +17,12 @@ out as follows:
 
 ## For Developers: ##
 
-The ignition suite was designed to be easy to follow and to make as few 
+The ignition suite was designed to be (relatively) easy to follow and to make as few assumptions as are reasonable.  Where possible, command line options are available for
+swapping out the handling classes for different functionality.
+
+## Dependency Injection ##
+
+We use [Pimple](https://github.com/fabpot/Pimple).
 
 ### Site ###
 
