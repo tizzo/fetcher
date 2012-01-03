@@ -429,7 +429,8 @@ function drush_ignition_make_random_password() {
 }
 
 function drush_ignition_get_handler($type, $handler) {
-  // TODO: Determine whether we could have a much better plugin system (hint: we can).
+  // TODO: Determine whether we could have a much better plugin system (hint:
+  // we can).
   $handler = strtolower($handler);
   $handler[0] = strtoupper($handler[0]);
   $class = 'Ignition\\' . $type . '\\' . $handler;
