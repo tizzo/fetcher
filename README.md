@@ -22,7 +22,13 @@ swapping out the handling classes for different functionality.
 
 ## Dependency Injection ##
 
-We use [Pimple](https://github.com/fabpot/Pimple).
+We use [Pimple](https://github.com/fabpot/Pimple) as a [Dependency Injection Container](http://fabien.potencier.org/article/12/do-you-need-a-dependency-injection-container).
+On the face of it that might seem like overkill for a simple project like this but it serves several purposes:
+
+- Centralizes the construction of context
+- Provides a central clearinghouse for all contextual information that must be accessed and stay synchronized across several objects
+- Provides a point of extension so that the desired classes or even the factory methods can be swapped out for other factory method at runtime.
+- Allows utility functions to be swapped out at runtime without a sophisticated plugin system
 
 ### Site ###
 
