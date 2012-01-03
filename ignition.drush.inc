@@ -179,7 +179,17 @@ function drush_ignition_info($site_name = NULL) {
   }
 }
 
-function drush_ignition_create($site_name, $version) {
+/**
+ *
+ */
+function drush_ignition_create($site_name = FALSE, $version = '7') {
+
+  if (!$site_name) {
+    $site_name = drush_prompt(dt('Please enter the site name you would like to create or n to cancel'));
+    if ($site_name = 'n') {
+      return;
+    }
+  }
 
   // TODO: Most of this should probably be moved into the site class iteslf.
 
