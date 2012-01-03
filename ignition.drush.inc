@@ -126,48 +126,6 @@ function ignition_drush_command() {
 }
 
 /**
- * Autoloader for Ignition.
- *
- * @param $class
- *   The name of the class to load.
- * @return
- *   True if the class was successfully loaded.
- */
-function ignition_autoload($class) {
-  static $search_paths;
-
-  // Only take action if searching for an Ignition class.
-  if (strpos($class, 'Ignition\\') === 0) {
-    if ($search_paths === NULL) {
-      // TODO: use a proper method for discovering the base path to the cmd file
-      $command = drush_get_command();
-      $search_paths = array(
-        // Classes in base Ignition install.
-        $command['path'] . '/lib/',
-      );
-    }
-
-    // Try the search paths in order.
-    foreach ($search_paths as $base_path) {
-      $file = $base_path . strtr($class, '\\', '/') . '.php';
-      if (is_file($file)) {
-        require $file;
-        return TRUE;
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_drush_init().
- *
- * Register our autoloader.
- */
-function ignition_drush_init() {
-  spl_autoload_register('ignition_autoload');
-}
-
-/**
  * List sites in the ignition install.
  */
 function drush_ignition_list($name = '') {
@@ -384,6 +342,51 @@ function drush_ignition_subcommand() {
     'sync-database' => '',
     'sync-files' => '',
   );
+}
+
+/**
+ * Implements hook_drush_init().
+ *
+ * Register our autoloader.
+ */
+function ignition_drush_init() {
+  $command = drush_get_command();
+
+  // Check to see if we're running a Ignition command.
+  if (strpos($command['command-hook'], 'ignition-') === 0) {
+    spl_autoload_register('ignition_autoload');
+  }
+}
+
+/**
+ * Autoloader for Ignition.
+ *
+ * @param $class
+ *   The name of the class to load.
+ * @return
+ *   True if the class was successfully loaded.
+ */
+function ignition_autoload($class) {
+  static $search_paths;
+
+  // Only take action if searching for an Ignition class.
+  if ($search_paths === NULL) {
+    // TODO: use a proper method for discovering the base path to the cmd file
+    $command = drush_get_command();
+    $search_paths = array(
+      // Classes in base Ignition install.
+      $command['path'] . '/lib/',
+    );
+  }
+
+  // Try the search paths in order.
+  foreach ($search_paths as $base_path) {
+    $file = $base_path . strtr($class, '\\', '/') . '.php';
+    if (is_file($file)) {
+      require $file;
+      return TRUE;
+    }
+  }
 }
 
 /**
