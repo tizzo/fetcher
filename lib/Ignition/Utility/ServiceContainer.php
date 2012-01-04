@@ -13,19 +13,15 @@ use \Pimple;
 
 class ServiceContainer extends \Pimple {
 
+  
+
   /**
    * This constructor function 
    *
    * A word of warning: most 
    */
   public function __construct() {
-
-    // Register our service for generating a random string.
-    $class = get_class($this);
-    $this['random'] = function($c) use ($class) {
-      return $class::randomString();
-    };
-
+  
     // The Ignition site class to use.
     $this['site class'] = '\Ignition\Site';
 
@@ -72,7 +68,43 @@ class ServiceContainer extends \Pimple {
     $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
 
     // Set our default ignition client authentication class to our own HTTPClient.
-    $this['ignition client authentication class'] = '\Ignition\Authentication\OpenSshKeys';
+    $this['client.authentication class'] = '\Ignition\Authentication\OpenSshKeys';
+
+    // Instantiate the authentication object.
+    $this['client.authentication'] = $this->share(function($c) {
+      return new $c['client.authentication class']($c);
+    });
+
+    /**
+     * Generate a random string.
+     *
+     * Essentially stolen from Drupal 7's `drupal_random_bytes`.
+     */
+    // Register our service for generating a random string.
+    $this['random'] = $this->protect( function($count = 55) {
+      static $random_state, $bytes;
+      if (!isset($random_state)) {
+        $random_state = print_r($_SERVER, TRUE);
+        if (function_exists('getmypid')) {
+          $random_state .= getmypid();
+        }
+        $bytes = '';
+      }
+      if (strlen($bytes) < $count) {
+        if ($fh = @fopen('/dev/urandom', 'rb')) {
+          $bytes .= fread($fh, max(4096, $count));
+          fclose($fh);
+        }
+        while (strlen($bytes) < $count) {
+          $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
+          $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
+        }
+      }
+      $output = substr($bytes, 0, $count);
+      $bytes = substr($bytes, $count);
+      return strtr($output, array('+' => '-', '/' => '_', '=' => ''));
+    });
+
   }
 
   /**
@@ -143,39 +175,5 @@ class ServiceContainer extends \Pimple {
     return $this;
   }
 
-  /**
-   * Generate a random string.
-   *
-   * Essentially stolen from Drupal 7's `drupal_random_bytes`.
-   */
-  static public function randomString() {
-    $count = 55;
-    // $random_state does not use drupal_static as it stores random bytes.
-    static $random_state, $bytes;
-    // Initialize on the first call. The contents of $_SERVER includes a mix of
-    // user-specific and system information that varies a little with each page.
-    if (!isset($random_state)) {
-      $random_state = print_r($_SERVER, TRUE);
-      if (function_exists('getmypid')) {
-        // Further initialize with the somewhat random PHP process ID.
-        $random_state .= getmypid();
-      }
-      $bytes = '';
-    }
-    if (strlen($bytes) < $count) {
-      if ($fh = @fopen('/dev/urandom', 'rb')) {
-        $bytes .= fread($fh, max(4096, $count));
-        fclose($fh);
-      }
-      while (strlen($bytes) < $count) {
-        $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
-        $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
-      }
-    }
-    $data = substr($bytes, 0, $count);
-    $bytes = substr($bytes, $count);
-    $hash = base64_encode(hash('sha256', $data, TRUE));
-    return strtr($hash, array('+' => '-', '/' => '_', '=' => ''));
   }
-}
 
