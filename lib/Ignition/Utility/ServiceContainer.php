@@ -3,7 +3,9 @@
 /**
  * @file
  *   This service container is based on [Pimple](https://github.com/fabpot/Pimple), a simple PHP
- *   Dependency Injection Container.
+ *   Dependency Injection Container.  The goal of this file is 2 fold.  First we want to have a
+ *   central clearinghouse for all context that may be populated by global context *or* manually
+ *   constructed for use by Ignition or other integrating parties.
  */
 
 namespace Ignition\Utility;
@@ -11,18 +13,61 @@ use \Pimple;
 
 class ServiceContainer extends \Pimple {
 
+  /**
+   * This constructor function 
+   *
+   * A word of warning: most 
+   */
   public function __construct() {
 
-
-    $this['random'] = function($c) {
-      return static::randomString();
+    $class = get_class($this);
+    $this['random'] = function($c) use ($class) {
+      return $class::randomString();
     };
 
     $this['site class'] = '\Ignition\Site';
 
     $this['site'] = $this->share(function($c) {
-      return new $this['site class']($c);
+      return new $c['site class']($c);
     });
+
+    // Set our default system to Ubuntu.
+    $this['system class'] = '\Ignition\Server\Ubuntu';
+
+    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
+    $this['system'] = function($c) {
+      return new $c['system class']($c);
+    };
+
+    // Set our default server to Apache2.
+    $this['server class'] = '\Ignition\Server\Apache2';
+
+    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
+    $this['server'] = $this->share(function($c) {
+      return new $c['server class']($c);
+    });
+    
+    // Set our default database to MySQL.
+    $this['database class'] = '\Ignition\DB\MySQL';
+
+    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
+    $this['database'] = $this->share(function($c) {
+      return new $c['database class']($c);
+    });
+
+    // Set our default VCS to Git.
+    $this['vcs class'] = '\Ignition\VCS\Git';
+
+    // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
+    $this['vcs'] = $this->share(function($c) {
+      return new $c['vcs class']($c);
+    });
+
+    // Set our default ignition client class to our own HTTPClient.
+    $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
+
+    // Set our default ignition client authentication class to our own HTTPClient.
+    $this['ignition client authentication class'] = '\Ignition\Authentication\PublicKey';
   }
 
   /**
@@ -32,66 +77,34 @@ class ServiceContainer extends \Pimple {
 
     $container = new static();
 
-    $container['client'] = function($c) {
-      if (!drush_get_option('ignition-server', FALSE)) {
-        // TODO: Replace with an exception.
-        drush_log('The ignition server option must be set, recommend setting it in your .drushrc.php file.', 'error');
-        return FALSE;
-      }
-      // TODO: Add authentication.
-      $client->setURL(drush_get_option('ignition-host'))
-        ->setMethod('GET')
-        ->setTimeout(3)
-        ->setFormat('json');
-      return $client;
-    };
-
-    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
-    $container['system'] = $container->share(function($c) {
-      return drush_ignition_get_handler('System', drush_get_option('ignition-system', 'Ubuntu', $c)); 
-    });
-
-    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
-    $container['server'] = $container->share(function($c) {
-      return drush_ignition_get_handler('Server', drush_get_option('ignition-server', 'Apache2', $c));
-    });
-
-    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
-    $container['database'] = $container->share(function($c) {
-      return drush_ignition_get_handler('DB', drush_get_option('ignition-database', 'Mysql'), $c);
-    });
-
-    // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
-    $container['vcs'] = $container->share(function($c) {
-      return drush_ignition_get_handler('VCS', 'Git', $c);
-    });
-
-    // TODO: This still doesn't feel right.  We shouldn't load the db data here.
-    $container['dbSpec'] = array(
-      'database' => drush_get_option('database', $site_info->name),
-      'port' => drush_get_option('database-port', 3306),
-      'username' => drush_get_option('database-user', $site_info->name),
-      'password' => drush_get_option('database-password', $this['random']),
-      'host' => 'localhost',
-      'driver' => $container['database']->getDriver(),
-    );
-
-    $container['ignition client class'] = '\Ignition\Utility\HTTPClient';
-
-    // TODO: Finish making this pluggable.
-    //$container['ignition client authentication class'] = '\Ignition\Authentication\PublicKey';
-
+    // Detect overrides passed in as Drush options.
+    if ($class = drush_get_option('ignition-system', FALSE)) {
+      $container['system class'] =  '\\Ignition\\System\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-database', FALSE)) {
+      $container['database class'] = '\\Ignition\\DB\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-server', FALSE)) {
+      $container['server class'] = '\\Ignition\\Server\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-vcs', FALSE)) {
+      $container['vcs class'] = '\\Ignition\\VCS\\' . $class;
+    }
+   
     $container['ignition client'] = function($c) {
+      if (!drush_get_option('ignition-server', FALSE)) {
+        $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
+        drush_log(dt($message), 'error');
+        throw new \Ignition\Exception\IgnitionException($message);
+      }
       $client = new $c['ignition client class']();
       $client->setURL(drush_get_option('ignition-host'))
-        // TODO: Add authentication.
         ->setMethod('GET')
         ->setTimeout(3)
-        ->setFormat('json');
+        ->setEncoding('json');
 
       // TODO: Implement this.
       //$container['ignition client authentication class']::addAuthenticationToHTTPClientFromDrushContext($client);
-
       return $client;
     };
 
@@ -110,6 +123,16 @@ class ServiceContainer extends \Pimple {
         drush_ignition_get_handler('VCS', $site_info->vcs);
       });
     }
+    // TODO: This still doesn't quite feel right.  Should we load the db data here?
+    // TODO: Move this global context...
+    $this['dbSpec'] = array(
+      'database' => drush_get_option('database', $siteInfo->name),
+      'port' => drush_get_option('database-port', 3306),
+      'username' => drush_get_option('database-user', $siteInfo->name),
+      'password' => drush_get_option('database-password', $this['random']),
+      'host' => 'localhost',
+      'driver' => $this['database class']::getDriver(),
+    );
     $this['site info'] = $siteInfo;
     return $this;
   }
@@ -119,7 +142,7 @@ class ServiceContainer extends \Pimple {
    *
    * Essentially stolen from Drupal 7's `drupal_random_bytes`.
    */
-  static private function randomString() {
+  static public function randomString() {
     $count = 55;
     // $random_state does not use drupal_static as it stores random bytes.
     static $random_state, $bytes;
@@ -148,6 +171,5 @@ class ServiceContainer extends \Pimple {
     $hash = base64_encode(hash('sha256', $data, TRUE));
     return strtr($hash, array('+' => '-', '/' => '_', '=' => ''));
   }
-
 }
 

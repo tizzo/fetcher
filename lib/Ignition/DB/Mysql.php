@@ -13,18 +13,19 @@ class Mysql extends Base {
 
   private $db_spec = array();
 
-  public function configure($config) {
-    foreach ($config as $name => $value) {
-      if (isset($this->{$name}) && $value != '') {
-        $this->{$name} = $value;
-      }
-    }
+  public function __construct(\Pimple $container) {
+    /*
+    $username = $container['db.username'];
+    $password = $container['db.password'];
+    $database = $container['db.database'];
+    */
+    $this->db_spec  = $container['dbSpec'];
   }
 
   /**
    * Returns the drush driver for this database.
    */
-  public function getDriver() {
+  static public function getDriver() {
     return 'mysql';
   }
 
@@ -69,6 +70,9 @@ class Mysql extends Base {
     //sql = "mysql -e 'flush privileges'"
   }
 
+  /**
+   * Execute a MySQL query at the command line.
+   */
   protected function executeQuery($command) {
     // TODO: Allow the mysql path to be specified?
     $command = 'mysql -e "' . $command . ';"';

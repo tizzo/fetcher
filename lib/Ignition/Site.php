@@ -57,18 +57,22 @@ class Site {
 
   /**
    * Constructor function to allow dependency injection.
+   *
    */
-  public function __construct($config) {
-    foreach ($config as $name => $value) {
-      if (isset($this->{$name})) {
-        $this->{$name} = $value;
-      }
-    }
-    // TODO: What if our construct method didn't receive all this data?
-    // TODO: Should we be doing this here?
+  public function __construct(\Pimple $container) {
+
+    $this->database = $container['database'];
+    
+    $this->siteInfo = $container['site info'];
+
+    $this->vcs = $container['vcs'];
+
+    $this->server = $container['server'];
+
+    $this->system = $container['system'];
+
     if ($this->workingDirectory == '') {
       // TODO: Add optional webroot from siteInfo.
-      //if (isset($this->siteInfo->
       $this->workingDirectory = $this->system->getWebRoot() . '/' . $this->siteInfo->name;
     }
     if ($this->codeDirectory == '') {
@@ -201,7 +205,7 @@ class Site {
    */
   public function delete() {
     $this->system->ensureDeleted($this->workingDirectory);
-    $this->system->removeSite($this->siteInfo->name);
+    //$this->system->removeSite($this->siteInfo->name);
   }
 
   /**
