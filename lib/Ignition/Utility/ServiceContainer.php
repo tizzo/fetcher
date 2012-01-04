@@ -20,24 +20,29 @@ class ServiceContainer extends \Pimple {
    */
   public function __construct() {
 
+    // Register our service for generating a random string.
     $class = get_class($this);
     $this['random'] = function($c) use ($class) {
       return $class::randomString();
     };
 
+    // The Ignition site class to use.
     $this['site class'] = '\Ignition\Site';
 
+    // The default Site service loader.
     $this['site'] = $this->share(function($c) {
-      return new $c['site class']($c);
+      $site = new $c['site class']($c);
+      // TODO: Set up the site class?
+      return $site;
     });
 
     // Set our default system to Ubuntu.
     $this['system class'] = '\Ignition\Server\Ubuntu';
 
     // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
-    $this['system'] = function($c) {
+    $this['system'] = $this->share(function($c) {
       return new $c['system class']($c);
-    };
+    });
 
     // Set our default server to Apache2.
     $this['server class'] = '\Ignition\Server\Apache2';
