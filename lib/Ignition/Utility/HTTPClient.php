@@ -350,7 +350,7 @@ class HTTPClient {
   /**
    * Register a encoding and provide a function to deal with it.
    */
-  public function registerEncoding($name, $mimeType, Closure $function) {
+  public function registerEncoding($name, $mimeType, \Closure $function) {
     // It would be cool to allow decode callbacks to be injected to allow
     // support for arbitrary encodings.
     // TODO: The body of this function :D.
