@@ -198,45 +198,50 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
   $site_info->version = $version;
   $site = drush_ignition_get_site($site_info);
 
-  // Make sure that the project direcotry is properly configured on the server.
-  $success = $site->setUpWorkingDirectory();
+  try {
+    // Make sure that the project direcotry is properly configured on the server.
+    $success = $site->setUpWorkingDirectory();
 
-  // Checkout the site in the appropriate location.
-  //$success = $site->checkout(drush_get_option('branch', NULL));
+    $commandline_args = array(
+      'drupal-' . $version,
+    );
+    $commandline_options = array(
+      // Default our package hander to git_drupalorg.
+      'package-handler' => drush_get_option('package-handler', 'git_drupalorg'),
+      'drupal-project-rename' => 'code',
+      'destination' => $site->getWorkingDirectory(),
+    );
+    foreach ($commandline_options as $name => $value) {
+      drush_set_option($name, $value);
+    }
+    // Note we don't use drush_invoke_process() because it requires an existinge
+    // site.
+    drush_invoke('pm-download', $commandline_args);
+    return;
 
-  $commandline_args = array(
-    'drupal-' . $version,
-  );
-  $commandline_options = array(
-    // Default our package hander to git_drupalorg.
-    'package-handler' => drush_get_option('package-handler', 'git_drupalorg'),
-    'drupal-project-rename' => 'code',
-    'destination' => $site->getWorkingDirectory(),
-  );
-  foreach ($commandline_options as $name => $value) {
-    drush_set_option($name, $value);
+    // Create symlinks and ensure we have a settings.php.
+    $success = $site->ensureSymLinks();
+
+    // Install the site
+    $commandline_args = array();
+    $commandline_options = array(
+      'root' => $site->getCodePath(),
+      'db-url' => '',
+      'account-name' => 'admin',
+      'account-pass' => 'pass',
+      'site-name' => $ite_name,
+    );
+    drush_invoke_process('@self', 'site-install', $commandline_args, $commandline_options, TRUE);
   }
-  // Note we don't use drush_invoke_process() because it requires an existinge
-  // site.
-  drush_invoke('pm-download', $commandline_args);
-  return;
-
-  // Create symlinks and ensure we have a settings.php.
-  $success = $site->ensureSymLinks();
-
-  // Install the site
-  $commandline_args = array();
-  $commandline_options = array(
-    'root' => $site->getCodePath(),
-    'db-url' => '',
-    'account-name' => 'admin',
-    'account-pass' => 'pass',
-    'site-name' => $ite_name,
-  );
-  drush_invoke_process('@self', 'site-install', $commandline_args, $commandline_options, TRUE);
+  catch (Exception $e) {
+    //drush_print($e);
+    //drush_log(dt('Something failed in site creation, consider running `drush ignition-delete @site_name.', array('@site_name', $site_name)));
+  }
 }
 
 /**
+ * Setup a local copy of an Ignition site.
+ *
  * Do all of the work to setup a local copy of a site tracked
  * by Ignition, optionally syncronizing database and file with
  * an environment tracked by Ignition.
@@ -246,8 +251,6 @@ function drush_ignition_get($site_name) {
   // TODO: Document installation instructions.
   $site_info = drush_ignition_get_site_info($site_name);
   if ($site_info === NULL) {
-    // TODO: Check for connectivity problems.
-    //if ($client->meta
     drush_log('This site does not appear to exist.', 'error');
     return;
   }
@@ -283,16 +286,17 @@ function drush_ignition_get($site_name) {
  */
 function drush_ignition_get_site_info($site_name) {
   $container = drush_ignition_get_service_container();
-  return $container['ignition client']
+  $result = $container['ignition client']
     ->setPath("ignition/api/site/$site_name.json")
-    // Most of our requests retrieve information, so default to a GET request.
-    ->setMethod('GET')
-    // Set a 3 second timeout.
-    ->setTimeout(3)
     ->fetch();
+  // TODO: Check for connectivity problems and authenitcation failures!!!!
+  return $result;
 }
 
 
+/**
+ * Delete an ignition site.
+ */
 function drush_ignition_delete($site_name) {
   // TODO: Validate $site_name.
   // TODO: Allow deletion of other webroots (check site info?).
