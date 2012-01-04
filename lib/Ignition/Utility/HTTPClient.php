@@ -39,14 +39,14 @@ class HTTPClient {
   public $method = 'GET';
 
   /**
-   * An array of supported formats and their decode functions.
+   * An array of supported encodings and their decode functions.
    */
-  protected $formats = array();
+  protected $encodings = array();
 
   /**
-   * The format to be requested, acceptable values are json and xml.
+   * The encoding to be requested, acceptable values are json and xml.
    */
-  public $format = FALSE;
+  public $encoding = FALSE;
 
   /**
    * The timeout for this request.
@@ -65,7 +65,7 @@ class HTTPClient {
   public $meta = FALSE;
 
   /**
-   * A constructor function to register our default encodings and set a default format.
+   * A constructor function to register our default encodings and set a default encoding.
    */
   public function __construct() {
 
@@ -76,7 +76,7 @@ class HTTPClient {
     $this->registerEncoding('plain', 'text/plain', $plainTextDecode);
 
     // Default our decoding to plain
-    $this->setFormat('plain');
+    $this->setEncoding('plain');
 
     // Register our json decoding.
     $jsonDecode = function($jsonString) {
@@ -97,6 +97,13 @@ class HTTPClient {
       return $response;
     };
     $this->registerEncoding('xml', 'application/xml', $xmlDecode);
+
+    // Register serialized PHP decoding.
+    $phpDecode = function($serializedPhpString) {
+      return unserialize($serializedPhpString);
+    };
+    $this->registerEncoding('php', 'application/vnd.php.serialized', $phpDecode);
+
   }
 
   /**
@@ -142,19 +149,19 @@ class HTTPClient {
   }
 
   /**
-   * Set the format to be used.
+   * Set the encoding to be used.
    *
-   * @param $format
-   *   The format with which to send and receive data.  Acceptable values
+   * @param $encoding
+   *   The encoding with which to send and receive data.  Acceptable values
    *   by default are `plain`, `xml` and `json` defaulting to `plain`.  New
-   *   formats may be added via the HTTPClient::registerEncoding() method.
+   *   encodings may be added via the HTTPClient::registerEncoding() method.
    * @return
    *   This request object, allowing this method to be chainable on success,
    *   FALSE on failure.
    */
-  public function setFormat($format) {
-    if (isset($this->formats[$format])) {
-      $this->format = $format;
+  public function setEncoding($encoding) {
+    if (isset($this->encodings[$encoding])) {
+      $this->encoding = $encoding;
       return $this;
     }
     else {
@@ -260,7 +267,7 @@ class HTTPClient {
 
     // Use the configured mime type, this shuold always be set because we default
     // to plain.
-    $mimeType = $this->formats[$this->format]['mime type'];
+    $mimeType = $this->encodings[$this->encoding]['mime type'];
     if (!isset($this->headers['Content Type'])) {
       $this->setHeader('Content Type', $mimeType);
     }
@@ -305,16 +312,16 @@ class HTTPClient {
   /**
    * Decode the response.
    *
-   * If format is set to something we understand, decode the response.
+   * If encoding is set to something we understand, decode the response.
    *
-   * See HTTPClient::registerEncoding() to add formats.
+   * See HTTPClient::registerEncoding() to add encodings.
    *
    * @return
    *  The decoded PHP representation of the data.
    */
   public function decode() {
-    if ($this->format && isset($this->formats[$this->format]) && $this->response) {
-      return $this->formats[$this->format]['function']($this->response);
+    if ($this->encoding && isset($this->encodings[$this->encoding]) && $this->response) {
+      return $this->encodings[$this->encoding]['function']($this->response);
     }
   }
 
@@ -341,13 +348,13 @@ class HTTPClient {
   }
 
   /**
-   * Register a format and provide a function to deal with it.
+   * Register a encoding and provide a function to deal with it.
    */
   public function registerEncoding($name, $mimeType, Closure $function) {
     // It would be cool to allow decode callbacks to be injected to allow
-    // support for arbitrary formats.
+    // support for arbitrary encodings.
     // TODO: The body of this function :D.
-    $this->formats[$name] = array(
+    $this->encodings[$name] = array(
       'function' => $function,
       'mime type' => $mimeType,
     );
