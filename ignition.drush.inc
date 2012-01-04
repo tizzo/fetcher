@@ -311,33 +311,7 @@ function drush_ignition_get_site($site_info = NULL) {
   $container = drush_ignition_get_service_container();
   $container->configureWithSiteInfo($site_info);
 
-  // Attempt to load a plugin appropriate to the system.
-  $config['system'] = drush_ignition_get_handler('System', drush_get_option('ignition-system'));
-  // Attempt to load a plugin appropriate to the server.
-  $config['server'] = drush_ignition_get_handler('Server', drush_get_option('ignition-server', 'Apache2'));
-  // Load a database plugin.
-  $config['database'] = drush_ignition_get_handler('DB', drush_get_option('ignition-database'));
-  // Load the appropriate VCS plugin.
-  if (!is_null($site_info) && isset($site_info->vcs)) {
-    $config['vcs'] = drush_ignition_get_handler('VCS', $site_info->vcs);
-  }
-  else {
-    $config['vcs'] = drush_ignition_get_handler('VCS', 'Git');
-  }
-  // TODO: This still doesn't feel right.  We shouldn't load the db data here.
-  $config['dbSpec'] = array(
-    'database' => drush_get_option('database', $site_info->name),
-    'port' => drush_get_option('database-port', 3306),
-    'username' => drush_get_option('database-user', $site_info->name),
-    'password' => drush_get_option('database-password', drush_ignition_make_random_password()),
-    'host' => 'localhost',
-    'driver' => $config['database']->getDriver(),
-  );
-  // Add the loaded site information.
-  $config['siteInfo'] = $site_info;
-
-  //return $container['site'];
-  return new Ignition\Site($config);
+  return $container['site'];
 }
 
 function drush_ignition_release() {
@@ -369,7 +343,6 @@ function drush_ignition_subcommand() {
  */
 function ignition_drush_init() {
   $command = drush_get_command();
-
   // Check to see if we're running a Ignition command.
   if (strpos($command['command-hook'], 'ignition-') === 0) {
     spl_autoload_register('ignition_autoload');
@@ -385,6 +358,7 @@ function ignition_drush_init() {
  *   True if the class was successfully loaded.
  */
 function ignition_autoload($class) {
+
   static $search_paths;
 
   // Only take action if searching for an Ignition class.
@@ -408,17 +382,13 @@ function ignition_autoload($class) {
 }
 
 /**
+ * A simple factory function for loading a service containter from the global Drush context.
  *
+ * @return \Ignition\Utility\ServiceContainer.
+ *   A service container populated from the global Drush context.
  */
 function drush_ignition_get_service_container($handler = FALSE) {
-  static $container = FALSE;
-  if ($handler) {
-    return $container = $handler;
-  }
-  if (!$container) {
-    $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
-  }
-  return $container;
+  return \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
 }
 
 /**
