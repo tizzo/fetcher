@@ -100,4 +100,9 @@ class Posix {
     }
   }
 
+  public function getUserHomeFolder() {
+    $user = posix_getpwuid(getmyuid());
+    return $user['dir'];
+  }
+
 }
