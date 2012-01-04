@@ -72,7 +72,7 @@ class ServiceContainer extends \Pimple {
     $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
 
     // Set our default ignition client authentication class to our own HTTPClient.
-    $this['ignition client authentication class'] = '\Ignition\Authentication\PublicKey';
+    $this['ignition client authentication class'] = '\Ignition\Authentication\OpenSshKeys';
   }
 
   /**
@@ -108,8 +108,9 @@ class ServiceContainer extends \Pimple {
         ->setTimeout(3)
         ->setEncoding('json');
 
-      // TODO: Implement this.
-      //$container['ignition client authentication class']::addAuthenticationToHTTPClientFromDrushContext($client);
+      // Populate this object with the appropriate authorization credentials.
+      $c['ignition client authentication class']::addAuthenticationToHTTPClientFromDrushContext($client, $c);
+
       return $client;
     };
 
