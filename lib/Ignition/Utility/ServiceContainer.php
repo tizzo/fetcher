@@ -141,7 +141,7 @@ class ServiceContainer extends \Pimple {
         ->setEncoding('json');
 
       // Populate this object with the appropriate authorization credentials.
-      $c['ignition client authentication class']::addAuthenticationToHTTPClientFromDrushContext($client, $c);
+      $c['client.authentication']->addAuthenticationToHTTPClientFromDrushContext($client);
 
       return $client;
     };
