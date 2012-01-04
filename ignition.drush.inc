@@ -234,8 +234,8 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
     drush_invoke_process('@self', 'site-install', $commandline_args, $commandline_options, TRUE);
   }
   catch (Exception $e) {
-    //drush_print($e);
-    //drush_log(dt('Something failed in site creation, consider running `drush ignition-delete @site_name.', array('@site_name', $site_name)));
+    drush_log($e->getMessage(), 'error');
+    drush_log(dt('Something failed in site creation, consider running `drush ignition-delete @site_name.', array('@site_name', $site_name)), 'error');
   }
 }
 
