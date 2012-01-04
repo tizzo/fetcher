@@ -88,15 +88,6 @@ class Site {
       }
       $this->vcs->configure($config);
     }
-    if ($this->database) {
-      $db_spec = array();
-      // TODO: make this in some way configurable?
-      // If we have credentials, use them?
-      if (count($this->dbSpec)) {
-        $db_spec = $this->dbSpec;
-      }
-      $this->database->configure(array('db_spec' => $db_spec));
-    }
   }
 
   /**
