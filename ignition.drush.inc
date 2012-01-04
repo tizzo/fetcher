@@ -81,7 +81,6 @@ function ignition_drush_command() {
     ),
   );
 
-
   $environment_items['ignition-release'] = array(
     'description' => 'Release an Ignition managed site to a specific tag.',
     'aliases' => array('ir'),
@@ -225,8 +224,6 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
   // Create symlinks and ensure we have a settings.php.
   $success = $site->ensureSymLinks();
 
-
-
   // Install the site
   $commandline_args = array();
   $commandline_options = array(
@@ -255,30 +252,28 @@ function drush_ignition_get($site_name) {
     return;
   }
 
-  // Instantiate the site object.
-  $site = drush_ignition_get_site($site_info);
+  try {
+    // Instantiate the site object.
+    $site = drush_ignition_get_site($site_info);
 
-  // Make sure that the project direcotry is properly configured on the server.
-  $success = $site->setUpWorkingDirectory();
+    // Make sure that the project direcotry is properly configured on the server.
+    $site->setUpWorkingDirectory();
 
-  // Checkout the site in the appropriate location.
-  // TODO: Our options support branches and tags, don't hard code branch here.
-  $success = $site->checkout(drush_get_option('branch', NULL));
+    // Checkout the site in the appropriate location.
+    // TODO: Our options support branches and tags, don't hard code branch here.
+    $site->checkout(drush_get_option('branch', NULL));
 
-  // Create symlinks and ensure we have a settings.php.
-  $success = $site->ensureSymLinks();
-  //$success = $site->ensureSettingsFileExists();
-
-
-  // Ensure we have a database and user.
-  $success = $site->ensureDatabase();
+    // Create symlinks and ensure we have a settings.php.
+    $site->ensureSymLinks();
+    //$success = $site->ensureSettingsFileExists();
 
 
-  // TODO: Actually set this to a failure if any of the items above fail.
-  if ($success) {
+    // Ensure we have a database and user.
+    $site->ensureDatabase();
+
     drush_log('Your site has been setup!', 'success');
   }
-  else {
+  catch (Exception $e) {
     drush_log('Something went wrong along the way, try running with `--verbose` to find the problem.', 'error');
   }
 }
