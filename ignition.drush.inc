@@ -411,13 +411,22 @@ function ignition_autoload($class) {
 }
 
 /**
- * A simple factory function for loading a service containter from the global Drush context.
+ * Factory for loading a service containter from the global Drush context.
  *
  * @return \Ignition\Utility\ServiceContainer.
  *   A service container populated from the global Drush context.
  */
-function drush_ignition_get_service_container($handler = FALSE) {
-  return \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
+function drush_ignition_get_service_container($handler = FALSE, $reset = FALSE) {
+  static $container = FALSE;
+  // If a container was provided, lets use that.
+  if ($handler !== FALSE) {
+    $container = $handler;
+  }
+  else if ($reset || $container == FALSE) {
+    // Load a new container from the global context.
+    $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
+  }
+  return $container;
 }
 
 /**
