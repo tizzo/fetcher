@@ -34,9 +34,9 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
     $keyData = $this->parsePublicKey($this->getPublicKey());
     $fingerprint = $keyData['fingerprint'];
 
-    $client->addParam('ssh.plaintext', base64_encode($text));
-    $client->addParam('ssh.signature', base64_encode($signature));
-    $client->addParam('ssh.fingerprint', $fingerprint);
+    $client->addParam('ssh_plaintext', base64_encode($text));
+    $client->addParam('ssh_signature', base64_encode($signature));
+    $client->addParam('ssh_fingerprint', base64_encode($fingerprint));
 
   }
 
