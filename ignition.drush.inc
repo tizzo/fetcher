@@ -448,3 +448,18 @@ function drush_ignition_get_handler($type, $handler) {
   return new $class;
 }
 
+/** 
+ * Load an Ignition asset and populate it with variables.
+ *
+ * @param $asset_name
+ *   The name of the file as it appears in the `/assets` directory.
+ * @param $vars
+ *   An array of variables for the asset folder.
+ */
+function drush_ignition_get_asset($asset_name, array $vars = array()) {
+  // TODO: I've started moving this to twig, I'll need to finish.
+  drush_print(__DIR__ . '/assets/' . $asset_name . '.twig');
+  if (is_file(__DIR__ . '/assets/' . $asset_name . '.twig')) {
+    drush_print('found');
+  }
+}

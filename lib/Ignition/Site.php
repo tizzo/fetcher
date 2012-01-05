@@ -138,19 +138,17 @@ class Site {
    * Checks to see whether settings.php exists and creates it if it does not.
    */
   public function ensureSettingsFileExists() {
-    // TODO: Remove this once we get the vcs checkout rockin' and rollin'.
-    return TRUE;
     // TODO: Support multisite?
     $settings_file = $this->drupalRoot . '/sites/default/settings.php';
     if (!is_file($settings_file)) {
       // TODO: Get the settings.php for the appropriate version.
-      $settings_php_contents = '';
-      //$settings_php_contents = ignition_get_asset('settings.php', '');
+      $settings_php_contents = \drush_ignition_get_asset('drupal.6.settings.php', array());
+      return TRUE;
       // Allow settings to be checked into versioncontrol and automatically included from settings.php.
       if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
         $settings_php_contents .= "\r\n  require_once('site-settings.php');";
       }
-      drush_ignition_write_file($settings_php_file_path, $settings_php_contents);
+      $this->system->writeFile($path, $content);
     }
   }
 
