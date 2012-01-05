@@ -13,7 +13,7 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
 
   private $container = NULL;
 
-  public function __construct(ArrayAccess $container) {
+  public function __construct($container) {
     $this->container = $container;
   }
 
