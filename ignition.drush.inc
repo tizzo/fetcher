@@ -127,7 +127,7 @@ function ignition_drush_command() {
 /**
  * List sites in the ignition install.
  */
-function drush_ignition_list($name = '') {
+function drush_ignition_list($name = '', $page = '') {
 
   $container = drush_ignition_get_service_container();
   $client = $container['ignition client'];
