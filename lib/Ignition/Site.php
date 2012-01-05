@@ -142,7 +142,8 @@ class Site {
     $settings_file = $this->drupalRoot . '/sites/default/settings.php';
     if (!is_file($settings_file)) {
       // TODO: Get the settings.php for the appropriate version.
-      $settings_php_contents = \drush_ignition_get_asset('drupal.6.settings.php', array());
+      $vars =  array('database' => '', 'hostname' => '', 'username' => '', 'password' => '', 'driver' => '');
+      $settings_php_contents = \drush_ignition_get_asset('drupal.7.settings.php', $vars);
       return TRUE;
       // Allow settings to be checked into versioncontrol and automatically included from settings.php.
       if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {

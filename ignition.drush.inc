@@ -451,15 +451,25 @@ function drush_ignition_get_handler($type, $handler) {
 /** 
  * Load an Ignition asset and populate it with variables.
  *
+ * We do not have Drupal's templating system available to us at the bootstrap
+ * level where we start needing file assets so we implement our own dead
+ * simple php template engine here.
+ *
  * @param $asset_name
  *   The name of the file as it appears in the `/assets` directory.
  * @param $vars
  *   An array of variables for the asset folder.
  */
 function drush_ignition_get_asset($asset_name, array $vars = array()) {
-  // TODO: I've started moving this to twig, I'll need to finish.
-  drush_print(__DIR__ . '/assets/' . $asset_name . '.twig');
-  if (is_file(__DIR__ . '/assets/' . $asset_name . '.twig')) {
-    drush_print('found');
+  $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
+  if (is_file($path)) {
+    foreach ($vars as $name => $value) {
+      $$name = $value;
+    }
+    ob_start();
+    include($path);
+    $contents = ob_get_contents();
+    ob_end_clean();
+    drush_print($contents);
   }
 }
