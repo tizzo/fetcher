@@ -213,7 +213,7 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
     drush_invoke('pm-download', $commandline_args);
     return;
 
-    // Create symlinks and ensure we have a settings.php.
+    // Create necessary symlinks.
     $success = $site->ensureSymLinks();
 
     // Install the site
@@ -255,14 +255,18 @@ function drush_ignition_get($site_name) {
 
     // Make sure that the project direcotry is properly configured on the server.
     $site->setUpWorkingDirectory();
+    drush_log(dt('The working directory has been properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
-    // TODO: Our options support branches and tags, don't hard code branch here.
-    $site->checkout(drush_get_option('branch', NULL));
+    $site->ensureCode();
+    drush_log(dt('The code is in place and up to date.'), 'success');
 
-    // Create symlinks and ensure we have a settings.php.
+    // Create necessary symlinks.
     $site->ensureSymLinks();
-    //$success = $site->ensureSettingsFileExists();
+    drush_log(dt('All symlinks have been successfully created.'), 'success');
+
+    // Create the settings.php file.
+    $success = $site->ensureSettingsFileExists();
 
 
     // Ensure we have a database and user.
@@ -271,6 +275,7 @@ function drush_ignition_get($site_name) {
     drush_log('Your site has been setup!', 'success');
   }
   catch (Exception $e) {
+    drush_log($e->getMessage(), 'error');
     drush_log('Something went wrong along the way, try running with `--verbose` to find the problem.', 'error');
   }
 }
