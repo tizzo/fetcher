@@ -332,7 +332,36 @@ class HTTPClient {
    */
   public function fetch() {
     $this->execute();
-    return $this->decode();
+    if (!$this->getTimeoutStatus() && $this->getResponseCode() == 200) {
+      return $this->decode();
+    }
+    return FALSE;
+  }
+
+  /**
+   * Retrieve the response response code for the previously executed request.
+   *
+   * @return
+   *   Numeric HTTP Response code, NULL if this request has not been executed.
+   */
+  public function getResponseCode() {
+    if ($this->meta) {
+      $responseCode = $this->meta['wrapper_data'][0];
+      $parts = explode(' ', $responseCode);
+      return $parts[1];
+    }
+  }
+
+  /**
+   * Check whether the previous execution of this request timed out.
+   *
+   * @return
+   *   Boolean value, NULL if this request has not been executed.
+   */
+  public function getTimeoutStatus() {
+    if ($this->meta) {
+      return $this->meta['timed_out'];
+    }
   }
 
   /**
@@ -345,6 +374,13 @@ class HTTPClient {
    */
   public function getResult() {
     return $this->result;
+  }
+
+  /**
+   * Get the metadata from this request.
+   */
+  public function getMetadata() {
+    return $this->meta;
   }
 
   /**

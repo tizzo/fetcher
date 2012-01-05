@@ -146,7 +146,7 @@ function drush_ignition_list($name = '', $page = '') {
   $result = $client->fetch();
 
   // TODO: We should have one common error status to check.
-  if ($result !== FALSE && $result !== NULL) {
+  if ($result !== FALSE) {
     $rows[] = array(
       'Name',
       'Title',
@@ -244,8 +244,8 @@ function drush_ignition_get($site_name) {
 
   // TODO: Document installation instructions.
   $site_info = drush_ignition_get_site_info($site_name);
-  if ($site_info === NULL) {
-    drush_log('This site does not appear to exist.', 'error');
+  if ($site_info === FALSE) {
+    drush_log(dt('This site information could not be loaded.'), 'error');
     return;
   }
 
@@ -280,10 +280,23 @@ function drush_ignition_get($site_name) {
  */
 function drush_ignition_get_site_info($site_name) {
   $container = drush_ignition_get_service_container();
-  $result = $container['ignition client']
+  $client = $container['ignition client'];
+  $result = $client
     ->setPath("ignition/api/site/$site_name.json")
     ->fetch();
-  // TODO: Check for connectivity problems and authenitcation failures!!!!
+  if ($result === FALSE) {
+    $code = $client->getResponseCode();
+    if ($code == 401) {
+      drush_log('Access was denied, please check your authentication credentials.', 'error');
+    }
+    else if ($code == 404) {
+      drush_log('The requested site could not be found on the server.', 'error');
+    }
+    else {
+      drush_log('The data could not be retrieved from the server.', 'error');
+    }
+    return FALSE;
+  }
   return $result;
 }
 

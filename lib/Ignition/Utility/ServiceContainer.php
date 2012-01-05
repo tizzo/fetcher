@@ -13,8 +13,6 @@ use \Pimple;
 
 class ServiceContainer extends \Pimple {
 
-  
-
   /**
    * This constructor function 
    *
