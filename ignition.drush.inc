@@ -166,11 +166,8 @@ function drush_ignition_list($name = '') {
  * Print out information about a single site.
  */
 function drush_ignition_info($site_name = NULL) {
-  if (is_null($site_name)) {
-    $site_name = drush_prompt(dt('Please enter the site name you would like to view, use ignition-list for available options or N/n to cancel'));
-    if (strtoLower($site_name) == 'n') {
-      return;
-    }
+  if (is_null($site_name) && !$site_name != drush_ignition_prompt_for_site_name()) {
+    return;
   }
   $site_info = drush_ignition_get_site_info($site_name);
   if ($site_info) {
@@ -183,11 +180,8 @@ function drush_ignition_info($site_name = NULL) {
  */
 function drush_ignition_create($site_name = FALSE, $version = '7') {
 
-  if (!$site_name) {
-    $site_name = drush_prompt(dt('Please enter the site name you would like to create or n to cancel'));
-    if ($site_name = 'n') {
-      return;
-    }
+  if (!$site_name && !$site_name = drush_ignition_prompt_for_site_name()) {
+    return;
   }
 
   // TODO: Most of this should probably be moved into the site class iteslf.
@@ -326,6 +320,19 @@ function drush_ignition_release() {
   // Update the webroot symlink.
   // Run update.php
   // Take the site out of offline mode.
+}
+
+/**
+ *
+ */
+function drush_ignition_prompt_for_site_name() {
+  $site_name = drush_prompt(dt('Please enter the site name you would like to create or n to cancel'));
+  if ($site_name = 'n') {
+    return FALSE;
+  }
+  else {
+    return $site_name;
+  }
 }
 
 // TODO: Add this to the hook_command implementation above.
