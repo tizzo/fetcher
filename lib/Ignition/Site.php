@@ -158,10 +158,9 @@ class Site {
   /**
    *
    */
-  public function checkout($branch = NULL) {
-    // TODO: Populate vcs with the necessary info (remote URL & local URL).
+  public function ensureCode() {
     if (!is_dir($this->codeDirectory)) {
-      $this->vcs->initialCheckout($branch);
+      $this->vcs->initialCheckout();
     }
     else {
       // TODO: Switch to the right branch or something?

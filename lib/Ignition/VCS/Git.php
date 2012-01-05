@@ -9,11 +9,12 @@ class Git extends Base {
   protected $vcsURL = '';
   protected $codeDirectory = '';
 
-  public function initialCheckout($branch) {
-    if (is_null($branch)) {
-      $branch = 'master';
+  public function initialCheckout($branch = 'master') {
+    $this->executeGitCommand('clone %s %s --branch=%s', $this->vcsURL, $this->codeDirectory, $branch);
+    if (is_file($this->codeDirectory . '/.gitmodules')) {
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule sync', $this->codeDirectory, $this->codeDirectory . '/.git');
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule update --init --recursive', $this->codeDirectory, $this->codeDirectory . '/.git');
     }
-    return $this->executeGitCommand('clone %s %s --branch=%s', $this->vcsURL, $this->codeDirectory, $branch);
   }
 
   public function update($localDirectory) {
@@ -59,7 +60,7 @@ class Git extends Base {
     $memoryLimit = ini_get('max_execution_time');
     ini_set('max_execution_time', 0);
 
-    $process = new Process($command);
+    $process = new Process($command, $this->codeDirectory);
     $process->run(function ($type, $buffer) {
       if (drush_get_context('DRUSH_VERBOSE')) {
         if ($type === 'err') {
@@ -70,19 +71,10 @@ class Git extends Base {
       }
     });
 
-    if (drush_get_context('DRUSH_VERBOSE')) {
-      $function = 'drush_shell_exec_interactive';
-    }
-    else {
-      $function = 'drush_shell_exec';
-    }
-    $status = call_user_func_array($function, $args);
-
     // Restore the memory limit and execution time.
     ini_set('memory_limit', $timeLimit);
     ini_set('max_execution_time', $memoryLimit);
 
     return $process->isSuccessful();
-
   }
 }
