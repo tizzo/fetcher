@@ -2,6 +2,7 @@
 
 namespace Ignition\VCS;
 use Ignition\Base as Base;
+use Symfony\Component\Process\Process;
 
 class Git extends Base {
 
@@ -32,7 +33,29 @@ class Git extends Base {
     $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $this->codeDirectory, $this->codeDirectory . '/.git', $branch);
   }
 
+  /**
+   * Execute a git command.
+   *
+   * @param $command
+   *   The command to execute without the `git` prefix (e.g. `pull`).
+   */
   private function executeGitCommand($command) {
+
+    $args = func_get_args();
+    // TODO: Allow the git path to be specified?
+    $args[0] = 'git ' . $args[0];
+    $command = call_user_func_array('sprintf', $args);
+    drush_log('Executing `' . $command . '`.');
+
+    $process = new Process($command);
+    $process->run(function ($type, $buffer) {
+      if ($type === 'err') {
+        drush_log($buffer, 'error');
+      } else {
+        drush_log($buffer);
+      }
+    });
+    return $process->isSuccessful();
 
     // Attempt to ramp up the memory limit and execution time
     // to ensure big or slow chekcouts are not interrupted, storing
@@ -42,9 +65,6 @@ class Git extends Base {
     $memoryLimit = ini_get('max_execution_time');
     ini_set('max_execution_time', 0);
 
-    $args = func_get_args();
-    // TODO: Allow the git path to be specified?
-    $args[0] = 'git ' . $args[0];
 
     if (drush_get_context('DRUSH_VERBOSE')) {
       $function = 'drush_shell_exec_interactive';
