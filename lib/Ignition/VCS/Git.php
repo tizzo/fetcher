@@ -47,15 +47,9 @@ class Git extends Base {
     $command = call_user_func_array('sprintf', $args);
     drush_log('Executing `' . $command . '`.');
 
-    $process = new Process($command);
-    $process->run(function ($type, $buffer) {
-      if ($type === 'err') {
-        drush_log($buffer, 'error');
-      } else {
-        drush_log($buffer);
-      }
-    });
-    return $process->isSuccessful();
+    if (drush_get_context('simulate')) {
+      return TRUE;
+    }
 
     // Attempt to ramp up the memory limit and execution time
     // to ensure big or slow chekcouts are not interrupted, storing
@@ -65,6 +59,16 @@ class Git extends Base {
     $memoryLimit = ini_get('max_execution_time');
     ini_set('max_execution_time', 0);
 
+    $process = new Process($command);
+    $process->run(function ($type, $buffer) {
+      if (drush_get_context('DRUSH_VERBOSE')) {
+        if ($type === 'err') {
+          drush_log($buffer, 'error');
+        } else {
+          drush_log($buffer);
+        }
+      }
+    });
 
     if (drush_get_context('DRUSH_VERBOSE')) {
       $function = 'drush_shell_exec_interactive';
@@ -78,14 +82,7 @@ class Git extends Base {
     ini_set('memory_limit', $timeLimit);
     ini_set('max_execution_time', $memoryLimit);
 
-    if ($status == 128) {
-      return FALSE;
-    }
-    else if ($status) {
-      return FALSE;
-    }
-    else {
-      return TRUE;
-    }
+    return $process->isSuccessful();
+
   }
 }
