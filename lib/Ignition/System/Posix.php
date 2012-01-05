@@ -31,7 +31,7 @@ class Posix {
    *
    * TODO: Move to Posix provider.
    */
-  public function ensureFileExists($path, $owning_user = NULL, $owning_group = NULL) {
+  public function ensureFileExists($path, $owning_user = NULL, $owning_group = NULL, $permission = 755) {
     $old_mask = umask(0);
     $path_parts = explode('/', $path);
     $filename = array_pop($path_parts);
@@ -39,27 +39,41 @@ class Posix {
     $this->ensureFolderExists($directory, $owning_user, $owning_group);
     if (!file_exists($path)) {
       drush_log("Creating file $path");
-      touch($path);
-      chmod($path, 755);
+      if (!touch($path)) {
+        // Throw an exception.
+      }
+      if (!chmod($path, $permission)) {
+        // Throw an exception.
+      }
     }
   }
 
-  public function ensureSymLink($realPath, $destination) {
-    $pathParts = explode('/', $destination);
+  /**
+   * Ensure that a symlink exists and points to the location we want.
+   *
+   * @param $realPath
+   *   The path to the real thing we are linking to.
+   * @param $link
+   *   The path of the desired link.
+   * @return
+   *   True on success.
+   */
+  public function ensureSymLink($realPath, $link) {
+    $pathParts = explode('/', $link);
     array_pop($pathParts);
     $destinationDirectory = implode('/', $pathParts);
-    if (is_dir($destinationDirectory) && !is_link($destination)) {
-      drush_log("Creating a symlink to point from $destination to $realPath");
-      return symlink($realPath, $destination);
+    if (is_dir($destinationDirectory) && !is_link($link)) {
+      drush_log("Creating a symlink to point from $link to $realPath");
+      if (!symlink($realPath, $link)) {
+        // Throw an exception
+        throw new \Exception('Link creation failed.');
+      }
     }
     else if (!is_dir($destinationDirectory)) {
-      drush_log(dt('The directory where the symlink is desired (!path) does not exist.', array('!path' => $destinationDirectory)), 'error');
-      return FALSE;
+      throw new \Exception(sprintf('The directory where the symlink is desired (%s) does not exist.', $destinationDirectory));
     }
-    else if (readlink($destination) != $realPath) {
-      $error = 'A symlink already exists at !destination but it points to !current rather than !desired.';
-      $tokens = array('!path' => $destination, '!current' => readlink($destination), '!desired' => $realPath);
-      drush_log(dt($error, $tokens, 'error'));
+    else if (readlink($link) != $realPath) {
+      throw new \Exception(sprintf('A symlink already exists at %s but it points to %s rather than %s.', $link, readlink($link), $realPath));
     }
     else {
       return TRUE;
