@@ -32,42 +32,70 @@ class Mysql {
     return 'mysql';
   }
 
+  /**
+   * Check that the database exists.
+   */
   public function exists() {
     return $this->executeQuery("SELECT 1;")->isSuccessful();
   }
 
+  /**
+   * Create the database.
+   */
   public function createDatabase() {
-    // TODO: escape database name.
-    $result = $this->executeQuery('create database ' . $database)
-      ->isSuccessful();
+    $database = $this->container['database.database'];
+    $result = $this->executeQuery('create database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
       throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be created.', $database));
     }
   }
 
-  public function checkUserExists($user) {
-    $sql = "SELECT user FROM mysql.user WHERE user='%s'";
-    //shell_exec(sprintf("mysql -e 'create database %s'", $database));
+  /**
+   * Check that the user exists.
+   */
+  public function userExists() {
+    $conf = $this->container;
+    $process = $this->executeQuery(sprintf("SELECT user FROM mysql.user WHERE User='%s' AND Host='%s'", $conf['database.username'], $conf['database.hostname']), FALSE);
+    if (!$process->isSuccessful()) {
+      throw new \Ignition\Exception\IgnitionException('MySQL command failed.');
+    }
+    if ($process->getOutput() == '') {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
   }
-  public function createUser($database, $password) {
+
+  /**
+   *
+   */
+  public function createUser() {
     //sql = "mysql -e 'create user \"%s\"@\"localhost\" identified by \"%s\"'" % (siteName, password)
+    $conf = $this->container;
+    $command = sprintf('create user "%s"@"%s" identified by "%s"', $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
+    $this->executeQuery($command, FALSE);
   }
   
-  public function grantAccessToUser($database) {
-    //sql = "mysql -e 'grant all on %s.* to \"%s\"@\"localhost\"'" % (siteName, siteName)
-    //sql = "mysql -e 'flush privileges'"
+  public function grantAccessToUser() {
+    $conf = $this->container;
+    $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
+    $this->executeQuery($command, FALSE);
+    $this->executeQuery('flush privileges', FALSE);
   }
 
   /**
    * Execute a MySQL query at the command line.
    */
-  protected function executeQuery($command) {
+  protected function executeQuery($command, $setDatabase = TRUE) {
     // TODO: Allow the mysql path to be specified?
     $base_command = 'mysql';
 
     $config = $this->container;
 
-    $base_command .= ' --database=' . escapeshellarg($config['database.database']);
+    if ($setDatabase) {
+      $base_command .= ' --database=' . escapeshellarg($config['database.database']);
+    }
 
     if ($config['database.admin.user']) {
       $base_command .= ' --user=' . escapeshellarg($config['database.admin.user']);

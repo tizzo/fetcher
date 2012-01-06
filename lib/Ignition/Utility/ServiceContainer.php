@@ -83,7 +83,7 @@ class ServiceContainer extends \Pimple {
      */
     // Register our service for generating a random string.
     $this['random'] = $this->protect(
-      function($count = 55) {
+      function($count = 20) {
         static $random_state, $bytes;
         if (!isset($random_state)) {
           $random_state = print_r($_SERVER, TRUE);
@@ -104,7 +104,7 @@ class ServiceContainer extends \Pimple {
         }
         $output = substr($bytes, 0, $count);
         $bytes = substr($bytes, $count);
-        return strtr($output, array('+' => '-', '/' => '_', '=' => ''));
+        return base64_encode(substr(strtr($output, array('+' => '-', '/' => '_', '\\' => '_', '=' => '')), 0, -2));
       }
     );
 
