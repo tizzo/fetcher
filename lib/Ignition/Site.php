@@ -104,7 +104,6 @@ class Site {
       $this->database->createDatabase();
     }
     if (!$this->database->userExists()) {
-      drush_print('user doesn\'t exist');
       $name = $this->siteInfo->name;
       $this->database->createUser();
       $this->database->grantAccessToUser();
