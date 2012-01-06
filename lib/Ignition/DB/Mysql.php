@@ -1,6 +1,7 @@
 <?php
 
 namespace Ignition\DB;
+use Symfony\Component\Process\Process;
 
 class Mysql {
 
@@ -12,6 +13,8 @@ class Mysql {
 
   private $db_spec = array();
 
+  private $container = FALSE;
+
   public function __construct(\Pimple $container) {
     /*
     $username = $container['db.username'];
@@ -19,6 +22,7 @@ class Mysql {
     $database = $container['db.database'];
     */
     $this->db_spec  = $container['dbSpec'];
+    $this->container = $container;
   }
 
   /**
@@ -29,31 +33,16 @@ class Mysql {
   }
 
   public function exists() {
-    $db_spec = $this->getAdminDbSpec();
-    $exists = drush_sql_db_exists($db_spec);
-    $exists ? drush_log('exists') : drush_log('not exists');
-    return ;
+    return $this->executeQuery("SELECT 1;")->isSuccessful();
   }
 
-  public function getAdminDbSpec() {
-    $adminDBSpec = $this->db_spec;
-    // If we have an option set for the sql user, use it.
-    $adminDBSpec['username'] = drush_get_option('ignition-sql-user', 'root');
-    // If we have an option set for the sql password, use it.
-    if (drush_get_option('ignition-sql-password', FALSE)) {
-      $adminDBSpec['password'] = drush_get_option('ignition-sql-password');
-    }
-    else {
-      unset($adminDBSpec['password']);
-    }
-    return $adminDBSpec;
-  }
-  
   public function createDatabase() {
     // TODO: escape database name.
-    //shell_exec(sprintf("'create database %s'", $database));
-    $adminDBSpec = $this->getAdminDbSpec();
-    return drush_sql_empty_db($adminDBSpec);
+    $result = $this->executeQuery('create database ' . $database)
+      ->isSuccessful();
+    if (!$result) {
+      throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be created.', $database));
+    }
   }
 
   public function checkUserExists($user) {
@@ -74,15 +63,35 @@ class Mysql {
    */
   protected function executeQuery($command) {
     // TODO: Allow the mysql path to be specified?
-    $command = 'mysql -e "' . $command . ';"';
+    $base_command = 'mysql';
 
-    if (drush_get_context('DRUSH_VERBOSE')) {
-      $function = 'drush_shell_exec_interactive';
+    $config = $this->container;
+
+    $base_command .= ' --database=' . escapeshellarg($config['database.database']);
+
+    if ($config['database.admin.user']) {
+      $base_command .= ' --user=' . escapeshellarg($config['database.admin.user']);
     }
-    else {
-      $function = 'drush_shell_exec';
+    if ($config['database.admin.password']) {
+      $base_command .= ' --password=' . escapeshellarg($config['database.admin.password']);
     }
-    return call_user_func_array($function, $args);
+    if ($config['database.admin.hostname']) {
+      $base_command .= ' --host=' . escapeshellarg($config['database.admin.hostname']);
+    }
+    if ($config['database.admin.port']) {
+      $base_command .= ' --port=' . escapeshellarg($config['database.admin.port']);
+    }
+
+    $command = $base_command . ' -e ' . escapeshellarg($command);
+    drush_log(dt('Executing MySQL command `@command`', array('@command' => $command)));
+    $process = new Process($command);
+
+    if ($config['simulate']) {
+      return $process;
+    }
+
+    $process->run();
+    return $process;
   }
 }
 
