@@ -73,35 +73,40 @@ class ServiceContainer extends \Pimple {
       return new $c['client.authentication class']($c);
     });
 
+    $this['simulate'] = FALSE;
+    $this['verbose'] = FALSE;
+
     /**
      * Generate a random string.
      *
      * Essentially stolen from Drupal 7's `drupal_random_bytes`.
      */
     // Register our service for generating a random string.
-    $this['random'] = $this->protect( function($count = 55) {
-      static $random_state, $bytes;
-      if (!isset($random_state)) {
-        $random_state = print_r($_SERVER, TRUE);
-        if (function_exists('getmypid')) {
-          $random_state .= getmypid();
+    $this['random'] = $this->protect(
+      function($count = 55) {
+        static $random_state, $bytes;
+        if (!isset($random_state)) {
+          $random_state = print_r($_SERVER, TRUE);
+          if (function_exists('getmypid')) {
+            $random_state .= getmypid();
+          }
+          $bytes = '';
         }
-        $bytes = '';
+        if (strlen($bytes) < $count) {
+          if ($fh = @fopen('/dev/urandom', 'rb')) {
+            $bytes .= fread($fh, max(4096, $count));
+            fclose($fh);
+          }
+          while (strlen($bytes) < $count) {
+            $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
+            $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
+          }
+        }
+        $output = substr($bytes, 0, $count);
+        $bytes = substr($bytes, $count);
+        return strtr($output, array('+' => '-', '/' => '_', '=' => ''));
       }
-      if (strlen($bytes) < $count) {
-        if ($fh = @fopen('/dev/urandom', 'rb')) {
-          $bytes .= fread($fh, max(4096, $count));
-          fclose($fh);
-        }
-        while (strlen($bytes) < $count) {
-          $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
-          $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
-        }
-      }
-      $output = substr($bytes, 0, $count);
-      $bytes = substr($bytes, $count);
-      return strtr($output, array('+' => '-', '/' => '_', '=' => ''));
-    });
+    );
 
   }
 
