@@ -52,14 +52,20 @@ class Site {
 
   /**
    * A drush compatible $db_spec array as would be generaged by _drush_sql_get_db_spec().
+   *
+   * TODO: Kill this!!!
    */
   protected $dbSpec = array();
+
+  protected $container = FALSE;
 
   /**
    * Constructor function to allow dependency injection.
    *
    */
   public function __construct(\Pimple $container) {
+
+    $this->container = $container;
 
     $this->database = $container['database'];
     
@@ -95,7 +101,7 @@ class Site {
    */
   public function ensureDatabase() {
     if (!$this->database->exists()) {
-      return $this->database->createDatabase();
+      $this->database->createDatabase();
     }
     return TRUE;
     if (!$this->database->userExists()) {
@@ -124,14 +130,10 @@ class Site {
 
     // Ensure we have our files folders.
     $this->system->ensureFolderExists($this->workingDirectory . '/public_files', NULL, $this->system->getWebUser());
-    chmod($this->workingDirectory . '/public_files', 0775);
     if (isset($this->siteInfo->{'private files'})) {
       $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->system->getWebUser());
-      chmod($this->workingDirectory . '/public_files', 0775);
     }
 
-    // TODO: Don't lie quite so much.
-    return TRUE;
   }
 
   /**

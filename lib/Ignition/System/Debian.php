@@ -5,9 +5,6 @@ namespace Ignition\System;
 // 
 class Debian extends Posix {
 
-  public function __construct() {
-  }
-
   /** 
    * 
    */
