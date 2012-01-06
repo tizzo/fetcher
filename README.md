@@ -1,6 +1,11 @@
-# Ignition #
+# Ignition Drush #
 
-This is the drush command to interact with sites managed by Ignition.
+Ignition Drush is a command line client to interact wiht your Ignition site and to do interesting things with the data retrieved from there.
+
+This is the drush command to interact with sites managed by Ignition.  All `\Ignition\Site` class (the main, top level, class) methods are
+intended to work in a declaritive, rather than imperitive, way.  This means that generally Ignition Drush commands are intended to be capable
+of being run more than once.  Each call will verify that it is necessary before actually taking action.  If a folder needs to be created, the
+existence of that folder is first tested and the path to that folder is created if necessary.
 
 ## Folder layout ##
 
@@ -15,10 +20,14 @@ out as follows:
   - 1.0.1 - An example of a release folder for a tag called `1.0.1`.
 - webroot - A symlink to the Drupal root (usually the root of `/code` in this directory).
 
+It is also worth noting that while settings.php will be dynamically generated appropriately to the version of Drupal, if there is a `site-settings.php` file in the
+`sites/default` folder it will dynamically be included from the settings.php file.  This is the prefered method of including PHP files.
+
 ## For Developers: ##
 
 The ignition suite was designed to be (relatively) easy to follow and to make as few assumptions as are reasonable.  Where possible, command line options are available for
-swapping out the handling classes for different functionality.
+swapping out the handling classes for different functionality.  Ignition Drush uses PSR-0 compliant classes and leverages several Symfony 2 components to keey things nice
+and easy for us.
 
 ## Dependency Injection ##
 
