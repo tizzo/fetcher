@@ -8,6 +8,11 @@ class Git extends Base {
 
   protected $vcsURL = '';
   protected $codeDirectory = '';
+  protected $container = FALSE;
+
+  public function __construct(\Pimple $container) {
+    $this->container = $container;
+  }
 
   public function initialCheckout($branch = 'master') {
     $this->executeGitCommand('clone %s %s --branch=%s', $this->vcsURL, $this->codeDirectory, $branch);
@@ -48,10 +53,6 @@ class Git extends Base {
     $command = call_user_func_array('sprintf', $args);
     drush_log('Executing `' . $command . '`.');
 
-    if (drush_get_context('simulate')) {
-      return TRUE;
-    }
-
     // Attempt to ramp up the memory limit and execution time
     // to ensure big or slow chekcouts are not interrupted, storing
     // the current values so they may be restored.
@@ -61,15 +62,17 @@ class Git extends Base {
     ini_set('max_execution_time', 0);
 
     $process = new Process($command, $this->codeDirectory);
-    $process->run(function ($type, $buffer) {
-      if (drush_get_context('DRUSH_VERBOSE')) {
-        if ($type === 'err') {
-          drush_log($buffer, 'error');
-        } else {
-          drush_log($buffer);
+    if (!$this->container['simulate']) {
+      $process->run(function ($type, $buffer) {
+        if (drush_get_context('DRUSH_VERBOSE')) {
+          if ($type === 'err') {
+            drush_log($buffer, 'error');
+          } else {
+            drush_log($buffer);
+          }
         }
-      }
-    });
+      });
+    }
 
     // Restore the memory limit and execution time.
     ini_set('memory_limit', $timeLimit);
