@@ -186,7 +186,8 @@ class Site {
    * Ensure that all symlinks besides the webroot symlink have been created.
    */
   public function ensureSymLinks() {
-    return $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
+    $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
+    $this->system->ensureSymLink($this->drupalRoot, $this->workingDirectory . '/webroot');
   }
 
   public function updateCode() {
