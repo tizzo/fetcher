@@ -252,7 +252,6 @@ function drush_ignition_get($site_name) {
   try {
     // Instantiate the site object.
     $site = drush_ignition_get_site($site_info);
-
     // Make sure that the project direcotry is properly configured on the server.
     $site->setUpWorkingDirectory();
     drush_log(dt('The working directory has been properly setup.'), 'success');
@@ -261,16 +260,22 @@ function drush_ignition_get($site_name) {
     $site->ensureCode();
     drush_log(dt('The code is in place and up to date.'), 'success');
 
+    // Create the settings.php file.
+    $success = $site->ensureSettingsFileExists();
+    drush_log(dt('The settings.php file is in place.'), 'success');
+
     // Create necessary symlinks.
     $site->ensureSymLinks();
     drush_log(dt('All symlinks have been successfully created.'), 'success');
 
-    // Create the settings.php file.
-    $success = $site->ensureSettingsFileExists();
-
-
     // Ensure we have a database and user.
     $site->ensureDatabase();
+    drush_log(dt('Your database has been created and it was successfully conntected to.'), 'success');
+
+    // Create a drush alias for this site.
+    // TODO: Implement this:
+    //$site->createDrushAlias();
+    //drush_log(dt('A drush alias was created for you for this site.  The alias is !alias and resides in the file !path', array('!alias' => '', '!path' => '')));
 
     drush_log('Your site has been setup!', 'success');
   }
