@@ -168,15 +168,37 @@ class ServiceContainer extends \Pimple {
     // TODO: Move this global context...
     $this['dbSpec'] = array(
       'database' => drush_get_option('database', $siteInfo->name),
-      'port' => drush_get_option('database-port', 3306),
+      'port' => drush_get_option('ignition-db-username', ''),
       'username' => drush_get_option('database-user', $siteInfo->name),
-      'password' => drush_get_option('database-password', $this['random']),
+      'password' => drush_get_option('database-password', $this['random']()),
       'host' => 'localhost',
       'driver' => $this['database class']::getDriver(),
     );
+
+    // Setup the administrative db credentials ().
+    $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
+    $this['database.admin.password'] = drush_get_option('ignition-db-username', FALSE);
+    $this['database.admin.hostname'] = drush_get_option('ignition-db-username', 'localhost');
+    $this['database.admin.port'] = drush_get_option('ignition-db-username', '');
+
+    // Setup the site specific db credentails.
+    // TODO: Add support for this in siteInfo.
+    $this['database.hostname'] = 'localhost';
+    $this['database.username'] = drush_get_option('database-user', $siteInfo->name);
+    $this['database.password'] = drush_get_option('database-password', $this['random']());
+    $this['database.driver'] = $this['database class']::getDriver();
+    $this['database.port'] = drush_get_option('database-port', 3306);
+    $this['database.database'] = drush_get_option('database', $siteInfo->name);
+
+    // Drop the first character because our versions are formatted d*.
+    $this['version'] = substr($siteInfo->version, 1);
+
+    $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
+    $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
+
     $this['site info'] = $siteInfo;
     return $this;
   }
 
-  }
+}
 
