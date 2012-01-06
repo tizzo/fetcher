@@ -141,17 +141,24 @@ class Site {
    */
   public function ensureSettingsFileExists() {
     // TODO: Support multisite?
-    $settings_file = $this->drupalRoot . '/sites/default/settings.php';
-    if (!is_file($settings_file)) {
+    $settings_file_path = $this->drupalRoot . '/sites/default/settings.php';
+    if (!is_file($settings_file_path)) {
+      $conf = $this->container;
+      $vars = array();
+      $vars =  array(
+        'database' => $conf['database.database'],
+        'hostname' => $conf['database.hostname'],
+        'username' => $conf['database.username'],
+        'password' => $conf['database.password'],
+        'driver' => $conf['database.driver'],
+      );
       // TODO: Get the settings.php for the appropriate version.
-      $vars =  array('database' => '', 'hostname' => '', 'username' => '', 'password' => '', 'driver' => '');
-      $settings_php_contents = \drush_ignition_get_asset('drupal.7.settings.php', $vars);
-      return TRUE;
+      $content = \drush_ignition_get_asset('drupal.' . $this->container['version'] . '.settings.php', $vars);
       // Allow settings to be checked into versioncontrol and automatically included from settings.php.
       if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
-        $settings_php_contents .= "\r\n  require_once('site-settings.php');";
+        $content .= "\rrequire_once('site-settings.php');\r";
       }
-      $this->system->writeFile($path, $content);
+      $this->system->writeFile($settings_file_path, $content);
     }
   }
 
