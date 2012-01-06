@@ -475,6 +475,9 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
     include($path);
     $contents = ob_get_contents();
     ob_end_clean();
-    drush_print($contents);
+    return $contents;
+  }
+  else {
+    throw new \Ignition\Exception\IgnitionException(dt('The requested resource !path could not be found.', array('!path', $path)));
   }
 }
