@@ -436,6 +436,8 @@ function drush_ignition_get_service_container($handler = FALSE, $reset = FALSE) 
     $container = $handler;
   }
   else if ($reset || $container == FALSE) {
+    // TODO: Check to see if we are in a site and try to load site info from the
+    // site somewhere...
     // Load a new container from the global context.
     $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
   }
@@ -461,7 +463,7 @@ function drush_ignition_get_handler($type, $handler) {
   return new $class;
 }
 
-/** 
+/**
  * Load an Ignition asset and populate it with variables.
  *
  * We do not have Drupal's templating system available to us at the bootstrap
