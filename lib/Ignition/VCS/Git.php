@@ -63,15 +63,7 @@ class Git extends Base {
 
     $process = new Process($command, $this->codeDirectory);
     if (!$this->container['simulate']) {
-      $process->run(function ($type, $buffer) {
-        if (drush_get_context('DRUSH_VERBOSE')) {
-          if ($type === 'err') {
-            drush_log($buffer, 'error');
-          } else {
-            drush_log($buffer);
-          }
-        }
-      });
+      $process->run();
     }
 
     // Restore the memory limit and execution time.
