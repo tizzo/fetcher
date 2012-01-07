@@ -217,10 +217,16 @@ class Site {
   /**
    * Removes all traces of this site from this system.
    */
-  public function delete() {
+  public function remove() {
     $this->system->ensureDeleted($this->workingDirectory);
     $this->system->ensureDeleted($this->getDrushAliasPath());
     //$this->system->removeSite($this->siteInfo->name);
+    if ($this->database->exists()) {
+      $this->database->removeDatabase();
+    }
+    if ($this->database->userExists()) {
+      $this->database->removeUser();
+    }
   }
 
   /**

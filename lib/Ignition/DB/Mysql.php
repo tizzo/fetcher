@@ -16,12 +16,6 @@ class Mysql {
   private $container = FALSE;
 
   public function __construct(\Pimple $container) {
-    /*
-    $username = $container['db.username'];
-    $password = $container['db.password'];
-    $database = $container['db.database'];
-    */
-    $this->db_spec  = $container['dbSpec'];
     $this->container = $container;
   }
 
@@ -71,7 +65,6 @@ class Mysql {
    *
    */
   public function createUser() {
-    //sql = "mysql -e 'create user \"%s\"@\"localhost\" identified by \"%s\"'" % (siteName, password)
     $conf = $this->container;
     $command = sprintf('create user "%s"@"%s" identified by "%s"', $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
     $this->executeQuery($command, FALSE);
@@ -82,6 +75,26 @@ class Mysql {
     $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
     $this->executeQuery($command, FALSE);
     $this->executeQuery('flush privileges', FALSE);
+  }
+
+  /**
+   * Remove the database.
+   */
+  public function removeDatabase() {
+    $database = $this->container['database.database'];
+    $result = $this->executeQuery('drop database ' . $database, FALSE)->isSuccessful();
+    if (!$result) {
+      throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be dropped.', $database));
+    }
+  }
+
+  /**
+   * Remove the database user.
+   */
+  public function removeUser() {
+    $conf = $this->container;
+    $command = sprintf('drop user "%s"@"%s"', $conf['database.username'], $conf['database.hostname']);
+    $this->executeQuery($command, FALSE);
   }
 
   /**
