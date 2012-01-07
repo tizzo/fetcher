@@ -158,8 +158,8 @@ class Site {
    */
   public function ensureSettingsFileExists() {
     // TODO: Support multisite?
-    $settings_file_path = $this->drupalRoot . '/sites/default/settings.php';
-    if (!is_file($settings_file_path)) {
+    $settingsFilePath = $this->drupalRoot . '/sites/default/settings.php';
+    if (!is_file($settingsFilePath)) {
       $conf = $this->container;
       $vars = array();
       $vars =  array(
@@ -175,7 +175,7 @@ class Site {
       if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
         $content .= "\rrequire_once('site-settings.php');\r";
       }
-      $this->system->writeFile($settings_file_path, $content);
+      $this->system->writeFile($settingsFilePath, $content);
     }
   }
 
@@ -205,9 +205,6 @@ class Site {
   public function ensureSymLinks() {
     $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
     $this->system->ensureSymLink($this->drupalRoot, $this->workingDirectory . '/webroot');
-  }
-
-  public function updateCode() {
   }
 
   public function syncEnvDatabase() {

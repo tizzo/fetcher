@@ -317,10 +317,18 @@ function drush_ignition_get_site_info($site_name) {
 function drush_ignition_delete($site_name) {
   // TODO: Validate $site_name.
   // TODO: Allow deletion of other webroots (check site info?).
-  if (drush_confirm("Are you sure you want to delete $site_name?")) {
+  if (!drush_confirm("Are you sure you want to delete $site_name?")) {
+    return;
+  }
+  try {
     $site_info = new stdClass;
     $site_info->name = $site_name;
-    $result = drush_ignition_get_site($site_info)->delete();
+    $site = drush_ignition_get_site($site_info);
+    $site->remove();
+    drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
+  }
+  catch (Exception $e) {
+    drush_log($e->getMessage(), 'error');
   }
 }
 
