@@ -111,6 +111,24 @@ class Site {
   }
 
   /**
+   *
+   */
+  public function ensureDrushAlias() {
+    $drushPath = $this->system->getUserHomeFolder() . '/.drush';
+    $this->system->ensureFolderExists($drushPath);
+    $drushFilePath = $this->getDrushAliasPath();
+    if (!is_file($drushFilePath)) {
+      $vars = array(
+        'local_root' => $this->drupalRoot,
+        'remote_root' => $this->drupalRoot,
+        'hostname' => $this->container['remote.url'],
+      );
+      $content = \drush_ignition_get_asset('drush.alias', $vars);
+      $this->system->writeFile($drushFilePath, $content);
+    }
+  }
+
+  /**
    * Setup our basic working directory.
    */
   public function ensureWorkingDirectory() {
@@ -195,7 +213,8 @@ class Site {
   public function syncEnvDatabase() {
   }
 
-  public function loadDatabaseBackup() {
+  public function getDrushAliasPath() {
+    return $this->system->getUserHomeFolder() . '/.drush/' . $this->siteInfo->name . '.aliases.drushrc.php';
   }
 
   /**
@@ -203,6 +222,7 @@ class Site {
    */
   public function delete() {
     $this->system->ensureDeleted($this->workingDirectory);
+    $this->system->ensureDeleted($this->getDrushAliasPath());
     //$this->system->removeSite($this->siteInfo->name);
   }
 
