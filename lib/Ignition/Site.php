@@ -113,7 +113,7 @@ class Site {
   /**
    * Setup our basic working directory.
    */
-  public function setUpWorkingDirectory() {
+  public function ensureWorkingDirectory() {
 
     // Ensure we have our working directory.
     $this->system->ensureFolderExists($this->workingDirectory);

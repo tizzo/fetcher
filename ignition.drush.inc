@@ -194,7 +194,7 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
 
   try {
     // Make sure that the project direcotry is properly configured on the server.
-    $success = $site->setUpWorkingDirectory();
+    $success = $site->ensureWorkingDirectory();
 
     $commandline_args = array(
       'drupal-' . $version,
@@ -253,7 +253,7 @@ function drush_ignition_get($site_name) {
     // Instantiate the site object.
     $site = drush_ignition_get_site($site_info);
     // Make sure that the project direcotry is properly configured on the server.
-    $site->setUpWorkingDirectory();
+    $site->ensureWorkingDirectory();
     drush_log(dt('The working directory has been properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
