@@ -26,7 +26,6 @@ class ServiceContainer extends \Pimple {
     // The default Site service loader.
     $this['site'] = $this->share(function($c) {
       $site = new $c['site class']($c);
-      // TODO: Set up the site class?
       return $site;
     });
 
@@ -164,16 +163,11 @@ class ServiceContainer extends \Pimple {
         drush_ignition_get_handler('VCS', $site_info->vcs);
       });
     }
-    // TODO: This still doesn't quite feel right.  Should we load the db data here?
-    // TODO: Move this global context...
-    $this['dbSpec'] = array(
-      'database' => drush_get_option('database', $siteInfo->name),
-      'port' => drush_get_option('ignition-db-username', ''),
-      'username' => drush_get_option('database-user', $siteInfo->name),
-      'password' => drush_get_option('database-password', $this['random']()),
-      'host' => 'localhost',
-      'driver' => $this['database class']::getDriver(),
-    );
+
+    // Load environment variables
+    // TODO: Replace with environment!
+    $this['remote.name'] = $siteInfo->environments->dev->server->name;
+    $this['remote.url'] = $siteInfo->environments->dev->server->hostname;
 
     // Setup the administrative db credentials ().
     $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
@@ -181,6 +175,9 @@ class ServiceContainer extends \Pimple {
     $this['database.admin.hostname'] = drush_get_option('ignition-db-username', 'localhost');
     $this['database.admin.port'] = drush_get_option('ignition-db-username', '');
 
+    // TODO: If we're dealing with an already "gotten" site, we need to load the db_spec via drush
+    // rather than reading context options.
+    // TODO: When implementing the above, decide which should take precedence.
     // Setup the site specific db credentails.
     // TODO: Add support for this in siteInfo.
     $this['database.hostname'] = 'localhost';
@@ -191,7 +188,9 @@ class ServiceContainer extends \Pimple {
     $this['database.database'] = drush_get_option('database', $siteInfo->name);
 
     // Drop the first character because our versions are formatted d*.
-    $this['version'] = substr($siteInfo->version, 1);
+    if (isset($siteInfo->version)) {
+      $this['version'] = substr($siteInfo->version, 1);
+    }
 
     $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
     $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
