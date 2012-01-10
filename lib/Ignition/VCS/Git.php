@@ -63,6 +63,8 @@ class Git extends Base {
 
     $process = new Process($command, $this->codeDirectory);
     if (!$this->container['simulate']) {
+      // Git operations can run long, set our timeout to an hour.
+      $process->setTimeout(3600);
       $process->run();
     }
 
