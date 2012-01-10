@@ -79,7 +79,7 @@ class Site {
 
     if ($this->workingDirectory == '') {
       // TODO: Add optional webroot from siteInfo.
-      $this->workingDirectory = $this->system->getWebRoot() . '/' . $this->siteInfo->name;
+      $this->workingDirectory = $this->server->getWebRoot() . '/' . $this->siteInfo->name;
     }
     if ($this->codeDirectory == '') {
       // TODO: This needs to be smarter:
@@ -146,9 +146,9 @@ class Site {
     $this->system->ensureFileExists($this->workingDirectory . '/logs/watchdog.log');
 
     // Ensure we have our files folders.
-    $this->system->ensureFolderExists($this->workingDirectory . '/public_files', NULL, $this->system->getWebUser());
+    $this->system->ensureFolderExists($this->workingDirectory . '/public_files', NULL, $this->server->getWebUser());
     if (isset($this->siteInfo->{'private files'})) {
-      $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->system->getWebUser());
+      $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->server->getWebUser());
     }
 
   }
