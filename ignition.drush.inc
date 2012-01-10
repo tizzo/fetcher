@@ -257,9 +257,10 @@ function drush_ignition_get($site_name) {
     $site = drush_ignition_get_site($site_info);
     // Make sure that the project direcotry is properly configured on the server.
     $site->ensureWorkingDirectory();
-    drush_log(dt('The working directory has been properly setup.'), 'success');
+    drush_log(dt('The working directory is been properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
+    drush_log(dt('Checking out code from the repository.'));
     $site->ensureCode();
     drush_log(dt('The code is in place and up to date.'), 'success');
 
@@ -269,16 +270,16 @@ function drush_ignition_get($site_name) {
 
     // Create necessary symlinks.
     $site->ensureSymLinks();
-    drush_log(dt('All symlinks have been successfully created.'), 'success');
+    drush_log(dt('All symlinks have exist and point to the correct path.'), 'success');
 
     // Ensure we have a database and user.
     $site->ensureDatabase();
-    drush_log(dt('Your database has been created and it was successfully conntected to.'), 'success');
+    drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
 
     // Create a drush alias for this site.
     // TODO: Implement this:
     $site->ensureDrushAlias();
-    drush_log(dt('The alias @@alias has been created and resides in the file @path', array('@alias' => $site_info->name, '@path' => $site->getDrushAliasPath())), 'success');
+    drush_log(dt('The alias @!alias exists and resides in the file @path', array('!alias' => $site_name, '@path' => $site->getDrushAliasPath())), 'success');
 
     // Add the site to the server.
     $site->ensureSiteEnabled();
@@ -341,7 +342,7 @@ function drush_ignition_get($site_name) {
 }
 
 /**
- * Issue a request against 
+ * Issue a request against Ignition to retrieve a site's information by name.
  */
 function drush_ignition_get_site_info($site_name) {
   $container = drush_ignition_get_service_container();
@@ -543,6 +544,6 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
     return $contents;
   }
   else {
-    throw new \Ignition\Exception\IgnitionException(dt('The requested resource !path could not be found.', array('!path', $path)));
+    throw new \Ignition\Exception\IgnitionException(dt('The requested resource !path could not be found.', array('!path' => $path)));
   }
 }
