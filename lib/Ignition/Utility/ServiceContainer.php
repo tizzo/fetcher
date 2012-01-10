@@ -58,7 +58,14 @@ class ServiceContainer extends \Pimple {
 
     // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
     $this['vcs'] = $this->share(function($c) {
-      return new $c['vcs class']($c);
+      $config = array();
+      $config['codeDirectory'] = $c['site.code_directory'];
+      if (isset($c['vcs.url'])) {
+        $config['vcsURL'] = $c['vcs.url'];
+      }
+      $vcs = new $c['vcs class']($c);
+      $vcs->configure($config);
+      return $vcs;
     });
 
     // Set our default ignition client class to our own HTTPClient.
@@ -182,6 +189,10 @@ class ServiceContainer extends \Pimple {
 
     // Load the site variables.
     $this['site.name'] = $siteInfo->name;
+
+    if (isset($siteInfo->vcs_url)) {
+      $this['vcs.url'] = $siteInfo->vcs_url;
+    }
 
     // Load the environment variables.
     // TODO: Replace with environment!

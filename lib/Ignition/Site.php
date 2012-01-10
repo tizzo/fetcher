@@ -74,15 +74,6 @@ class Site {
 
     $this->codeDirectory = $container['site.code_directory'];
 
-    // Configure the vcs plugin.
-    if ($this->vcs) {
-      $config = array();
-      $config['codeDirectory'] = $this->codeDirectory;
-      if (isset($this->siteInfo->vcs_url)) {
-        $config['vcsURL'] = $this->siteInfo->vcs_url;
-      }
-      $this->vcs->configure($config);
-    }
   }
 
   /**
