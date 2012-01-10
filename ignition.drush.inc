@@ -275,7 +275,12 @@ function drush_ignition_get($site_name) {
     // Create a drush alias for this site.
     // TODO: Implement this:
     $site->ensureDrushAlias();
-    //drush_log(dt('A drush alias was created for you for this site.  The alias is !alias and resides in the file !path', array('!alias' => '', '!path' => '')));
+    drush_log(dt('The alias @@alias has been created and resides in the file @path', array('@alias' => $site_info->name, '@path' => $site->getDrushAliasPath())), 'success');
+
+    // Add the site to the server.
+    $site->ensureSiteEnabled();
+    // TODO: Fill in hosntame in comment.
+    drush_log(dt('The site has been enabeld and is running at @hostname', array('@hostname' => 'hostname')));
 
     drush_log('Your site has been setup!', 'success');
   }
