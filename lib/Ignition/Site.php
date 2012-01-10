@@ -158,7 +158,8 @@ class Site {
    */
   public function ensureSettingsFileExists() {
     // TODO: Support multisite?
-    $settingsFilePath = $this->drupalRoot . '/sites/default/settings.php';
+    // TODO: This is ugly, what we're doing with this container here...
+    $settingsFilePath = $this->container['site.webroot'] = $this->drupalRoot . '/sites/default/settings.php';
     if (!is_file($settingsFilePath)) {
       $conf = $this->container;
       $vars = array();
@@ -207,6 +208,18 @@ class Site {
     $this->system->ensureSymLink($this->drupalRoot, $this->workingDirectory . '/webroot');
   }
 
+  /**
+   *
+   */
+  public function ensureSiteEnabled() {
+    $server = $this->server;
+    if (!$server->siteEnabled()) {
+      $server->ensureSiteConfigured();
+      $server->ensureSiteEnabled();
+      $server->restart();
+    }
+  }
+
   public function syncEnvDatabase() {
   }
 
@@ -227,6 +240,7 @@ class Site {
     if ($this->database->userExists()) {
       $this->database->removeUser();
     }
+    $this->server->ensureSiteRemoved();
   }
 
   /**
