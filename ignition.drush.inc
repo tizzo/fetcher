@@ -252,10 +252,15 @@ function drush_ignition_get($site_name) {
     return;
   }
 
+  // Note that the Ignition library generally throws exceptions with helpful
+  // error messages if anything goes wrong anywhere, so we wrap all our work
+  // in one big try/catch.
   try {
+
     // Instantiate the site object.
     $site = drush_ignition_get_site($site_info);
-    // Make sure that the project direcotry is properly configured on the server.
+
+    // Make sure that the project direcotry is properly configured.
     $site->ensureWorkingDirectory();
     drush_log(dt('The working directory is been properly setup.'), 'success');
 
@@ -286,7 +291,8 @@ function drush_ignition_get($site_name) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
-    // TODO: How do we restore from MySQL backups?
+    // TODO: We'll want to move this into a library class that can be swapped
+    // out somehow so that we can support restoring from backups.
     if (drush_get_option('sync-db')) {
       drush_log(dt('Attempting to sync database from remote.'));
       $commandline_options = array(
