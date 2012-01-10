@@ -112,7 +112,7 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function restart() {
-    $command = 'sudo service apache2 restart';
+    $command = 'sudo service apache2 reload';
     if (!drush_shell_exec($command)) {
       throw new \Ignition\Exception\IgnitionException(dt('Apache failed to restart, the server may be down.'));
     }
