@@ -3,25 +3,45 @@
 namespace Ignition\Server;
 
 class Apache2 {
-  
+
   protected $container;
 
   public function __construct(\Pimple $container) {
     $this->container = $container;
   }
 
+  /**
+   * Get the user under which this server runs.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function getWebUser() {
     return 'www-data';
   }
 
+  /**
+   * Get the parent folder where web files should be located.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function getWebRoot() {
     return '/var/www';
   }
 
+  /**
+   * Check whether this site appears to be enabled.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function siteEnabled() {
     return is_link('/etc/apache2/sites-enabled/' . $this->container['site.name']);
   }
 
+  /**
+   * Check whether this site appears to be configured and configure it if not.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function ensureSiteConfigured() {
     $container = $this->container;
     $vhostPath = $this->getVhostPath();
@@ -36,10 +56,20 @@ class Apache2 {
     }
   }
 
+  /**
+   * Get the path where vhost files should be placed.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function getVhostPath() {
     return '/etc/apache2/sites-available/' . $this->container['site.name'];
   }
 
+  /**
+   * Ensure that the site is removed.
+   *
+   * TODO: Vhost deletion can vary based on the system.
+   */
   public function ensureSiteRemoved() {
     if ($this->siteEnabled()) {
       $this->ensureSiteDisabled();
@@ -48,6 +78,11 @@ class Apache2 {
     $this->container['system']->ensureDeleted($this->getVhostPath());
   }
 
+  /**
+   * Ensure that the configured site has been enabled.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function ensureSiteEnabled() {
     $command = 'a2ensite ' . $this->container['site.name'];
     drush_log('Executing `' . $command . '`.');
@@ -56,6 +91,11 @@ class Apache2 {
     }
   }
 
+  /**
+   * Ensure that the configured site has been disabled.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function ensureSiteDisabled() {
     $command = 'a2dissite ' . $this->container['site.name'];
     drush_log('Executing `' . $command . '`.');
@@ -64,6 +104,13 @@ class Apache2 {
     }
   }
 
+  /**
+   * Restart the server to load the configuration.
+   *
+   * Note this should be done cracefully if possible.
+   *
+   * TODO: This can vary based on the system.
+   */
   public function restart() {
     $command = 'sudo service apache2 restart';
     if (!drush_shell_exec($command)) {
