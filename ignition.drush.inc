@@ -559,3 +559,29 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
     throw new \Ignition\Exception\IgnitionException(dt('The requested resource !path could not be found.', array('!path' => $path)));
   }
 }
+
+/**
+ * Attempt to identify the site we are working with from the current directory.
+ *
+ * @return
+ *   A stdClass object containing site information or FALSE on failure.
+ */
+function drush_ignition_find_site_by_directory() {
+  $directory = getcwd();
+  $parts = explode(DIRECTORY_SEPARATOR, $directory);
+  $site_info = FALSE;
+  while (count($parts)) {
+    $path = implode(DIRECTORY_SEPARATOR, $parts) . '/site_info.yaml';
+    drush_print($path);
+    if (file_exists($path)) {
+      $site_info = file_get_contents($path);
+      break;
+    }
+    array_pop($parts);
+  }
+  if ($site_info) {
+    $container = drush_ignition_get_service_container();
+    $site_info = $container['site class']::parseSiteInfo($site_info);
+  }
+  return $site_info;
+}

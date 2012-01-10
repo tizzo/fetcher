@@ -135,7 +135,7 @@ class ServiceContainer extends \Pimple {
   /**
    * Create an Ignition ServiceContainer populated from the global Drush context.
    */
-  static function getServiceContainerFromDrushContext() {
+  static public function getServiceContainerFromDrushContext() {
 
     $container = new static();
 

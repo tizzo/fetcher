@@ -258,4 +258,11 @@ class Site {
     $string = Yaml::dump($siteInfo);
     $this->system->writeFile($this->workingDirectory . '/site_info.yaml', $string);
   }
+
+  /**
+   * Parse site info from a string.
+   */
+  static public function parseSiteInfo($string) {
+    return Yaml::parse($string);
+  }
 }
