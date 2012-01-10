@@ -572,7 +572,6 @@ function drush_ignition_find_site_by_directory() {
   $site_info = FALSE;
   while (count($parts)) {
     $path = implode(DIRECTORY_SEPARATOR, $parts) . '/site_info.yaml';
-    drush_print($path);
     if (file_exists($path)) {
       $site_info = file_get_contents($path);
       break;
