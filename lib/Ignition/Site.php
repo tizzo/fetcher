@@ -50,13 +50,6 @@ class Site {
    */
   protected $drupalRoot = '';
 
-  /**
-   * A drush compatible $db_spec array as would be generaged by _drush_sql_get_db_spec().
-   *
-   * TODO: Kill this!!!
-   */
-  protected $dbSpec = array();
-
   protected $container = FALSE;
 
   /**
@@ -77,14 +70,10 @@ class Site {
 
     $this->system = $container['system'];
 
-    if ($this->workingDirectory == '') {
-      // TODO: Add optional webroot from siteInfo.
-      $this->workingDirectory = $this->server->getWebRoot() . '/' . $this->siteInfo->name;
-    }
-    if ($this->codeDirectory == '') {
-      // TODO: This needs to be smarter:
-      $this->codeDirectory = $this->workingDirectory . '/' . 'code';
-    }
+    $this->workingDirectory = $container['site.working_directory'];
+
+    $this->codeDirectory = $container['site.code_directory'];
+
     // Configure the vcs plugin.
     if ($this->vcs) {
       $config = array();

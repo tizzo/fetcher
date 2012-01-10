@@ -81,8 +81,14 @@ class ServiceContainer extends \Pimple {
     };
 
     // TODO: This is retarderated:
+      // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
       return $c['server']->getWebroot() . '/' . $c['site.name'];
+    };
+
+    $this['site.code_directory'] = function($c) {
+      // TODO: This needs to be smarter:
+      return $c['site.working_directory'] . '/' . 'code';
     };
 
     /**
