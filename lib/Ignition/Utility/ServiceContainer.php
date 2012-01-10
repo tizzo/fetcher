@@ -75,6 +75,16 @@ class ServiceContainer extends \Pimple {
     $this['simulate'] = FALSE;
     $this['verbose'] = FALSE;
 
+    // TODO: use context to build hostname.
+    $this['site.hostname'] = function($c) {
+      return $c['site.name'] . '.local';
+    };
+
+    // TODO: This is retarderated:
+    $this['site.working_directory'] = function($c) {
+      return $c['server']->getWebroot() . '/' . $c['site.name'];
+    };
+
     /**
      * Generate a random string.
      *
@@ -164,7 +174,10 @@ class ServiceContainer extends \Pimple {
       });
     }
 
-    // Load environment variables
+    // Load the site variables.
+    $this['site.name'] = $siteInfo->name;
+
+    // Load the environment variables.
     // TODO: Replace with environment!
     $this['remote.name'] = $siteInfo->environments->dev->server->name;
     $this['remote.url'] = $siteInfo->environments->dev->server->hostname;
