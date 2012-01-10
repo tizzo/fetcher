@@ -196,8 +196,8 @@ class ServiceContainer extends \Pimple {
 
     // Load the environment variables.
     // TODO: Replace with environment!
-    $this['remote.name'] = $siteInfo->environments->dev->server->name;
-    $this['remote.url'] = $siteInfo->environments->dev->server->hostname;
+    $this['remote.name'] = trim($siteInfo->environments->dev->server->name);
+    $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
 
     // Setup the administrative db credentials ().
     $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);

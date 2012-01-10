@@ -1,6 +1,7 @@
 <?php
 
 namespace Ignition;
+use \Symfony\Component\Yaml\Yaml;
 
 class Site {
 
@@ -254,7 +255,7 @@ class Site {
         'hostname' => $conf['remote.url'],
       ),
     );
-    $string = json_encode($siteInfo);
-    $this->system->writeFile($this->workingDirectory . '/site_info.json', $string);
+    $string = Yaml::dump($siteInfo);
+    $this->system->writeFile($this->workingDirectory . '/site_info.yaml', $string);
   }
 }
