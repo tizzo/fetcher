@@ -241,8 +241,19 @@ class Site {
     return $this->workingDirectory;
   }
 
-  public function writeSiteInfoFile() {
-    $siteInfo = $this->siteInfo;
+  /**
+   *
+   */
+  public function ensureSiteInfoFileExists() {
+    $conf = $this->container;
+    $siteInfo = array(
+      'name' => $conf['site.name'],
+      'vcs_url' => $conf['vcs.url'],
+      'remote' => array(
+        'name' => $conf['remote.name'],
+        'hostname' => $conf['remote.url'],
+      ),
+    );
     $string = json_encode($siteInfo);
     $this->system->writeFile($this->workingDirectory . '/site_info.json', $string);
   }

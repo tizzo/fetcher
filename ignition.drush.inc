@@ -286,6 +286,12 @@ function drush_ignition_get($site_name) {
     $site->ensureDrushAlias();
     drush_log(dt('The alias @!alias exists and resides in the file @path', array('!alias' => $site_name, '@path' => $site->getDrushAliasPath())), 'success');
 
+    // Write a file with the site information so that we can track down
+    // which site this is even if it has been placed in an unexpected location
+    // came from later.
+    $site->ensureSiteInfoFileExists();
+    drush_log(dt('The site info file for this site exists.'), 'success');
+
     // Add the site to the server.
     $site->ensureSiteEnabled();
     // TODO: Fill in hosntame.
