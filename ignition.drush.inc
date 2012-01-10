@@ -62,6 +62,9 @@ function ignition_drush_command() {
       'branch' => 'The branch of the repository to checkout',
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
+      'sync-db' => 'Whether to syncronize the database with a selected remote environment.',
+      'sync-public-files' => 'Whether to syncronize the public files with the selected remote environment.',
+      //'sync-private-files' => 'Whether to syncronize the private files with the selected remote environment.',
       // TODO: Implement this:
       //'environment' => 'The environment to use for database and file syncing (defaults to dev if it exists).',
       // TODO: Implement this:
@@ -279,8 +282,55 @@ function drush_ignition_get($site_name) {
 
     // Add the site to the server.
     $site->ensureSiteEnabled();
-    // TODO: Fill in hosntame in comment.
-    drush_log(dt('The site has been enabeld and is running at @hostname', array('@hostname' => 'hostname')));
+    // TODO: Fill in hosntame.
+    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
+
+    // TODO: How do we restore from MySQL backups?
+    if (drush_get_option('sync-db')) {
+      drush_log(dt('Attempting to sync database from remote.'));
+      $commandline_options = array(
+        'no-ordered-dump',
+        'verbose',
+        'yes',
+        //'target-dump' => '/tmp/' . $site_name . '-' . time() . '.sql',
+        //'source-dump' => '/home/webadmin/drush-db-cache/' . $site_name . '-' . time() . '.sql',
+      );
+      if (drush_get_context('verbose')) {
+        $commandline_options['verbose'];
+      }
+      $commandline_args = array(
+        // TODO: Support multisite?
+        // TODOD: Get this dynamically.
+        'webadmin@bart.zivtech.com/var/www/roadside/webroot#default',
+        '/var/www/roadside/webroot#default',
+      );
+      $options_text = array();
+      foreach ($commandline_options as $name => $value) {
+        if (!is_numeric($name)) {
+          $value = '--' . $name . '=' . escapeshellarg($value);
+        }
+        else {
+          $value = '--' . $value;
+        }
+        $options_text[] = $value;
+      }
+      $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
+      drush_log(dt('Executing: `!command`. ', array('!command' => $command)));
+      if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
+        throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
+      }
+    }
+    /*
+    if (drush_get_option('sync-public-files')) {
+      $commandline_args = array(
+        // TODO: Build these dynamically!
+        'webadmin@bart.zivtech.com/var/www/roadside/webroot:%files',
+        '/var/www/roadside/webroot:%files',
+      );
+      // TODO: The sorts of logging above!
+      drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
+    }
+    */
 
     drush_log('Your site has been setup!', 'success');
   }
