@@ -312,7 +312,7 @@ function drush_ignition_get($site_name = FALSE) {
       }
       $commandline_args = array(
         // TODO: Support multisite?
-        // TODOD: Get this dynamically.
+        // TODO: Get this dynamically.
         'webadmin@bart.zivtech.com/var/www/roadside/webroot#default',
         '/var/www/roadside/webroot#default',
       );
@@ -328,9 +328,15 @@ function drush_ignition_get($site_name = FALSE) {
       }
       $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)));
+      if (!drush_shell_exec_interactive($command)) {
+        throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
+      }
+      /*
+      // TODO: This is how we should be running this command.
       if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
         throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
       }
+      */
     }
     /*
     if (drush_get_option('sync-public-files')) {
