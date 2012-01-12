@@ -225,7 +225,7 @@ class ServiceContainer extends \Pimple {
     $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
     $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
 
-    $this['site info'] = $siteInfo;
+    $this['site.info'] = $siteInfo;
     return $this;
   }
 

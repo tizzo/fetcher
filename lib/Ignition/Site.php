@@ -63,7 +63,7 @@ class Site {
 
     $this->database = $container['database'];
     
-    $this->siteInfo = $container['site info'];
+    $this->siteInfo = $container['site.info'];
 
     $this->vcs = $container['vcs'];
 
@@ -247,14 +247,15 @@ class Site {
    */
   public function ensureSiteInfoFileExists() {
     $conf = $this->container;
-    $siteInfo = array(
+    /*$siteInfo = array(
       'name' => $conf['site.name'],
       'vcs_url' => $conf['vcs.url'],
       'remote' => array(
         'name' => $conf['remote.name'],
         'hostname' => $conf['remote.url'],
       ),
-    );
+    );*/
+    $siteInfo = $this->siteInfo;
     $string = Yaml::dump($siteInfo);
     $this->system->writeFile($this->workingDirectory . '/site_info.yaml', $string);
   }

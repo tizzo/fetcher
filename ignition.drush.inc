@@ -242,14 +242,13 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
  * Do all of the work to setup a local copy of a site tracked
  * by Ignition, optionally syncronizing database and file with
  * an environment tracked by Ignition.
+ *
+ * TODO: Document installation instructions.
  */
-function drush_ignition_get($site_name) {
+function drush_ignition_get($site_name = FALSE) {
 
-  // TODO: Document installation instructions.
-  $site_info = drush_ignition_get_site_info($site_name);
-  if ($site_info === FALSE) {
-    drush_log(dt('This site information could not be loaded.'), 'error');
-    return;
+  if (!$site_info = drush_ignition_load_site_info_from_name_alias_or_context($site_name)) {
+    return FALSE;
   }
 
   // Note that the Ignition library generally throws exceptions with helpful
@@ -566,21 +565,76 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
  * @return
  *   A stdClass object containing site information or FALSE on failure.
  */
-function drush_ignition_find_site_by_directory() {
-  $directory = getcwd();
+function drush_ignition_find_site_by_directory($directory) {
   $parts = explode(DIRECTORY_SEPARATOR, $directory);
   $site_info = FALSE;
   while (count($parts)) {
-    $path = implode(DIRECTORY_SEPARATOR, $parts) . '/site_info.yaml';
+    $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
     if (file_exists($path)) {
-      $site_info = file_get_contents($path);
+      $site_info = drush_ignition_load_site_info_from_file($path);
       break;
     }
     array_pop($parts);
   }
-  if ($site_info) {
-    $container = drush_ignition_get_service_container();
-    $site_info = $container['site class']::parseSiteInfo($site_info);
-  }
   return $site_info;
+}
+
+/**
+ *
+ * @param $site_name
+ *   An optional param representing a site name or drush alias to the site.
+ * @return
+ *   A stdClass object containing site information.
+ */
+function drush_ignition_load_site_info_from_name_alias_or_context($site_name = FALSE) {
+
+  $site_info = FALSE;
+
+  // If we have a drush alias starting with `@` then we look up the local alias
+  // and try to get the site info from the parent folder of the webroot
+  // indicated by the alias root.
+  if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
+    // We may have multiple environments but if we wrote the aliases then the
+    // first one is the local one.
+    $spec = array_shift($specs);
+    $site_info = drush_ignition_find_site_by_directory($spec['root']);
+  }
+
+  // If a site was not selected, we may be loading the site information from
+  // the site info file in the current working directory, have a look.
+  $path = getcwd();
+  if (!$site_name && !($site_info = drush_ignition_find_site_by_directory($path))) {
+    $site_name = drush_ignition_prompt_for_site_name();
+  }
+
+  // Otherwise load the site from the Ignition web service based on the site
+  // name.
+  if ($site_name && !$site_info) {
+    $site_info = drush_ignition_get_site_info($site_name);
+  }
+
+  if ($site_info === FALSE) {
+    drush_log(dt('This site information could not be loaded.'), 'error');
+    return;
+  }
+
+  return $site_info;
+
+}
+
+/**
+ * Load site info from a specific file.
+ *
+ * @param $path
+ *   The path of the yaml file where site info is stored.
+ * @return
+ *   A stdClass object with data about the site.
+ */
+function drush_ignition_load_site_info_from_file($path) {
+  $return = FALSE;
+  if (is_file($path) && $site_info = file_get_contents($path)) {
+    $container = drush_ignition_get_service_container();
+    $return = $container['site class']::parseSiteInfo($site_info);
+  }
+  return $return;
 }
