@@ -110,8 +110,8 @@ function ignition_drush_command() {
   // Add environment specific options relevant to the server
   // on which ignition is being run for the appropriate commands.
   foreach ($environment_items as $name => $item) {
+    $item['options'] = array_merge($environment_options, $item['options']);
     $items[$name] = $item;
-    $item[$name]['options'] = array_merge($environment_options, $item['options']);
   }
 
   // Add the base options for all Ignition commands.
