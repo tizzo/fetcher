@@ -560,7 +560,7 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
 }
 
 /**
- * Attempt to identify the site we are working with from the current directory.
+ * Attempt to identify the site we are working with from the specified path.
  *
  * @return
  *   A stdClass object containing site information or FALSE on failure.
