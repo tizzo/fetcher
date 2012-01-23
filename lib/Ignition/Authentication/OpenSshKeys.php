@@ -28,8 +28,9 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
 
     // TODO: Allow the specification of the key to use.
 
-    // Generate pseudo random noise to sign for this transaction preventing replay attacks.
-    $text = $this->container['random'](64);
+    // Generate pseudo random noise to sign for this transaction.
+    // The current time is included preventing replay attacks.
+    $text = $this->container['random'](64) . '-' . time();
     $signature = $this->getSignature($text);
     $keyData = $this->parsePublicKey($this->getPublicKey());
     $fingerprint = $keyData['fingerprint'];

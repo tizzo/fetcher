@@ -370,13 +370,25 @@ function drush_ignition_get_site_info($site_name) {
   if ($result === FALSE) {
     $code = $client->getResponseCode();
     if ($code == 401) {
-      drush_log('Access was denied, please check your authentication credentials.', 'error');
+      // If access was denied, lets provide the server message for a hint as to why.
+      $meta = $client->getMetadata();
+      // The response code should be the first line in the response.
+      if (isset($meta['wrapper_data'][0])) {
+        $code = $meta['wrapper_data'][0];
+        $parts = explode(' ', $code);
+        // Remove the protocol and code leaving the message.
+        array_shift($parts);
+        array_shift($parts);
+        $message = implode(' ', $parts);
+        drush_log(dt('Server message: @message', array('@message' => $message)), 'error');
+      }
+      drush_log(dt('Access was denied, please check your authentication credentials.'), 'error');
     }
     else if ($code == 404) {
-      drush_log('The requested site could not be found on the server.', 'error');
+      drush_log(dt('The requested site could not be found on the server.'), 'error');
     }
     else {
-      drush_log('The data could not be retrieved from the server.', 'error');
+      drush_log(dt('The data could not be retrieved from the server.'), 'error');
     }
     return FALSE;
   }
