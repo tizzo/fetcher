@@ -255,8 +255,20 @@ class Site {
         'hostname' => $conf['remote.url'],
       ),
     );*/
+    // Simple Closure to convert recursively cast object to arrays.
+    $recursiveCaster = function($item) use (&$recursiveCaster) {
+      if (is_object($item)) {
+        $item = (array) $item;
+      }
+      foreach ($item as $name => $value) {
+        if (is_object($value)) {
+          $item[$name] = $recursiveCaster($value);
+        }
+      }
+      return $item;
+    };
     $siteInfo = $this->siteInfo;
-    $string = Yaml::dump($siteInfo);
+    $string = Yaml::dump($recursiveCaster($siteInfo), 5);
     $this->system->writeFile($this->workingDirectory . '/site_info.yaml', $string);
   }
 
