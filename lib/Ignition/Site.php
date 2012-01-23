@@ -34,15 +34,18 @@ class Site {
   /**
    * The path on disk of the site's containing folder.
    *
-   * Usually immediately inside the server's webroot and containing all code and files for the site.
+   * Usually immediately inside the server's webroot and containing all code and
+   * files for the site.
    */
   protected $workingDirectory = '';
 
   /**
-   * The path within the working directory where we are placing code during this operation.
+   * The path within the working directory where we are placing code during this
+   * operation.
    *
-   * For sites in development, this will usually be `code`.  For releases it will be a folder
-   * 
+   * For sites in development, this will usually be `code`.  For releases it
+   * will be a folder.
+   *
    */
   protected $codeDirectory = '';
 
@@ -243,19 +246,12 @@ class Site {
   }
 
   /**
-   *
+   * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
     $conf = $this->container;
-    /*$siteInfo = array(
-      'name' => $conf['site.name'],
-      'vcs_url' => $conf['vcs.url'],
-      'remote' => array(
-        'name' => $conf['remote.name'],
-        'hostname' => $conf['remote.url'],
-      ),
-    );*/
     // Simple Closure to convert recursively cast object to arrays.
+    // TODO: Oh god, if we ever have an object in here life is a world of pain.
     $recursiveCaster = function($item) use (&$recursiveCaster) {
       if (is_object($item)) {
         $item = (array) $item;
