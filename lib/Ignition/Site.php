@@ -272,6 +272,7 @@ class Site {
    * Parse site info from a string.
    */
   static public function parseSiteInfo($string) {
-    return Yaml::parse($string);
+    $info = Yaml::parse($string);
+    return (stdClass) $info;
   }
 }
