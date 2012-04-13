@@ -63,6 +63,8 @@ function ignition_drush_command() {
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
       'sync-db' => 'Whether to syncronize the database with a selected remote environment.',
+      // TODO: This should probably use a configurable "file-fetcher" option
+      // rather than speciying local or remote.
       'sync-public-files' => 'Whether to syncronize the public files with the selected remote environment.',
       //'sync-private-files' => 'Whether to syncronize the private files with the selected remote environment.',
       // TODO: Implement this:
@@ -161,7 +163,7 @@ function drush_ignition_list($name = '', $page = '') {
     drush_print_table($rows, TRUE);
   }
   else {
-    drush_log('The data could not be retrieved from the server.', 'error');
+    drush_log(dt('The data could not be retrieved from the server. Error code @code received rom server.', array('@code' => $client->getResponseCode())), 'error');
   }
 }
 
@@ -310,6 +312,7 @@ function drush_ignition_get($site_name = FALSE) {
       if (drush_get_context('verbose')) {
         $commandline_options['verbose'];
       }
+      $conf = drush_ignition_get_service_container();
       $commandline_args = array(
         // TODO: Support multisite?
         // TODO: Get this dynamically.
@@ -388,7 +391,7 @@ function drush_ignition_get_site_info($site_name) {
       drush_log(dt('The requested site could not be found on the server.'), 'error');
     }
     else {
-      drush_log(dt('The data could not be retrieved from the server.'), 'error');
+      drush_log(dt('The data could not be retrieved from the server. Error code @code received rom server.', array('@code' => $code)), 'error');
     }
     return FALSE;
   }
