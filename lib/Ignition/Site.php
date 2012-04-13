@@ -273,6 +273,8 @@ class Site {
    */
   static public function parseSiteInfo($string) {
     $info = Yaml::parse($string);
-    return (stdClass) $info;
+    $info = (object) $info;
+    // TODO: We should prolly turn this into an array in the importer.
+    return $info;
   }
 }
