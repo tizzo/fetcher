@@ -2,8 +2,9 @@
 
 namespace Ignition;
 use \Symfony\Component\Yaml\Yaml;
+//use \Pimple;
 
-class Site {
+class Site /*extends Pimple*/ {
 
   /**
    * The system provider, a dependency injected into the constructor.

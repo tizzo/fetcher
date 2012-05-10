@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   
+ *  Provides authentication
  */
 
 namespace Ignition\Authentication;

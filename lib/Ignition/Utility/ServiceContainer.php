@@ -19,7 +19,7 @@ class ServiceContainer extends \Pimple {
    * A word of warning: most 
    */
   public function __construct() {
-  
+
     // The Ignition site class to use.
     $this['site class'] = '\Ignition\Site';
 
@@ -30,7 +30,7 @@ class ServiceContainer extends \Pimple {
     });
 
     // Set our default system to Ubuntu.
-    $this['system class'] = '\Ignition\Server\Ubuntu';
+    $this['system class'] = '\Ignition\System\Ubuntu';
 
     // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
     $this['system'] = $this->share(function($c) {
@@ -44,9 +44,9 @@ class ServiceContainer extends \Pimple {
     $this['server'] = $this->share(function($c) {
       return new $c['server class']($c);
     });
-    
+
     // Set our default database to MySQL.
-    $this['database class'] = '\Ignition\DB\MySQL';
+    $this['database class'] = '\Ignition\DB\Mysql';
 
     // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
     $this['database'] = $this->share(function($c) {
@@ -144,7 +144,7 @@ class ServiceContainer extends \Pimple {
       $container['system class'] =  '\\Ignition\\System\\' . $class;
     }
     if ($class = drush_get_option('ignition-database', FALSE)) {
-      $container['database class'] = '\\Ignition\\DB\\' . $class;
+      $container['database class'] = 'Ignition\\DB\\' . $class;
     }
     if ($class = drush_get_option('ignition-server', FALSE)) {
       $container['server class'] = '\\Ignition\\Server\\' . $class;
@@ -152,9 +152,9 @@ class ServiceContainer extends \Pimple {
     if ($class = drush_get_option('ignition-vcs', FALSE)) {
       $container['vcs class'] = '\\Ignition\\VCS\\' . $class;
     }
-   
+
     $container['ignition client'] = function($c) {
-      if (!drush_get_option('ignition-server', FALSE)) {
+      if (!drush_get_option('ignition-host', FALSE)) {
         $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
         drush_log(dt($message), 'error');
         throw new \Ignition\Exception\IgnitionException($message);

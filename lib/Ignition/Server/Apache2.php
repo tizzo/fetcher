@@ -11,6 +11,16 @@ class Apache2 {
   }
 
   /**
+   * Implements \Ignition\Server\ServerInterface::registerSettings().
+   *
+   * TODO: I think this is a good idea...
+   */
+  public function registerSettings(\Ignition\Site $site) {
+    $site['server.user'] = 'www-data';
+    $site['server.basewebroot'] = '/var/www';
+  }
+
+  /**
    * Get the user under which this server runs.
    *
    * TODO: This can vary based on the system.

@@ -298,6 +298,13 @@ function drush_ignition_get($site_name = FALSE) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
+    /*
+    TODO: move be below to a separate class and add this method to the site object.
+    if (drush_get_option('sync-db')) {
+      $site->syncDB();
+    }
+    */
+
     // TODO: We'll want to move this into a library class that can be swapped
     // out somehow so that we can support restoring from backups.
     if (drush_get_option('sync-db')) {
@@ -331,15 +338,17 @@ function drush_ignition_get($site_name = FALSE) {
       }
       $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)));
+      /*
       if (!drush_shell_exec_interactive($command)) {
         throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
       }
-      /*
+      //*/
+      //*
       // TODO: This is how we should be running this command.
       if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
         throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
       }
-      */
+      //*/
     }
     /*
     if (drush_get_option('sync-public-files')) {
