@@ -17,8 +17,7 @@ class DrushAlias  implements InfoFetcherInterface {
       if (!empty($alias['ignition'])) {
         $info = $alias['ignition'];
         if (!empty($list[$info['name']])) {
-          drush_print_r($list);
-          $info = (object) array_merge((array) $list[$info['name']], $info);
+          $info = ((array) $list[$info['name']] + $info);
         }
         $list[$info['name']] = (object) $info;
       }
