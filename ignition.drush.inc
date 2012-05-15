@@ -162,7 +162,7 @@ function drush_ignition_info($site_name = NULL) {
 }
 
 /**
- *
+ * Create and install a new site.
  */
 function drush_ignition_create($site_name = FALSE, $version = '7') {
 
