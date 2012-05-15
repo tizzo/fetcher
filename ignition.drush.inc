@@ -132,38 +132,19 @@ function ignition_drush_command() {
 /**
  * List sites in the ignition install.
  */
-function drush_ignition_list($name = '', $page = '') {
-
-  $container = drush_ignition_get_service_container();
-  $client = $container['ignition client'];
-  $client->setPath('ignition/api/site.json');
-
-  // If we have a name to search for add it to the query.
-  if ($name != '') {
-    $client->addParam('name', $name);
-  }
-  // If we are paging past the first 100 results, add the page.
-  if ($page != '') {
-    $client->addParam('page', $page);
-  }
-
-  // Execute the request and decode the response.
-  $result = $client->fetch();
-
+function drush_ignition_list($name = '', $page = 0) {
+  $result = drush_ignition_get_info_fetcher()->listSites($name, $page);
+  drush_print_r($result);
   // TODO: We should have one common error status to check.
-  if ($result !== FALSE) {
+  if (!empty($result)) {
     $rows[] = array(
       'Name',
       'Title',
-      //t('client'),
     );
     foreach($result as $name => $info) {
-      $rows[] = array($name, $info->name);
+      $rows[] = array($name, $info->title);
     }
     drush_print_table($rows, TRUE);
-  }
-  else {
-    drush_log(dt('The data could not be retrieved from the server. Error code @code received rom server.', array('@code' => $client->getResponseCode())), 'error');
   }
 }
 
@@ -374,37 +355,17 @@ function drush_ignition_get($site_name = FALSE) {
  * Issue a request against Ignition to retrieve a site's information by name.
  */
 function drush_ignition_get_site_info($site_name) {
-  $container = drush_ignition_get_service_container();
-  $client = $container['ignition client'];
-  $result = $client
-    ->setPath("ignition/api/site/$site_name.json")
-    ->fetch();
-  if ($result === FALSE) {
-    $code = $client->getResponseCode();
-    if ($code == 401) {
-      // If access was denied, lets provide the server message for a hint as to why.
-      $meta = $client->getMetadata();
-      // The response code should be the first line in the response.
-      if (isset($meta['wrapper_data'][0])) {
-        $code = $meta['wrapper_data'][0];
-        $parts = explode(' ', $code);
-        // Remove the protocol and code leaving the message.
-        array_shift($parts);
-        array_shift($parts);
-        $message = implode(' ', $parts);
-        drush_log(dt('Server message: @message', array('@message' => $message)), 'error');
-      }
-      drush_log(dt('Access was denied, please check your authentication credentials.'), 'error');
-    }
-    else if ($code == 404) {
-      drush_log(dt('The requested site could not be found on the server.'), 'error');
-    }
-    else {
-      drush_log(dt('The data could not be retrieved from the server. Error code @code received rom server.', array('@code' => $code)), 'error');
-    }
-    return FALSE;
-  }
+  $result = drush_ignition_get_info_fetcher()->getInfo($site_name); 
   return $result;
+}
+
+/**
+ * Get the conifugred siteInfoFetcher().
+ *
+ */
+function drush_ignition_get_info_fetcher() {
+  $class = drush_get_option('ignition-info-fetcher', 'Ignition\InfoFetcher\DrushAlias');
+  return new $class();
 }
 
 
