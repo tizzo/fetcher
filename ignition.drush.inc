@@ -231,6 +231,7 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
 function drush_ignition_get($site_name = FALSE) {
 
   if (!$site_info = drush_ignition_load_site_info_from_name_alias_or_context($site_name)) {
+    drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
     return FALSE;
   }
 
