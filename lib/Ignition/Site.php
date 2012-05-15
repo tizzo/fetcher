@@ -63,6 +63,7 @@ class Site /*extends Pimple*/ {
    */
   public function __construct(\Pimple $container) {
 
+    // TODO: lazy load all of these from their containers.
     $this->container = $container;
 
     $this->database = $container['database'];
@@ -205,7 +206,8 @@ class Site /*extends Pimple*/ {
     }
   }
 
-  public function syncEnvDatabase() {
+  public function syncDatabase(Array $conf) {
+    return $this->container['database synchronizer']->syncDB($conf);
   }
 
   public function getDrushAliasPath() {

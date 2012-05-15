@@ -68,6 +68,12 @@ class ServiceContainer extends \Pimple {
       return $vcs;
     });
 
+    $this['database synchronizer class'] = 'Ignition\DBSynchronizer\DrushSqlSync';
+
+    $this['database synchronizer'] = $this->share(function($c) {
+      return new $c['database synchronizer class']($c);
+    });
+
     // Set our default ignition client class to our own HTTPClient.
     $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
 

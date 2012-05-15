@@ -280,58 +280,10 @@ function drush_ignition_get($site_name = FALSE) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
-    /*
-    TODO: move be below to a separate class and add this method to the site object.
     if (drush_get_option('sync-db')) {
-      $site->syncDB();
+      $site->syncDatabase($site_info);
     }
-    */
 
-    // TODO: We'll want to move this into a library class that can be swapped
-    // out somehow so that we can support restoring from backups.
-    if (drush_get_option('sync-db')) {
-      drush_log(dt('Attempting to sync database from remote.'));
-      $commandline_options = array(
-        'no-ordered-dump',
-        'verbose',
-        'yes',
-        //'target-dump' => '/tmp/' . $site_name . '-' . time() . '.sql',
-        //'source-dump' => '/home/webadmin/drush-db-cache/' . $site_name . '-' . time() . '.sql',
-      );
-      if (drush_get_context('verbose')) {
-        $commandline_options['verbose'];
-      }
-      $conf = drush_ignition_get_service_container();
-      $commandline_args = array(
-        // TODO: Support multisite?
-        // TODO: Get this dynamically.
-        'webadmin@bart.zivtech.com/var/www/roadside/webroot#default',
-        '/var/www/roadside/webroot#default',
-      );
-      $options_text = array();
-      foreach ($commandline_options as $name => $value) {
-        if (!is_numeric($name)) {
-          $value = '--' . $name . '=' . escapeshellarg($value);
-        }
-        else {
-          $value = '--' . $value;
-        }
-        $options_text[] = $value;
-      }
-      $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
-      drush_log(dt('Executing: `!command`. ', array('!command' => $command)));
-      /*
-      if (!drush_shell_exec_interactive($command)) {
-        throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
-      }
-      //*/
-      //*
-      // TODO: This is how we should be running this command.
-      if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
-        throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
-      }
-      //*/
-    }
     /*
     if (drush_get_option('sync-public-files')) {
       $commandline_args = array(
@@ -356,7 +308,7 @@ function drush_ignition_get($site_name = FALSE) {
  * Issue a request against Ignition to retrieve a site's information by name.
  */
 function drush_ignition_get_site_info($site_name) {
-  $result = drush_ignition_get_info_fetcher()->getInfo($site_name); 
+  $result = drush_ignition_get_info_fetcher()->getInfo($site_name);
   return $result;
 }
 
@@ -365,7 +317,7 @@ function drush_ignition_get_site_info($site_name) {
  *
  */
 function drush_ignition_get_info_fetcher() {
-  $class = drush_get_option('ignition-info-fetcher', 'Ignition\InfoFetcher\DrushAlias');
+  $class = drush_get_option('ignition-info-fetcher-class', 'Ignition\InfoFetcher\DrushAlias');
   return new $class();
 }
 
