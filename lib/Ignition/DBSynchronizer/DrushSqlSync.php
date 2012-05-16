@@ -1,8 +1,16 @@
 <?php
 
 namespace Ignition\DBSynchronizer;
+use Symfony\Component\Process\Process;
 
 class DrushSqlSync implements DBSynchronizerInterface {
+
+  protected $container = NULL;
+
+  public function __construct(Pimple $container) {
+    $this->container = $container;
+  }
+
   public function syncDB(array $alias) {
     // Don't hard code this and rework all of it to work properly with aliases.
     drush_log(dt('Attempting to sync database from remote.'));
@@ -33,8 +41,19 @@ class DrushSqlSync implements DBSynchronizerInterface {
     }
     $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
     drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
+    /*
     if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
       throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
+    }
+    */
+
+    if (!$this->container['simulate']) {
+      $process = new Process($command, $this->codeDirectory);
+      $process->setTimeout(600);
+      $process->run();
+      if (!$process->isSuccessful()) {
+        throw new Exception('Database synchronization failed!');
+      }
     }
   }
 }

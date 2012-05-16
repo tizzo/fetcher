@@ -15,7 +15,7 @@ class Git extends Base {
   }
 
   public function initialCheckout($branch = 'master') {
-    $this->executeGitCommand('clone %s %s --branch=%s', $this->vcsURL, $this->codeDirectory, $branch);
+    $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->vcsURL, $this->codeDirectory, $branch);
     if (is_file($this->codeDirectory . '/.gitmodules')) {
       $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule sync', $this->codeDirectory, $this->codeDirectory . '/.git');
       $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule update --init --recursive', $this->codeDirectory, $this->codeDirectory . '/.git');
@@ -61,7 +61,7 @@ class Git extends Base {
     $memoryLimit = ini_get('max_execution_time');
     ini_set('max_execution_time', 0);
 
-    $process = new Process($command, $this->codeDirectory);
+    $process = new Process($command);
     if (!$this->container['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);

@@ -281,7 +281,7 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
     if (drush_get_option('sync-db')) {
-      $site->syncDatabase($site_info);
+      $site->syncDatabase();
     }
 
     /*
