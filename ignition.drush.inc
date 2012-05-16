@@ -245,7 +245,7 @@ function drush_ignition_get($site_name = FALSE) {
 
     // Make sure that the project direcotry is properly configured.
     $site->ensureWorkingDirectory();
-    drush_log(dt('The working directory is been properly setup.'), 'success');
+    drush_log(dt('The working directory has been properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
     drush_log(dt('Checking out code from the repository.'));
