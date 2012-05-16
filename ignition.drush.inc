@@ -265,8 +265,8 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
 
     // Create a drush alias for this site.
-    // TODO: Implement this:
-    $site->ensureDrushAlias();
+    // TODO: Account for it being in a shared location.
+    //$site->ensureDrushAlias();
     drush_log(dt('The alias @!alias exists and resides in the file @path', array('!alias' => $site_name, '@path' => $site->getDrushAliasPath())), 'success');
 
     // Write a file with the site information so that we can track down
