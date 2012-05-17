@@ -134,15 +134,14 @@ function ignition_drush_command() {
  */
 function drush_ignition_list($name = '', $page = 0) {
   $result = drush_ignition_get_info_fetcher()->listSites($name, $page);
-  drush_print_r($result);
   // TODO: We should have one common error status to check.
   if (!empty($result)) {
     $rows[] = array(
-      'Name',
       'Title',
+      'Name',
     );
     foreach($result as $name => $info) {
-      $rows[] = array($name, $info->title);
+      $rows[] = array($info->title, $name);
     }
     drush_print_table($rows, TRUE);
   }
