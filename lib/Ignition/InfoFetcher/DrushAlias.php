@@ -19,7 +19,18 @@ class DrushAlias  implements InfoFetcherInterface {
         if (!empty($list[$info['name']])) {
           $info = ((array) $list[$info['name']] + $info);
         }
-        $list[$info['name']] = (object) $info;
+        // Our code expects this to be a set of nested objects, not arrays.
+        $objectify = function ($array) use (&$objectify) {
+          if (is_array($array)) {
+            foreach ($array as &$item) {
+              if (is_array($item)) {
+                $item = $objectify($item);
+              }
+            }
+          }
+          return (object) $array;
+        };
+        $list[$info['name']] = (object) $objectify($info);
       }
     }
     return $list;
