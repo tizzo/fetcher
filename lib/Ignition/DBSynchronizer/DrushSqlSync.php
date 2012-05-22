@@ -16,11 +16,10 @@ class DrushSqlSync implements DBSynchronizerInterface {
     drush_log(dt('Attempting to sync database from remote.'));
     $commandline_options = array(
       '--no-ordered-dump',
-      '--verbose',
       '--yes',
     );
-    if (drush_get_context('verbose')) {
-      $commandline_options['verbose'] = TRUE;
+    if ($this->container['verbose']) {
+      $commandline_options[] = '--verbose';
     }
     $conf = drush_ignition_get_service_container();
     $commandline_args = array(
@@ -29,9 +28,10 @@ class DrushSqlSync implements DBSynchronizerInterface {
       '@' . $this->container['site.name'] . '.live',
       '@' . $this->container['site.name'] . '.local',
     );
-    $options_text = array();
-    $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $options_text);
-    drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
+    if ($this->container['verbose']) {
+      $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $commandline_options);
+      drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
+    }
     if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
       throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
     }

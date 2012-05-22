@@ -62,7 +62,7 @@ function ignition_drush_command() {
       'branch' => 'The branch of the repository to checkout',
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
-      'sync-db' => 'Whether to syncronize the database with a selected remote environment.',
+      'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       // TODO: This should probably use a configurable "file-fetcher" option
       // rather than speciying local or remote.
       'sync-public-files' => 'Whether to syncronize the public files with the selected remote environment.',
@@ -264,7 +264,6 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
 
     // Create a drush alias for this site.
-    // TODO: Account for it being in a shared location.
     //$site->ensureDrushAlias();
     drush_log(dt('The alias @!alias exists and resides in the file @path', array('!alias' => $site_name, '@path' => $site->getDrushAliasPath())), 'success');
 
@@ -279,7 +278,7 @@ function drush_ignition_get($site_name = FALSE) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
-    if (drush_get_option('sync-db')) {
+    if (drush_get_option('sql-sync')) {
       $site->syncDatabase();
     }
 
