@@ -2,9 +2,9 @@
 
 namespace Ignition;
 use \Symfony\Component\Yaml\Yaml;
-//use \Pimple;
+use \Pimple;
 
-class Site /*extends Pimple*/ {
+class Site extends Pimple {
 
   /**
    * The system provider, a dependency injected into the constructor.
@@ -66,19 +66,19 @@ class Site /*extends Pimple*/ {
     // TODO: lazy load all of these from their containers.
     $this->container = $container;
 
-    $this->database = $container['database'];
+    $this['database'] = $container['database'];
     
-    $this->siteInfo = $container['site.info'];
+    $this['siteInfo'] = $container['site.info'];
 
-    $this->vcs = $container['vcs'];
+    $this['vcs'] = $container['vcs'];
 
-    $this->server = $container['server'];
+    $this['server'] = $container['server'];
 
-    $this->system = $container['system'];
+    $this['system'] = $container['system'];
 
-    $this->workingDirectory = $container['site.working_directory'];
+    $this['site.working_directory'] = $container['site.working_directory'];
 
-    $this->codeDirectory = $container['site.code_directory'];
+    $this['codeDirectory'] = $container['site.code_directory'];
 
   }
 
@@ -86,13 +86,13 @@ class Site /*extends Pimple*/ {
    * Create a new database
    */
   public function ensureDatabase() {
-    if (!$this->database->exists()) {
-      $this->database->createDatabase();
+    if (!$this['database']->exists()) {
+      $this['database']->createDatabase();
     }
-    if (!$this->database->userExists()) {
+    if (!$this['database']->userExists()) {
       $name = $this->siteInfo->name;
-      $this->database->createUser();
-      $this->database->grantAccessToUser();
+      $this['database']->createUser();
+      $this['database']->grantAccessToUser();
     }
   }
 
@@ -100,8 +100,8 @@ class Site /*extends Pimple*/ {
    *
    */
   public function ensureDrushAlias() {
-    $drushPath = $this->system->getUserHomeFolder() . '/.drush';
-    $this->system->ensureFolderExists($drushPath);
+    $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
+    $this['system']->ensureFolderExists($drushPath);
     $drushFilePath = $this->getDrushAliasPath();
     if (!is_file($drushFilePath)) {
       $vars = array(
@@ -110,7 +110,7 @@ class Site /*extends Pimple*/ {
         'hostname' => $this->container['remote.url'],
       );
       $content = \drush_ignition_get_asset('drush.alias', $vars);
-      $this->system->writeFile($drushFilePath, $content);
+      $this['system']->writeFile($drushFilePath, $content);
     }
   }
 
@@ -120,21 +120,21 @@ class Site /*extends Pimple*/ {
   public function ensureWorkingDirectory() {
 
     // Ensure we have our working directory.
-    $this->system->ensureFolderExists($this->workingDirectory);
+    $this['system']->ensureFolderExists($this['site.working_directory']);
 
     // Ensure we have a log directory.
-    $this->system->ensureFolderExists($this->workingDirectory . '/logs');
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/logs');
 
     // Ensure we have our log files.
     // TODO: We probably only want these on dev.
-    $this->system->ensureFileExists($this->workingDirectory . '/logs/access.log');
-    $this->system->ensureFileExists($this->workingDirectory . '/logs/mail.log');
-    $this->system->ensureFileExists($this->workingDirectory . '/logs/watchdog.log');
+    $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/access.log');
+    $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/mail.log');
+    $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/watchdog.log');
 
     // Ensure we have our files folders.
-    $this->system->ensureFolderExists($this->workingDirectory . '/public_files', NULL, $this->server->getWebUser());
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server']->getWebUser());
     if (isset($this->siteInfo->{'private files'})) {
-      $this->system->ensureFolderExists($this->workingDirectory . '/private_files', NULL, $this->server->getWebUser());
+      $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
     }
 
   }
@@ -162,7 +162,7 @@ class Site /*extends Pimple*/ {
       if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
         $content .= "\rrequire_once('site-settings.php');\r";
       }
-      $this->system->writeFile($settingsFilePath, $content);
+      $this['system']->writeFile($settingsFilePath, $content);
     }
   }
 
@@ -172,11 +172,11 @@ class Site /*extends Pimple*/ {
    */
   public function ensureCode() {
     if (!is_dir($this->codeDirectory)) {
-      $this->vcs->initialCheckout();
+      $this['vcs']->initialCheckout();
     }
     else {
       // TODO: Switch to the right branch or something?
-      // $this->vcs->update($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
+      // $this['vcs']->update($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
     }
     if (is_dir($this->codeDirectory . '/webroot')) {
       $this->drupalRoot = $this->codeDirectory . '/webroot';
@@ -190,15 +190,15 @@ class Site /*extends Pimple*/ {
    * Ensure that all symlinks besides the webroot symlink have been created.
    */
   public function ensureSymLinks() {
-    $this->system->ensureSymLink($this->workingDirectory . '/public_files', $this->drupalRoot . '/sites/default/files');
-    $this->system->ensureSymLink($this->drupalRoot, $this->workingDirectory . '/webroot');
+    $this['system']->ensureSymLink($this['site.working_directory'] . '/public_files', $this->drupalRoot . '/sites/default/files');
+    $this['system']->ensureSymLink($this->drupalRoot, $this['site.working_directory'] . '/webroot');
   }
 
   /**
    *
    */
   public function ensureSiteEnabled() {
-    $server = $this->server;
+    $server = $this['server'];
     if (!$server->siteEnabled()) {
       $server->ensureSiteConfigured();
       $server->ensureSiteEnabled();
@@ -211,23 +211,23 @@ class Site /*extends Pimple*/ {
   }
 
   public function getDrushAliasPath() {
-    return $this->system->getUserHomeFolder() . '/.drush/' . $this->siteInfo->name . '.aliases.drushrc.php';
+    return $this['system']->getUserHomeFolder() . '/.drush/' . $this->siteInfo->name . '.aliases.drushrc.php';
   }
 
   /**
    * Removes all traces of this site from this system.
    */
   public function remove() {
-    $this->system->ensureDeleted($this->workingDirectory);
-    $this->system->ensureDeleted($this->getDrushAliasPath());
-    //$this->system->removeSite($this->siteInfo->name);
-    if ($this->database->exists()) {
-      $this->database->removeDatabase();
+    $this['system']->ensureDeleted($this['site.working_directory']);
+    $this['system']->ensureDeleted($this->getDrushAliasPath());
+    //$this['system']->removeSite($this->siteInfo->name);
+    if ($this['database']->exists()) {
+      $this['database']->removeDatabase();
     }
-    if ($this->database->userExists()) {
-      $this->database->removeUser();
+    if ($this['database']->userExists()) {
+      $this['database']->removeUser();
     }
-    $this->server->ensureSiteRemoved();
+    $this['server']->ensureSiteRemoved();
   }
 
   /**
@@ -245,7 +245,7 @@ class Site /*extends Pimple*/ {
    * @return string
    */
   public function getWorkingDirectory() {
-    return $this->workingDirectory;
+    return $this['site.working_directory'];
   }
 
   /**
@@ -268,7 +268,7 @@ class Site /*extends Pimple*/ {
     };
     $siteInfo = $this->siteInfo;
     $string = Yaml::dump($recursiveCaster($siteInfo), 5);
-    $this->system->writeFile($this->workingDirectory . '/site_info.yaml', $string);
+    $this['system']->writeFile($this['site.working_directory'] . '/site_info.yaml', $string);
   }
 
   /**
