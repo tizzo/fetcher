@@ -9,6 +9,7 @@
 
 namespace Ignition\Utility;
 
+
 class HTTPClient {
 
   /**
@@ -73,7 +74,10 @@ class HTTPClient {
     $plainTextDecode = function($textString) {
       return (string) $textString;
     };
-    $this->registerEncoding('plain', 'text/plain', $plainTextDecode);
+    $plainTextEncode = function(Array $textString) {
+      return $params = http_build_query($params);
+    };
+    $this->registerEncoding('plain', 'text/plain', $plainTextDecode, $plainTextEncode);
 
     // Default our decoding to plain
     $this->setEncoding('plain');
@@ -86,7 +90,10 @@ class HTTPClient {
       }
       return $response;
     };
-    $this->registerEncoding('json', 'application/json', $jsonDecode);
+    $jsonEncode = function(Array $params) {
+      return json_encode($params);
+    };
+    $this->registerEncoding('json', 'application/json', $jsonDecode, $jsonEncode);
 
     // Register xml decoding.
     $xmlDecode = function($xmlString) {
@@ -96,13 +103,16 @@ class HTTPClient {
       }
       return $response;
     };
-    $this->registerEncoding('xml', 'application/xml', $xmlDecode);
+    $this->registerEncoding('xml', 'application/xml', $xmlDecode, $plainTextEncode);
 
     // Register serialized PHP decoding.
     $phpDecode = function($serializedPhpString) {
       return unserialize($serializedPhpString);
     };
-    $this->registerEncoding('php', 'application/vnd.php.serialized', $phpDecode);
+    $phpEncode = function(Array $params) {
+      return serialize($params);
+    };
+    $this->registerEncoding('php', 'application/vnd.php.serialized', $phpDecode, $phpEncode);
 
   }
 
@@ -201,7 +211,7 @@ class HTTPClient {
     $this->setHeader('Authorization', 'Basic ' .  base64_encode($username.':'.$password));
     return $this;
   }
-  
+
   /**
    * Reset the response data so that a similar request
    * can be made with the same object.
@@ -247,7 +257,7 @@ class HTTPClient {
    *   The body of the request or FALSE of failure.
    */
   public function execute() {
-    
+
     $request_url = $this->url;
 
     if ($this->path != '') {
@@ -269,29 +279,30 @@ class HTTPClient {
     // to plain.
     $mimeType = $this->encodings[$this->encoding]['mime type'];
     if (!isset($this->headers['Content Type'])) {
-      $this->setHeader('Content Type', $mimeType);
+      $this->setHeader('Content-Type', $mimeType);
     }
     if (!isset($this->headers['Accept'])) {
       $this->setHeader('Accept', $mimeType);
     }
     if (count($this->headers)) {
-      $headers = '';
+      $headers = array();
       foreach ($this->headers as $name => $value) {
-        $headers .= $name . ': ' . $value . "\r\n";
+        $headers[] = $name . ': ' . $value;
       }
       $context_parameters['http']['header'] = $headers;
     }
-    $params = $this->params;
-    if (count($params)) {
-      $params = http_build_query($params);
-      if ($this->method == 'POST') {
+    if (!empty($this->params) && count($this->params) > 0) {
+      if (in_array($this->method, array('POST', 'PUT'))) {
+        $params = $this->encode();
         $context_parameters['http']['content'] = $params;
-      } 
+      }
       else {
+        $params = http_build_query($params);
         $request_url .= '?' . $params;
       }
     }
     $context = stream_context_create($context_parameters);
+    var_dump($context_parameters);
     $file_resource = @fopen($request_url, 'rb', false, $context);
     if (!$file_resource) {
       $response = false;
@@ -321,7 +332,23 @@ class HTTPClient {
    */
   public function decode() {
     if ($this->encoding && isset($this->encodings[$this->encoding]) && $this->response) {
-      return $this->encodings[$this->encoding]['function']($this->response);
+      return $this->encodings[$this->encoding]['decode']($this->response);
+    }
+  }
+
+  /**
+   * Decode the response.
+   *
+   * If encoding is set to something we understand, decode the response.
+   *
+   * See HTTPClient::registerEncoding() to add encodings.
+   *
+   * @return
+   *  The decoded PHP representation of the data.
+   */
+  public function encode() {
+    if ($this->encoding && isset($this->encodings[$this->encoding])) {
+      return $this->encodings[$this->encoding]['encode']($this->params);
     }
   }
 
@@ -373,7 +400,7 @@ class HTTPClient {
    *   The string returned from the request.
    */
   public function getResult() {
-    return $this->result;
+    return $this->response;
   }
 
   /**
@@ -386,12 +413,13 @@ class HTTPClient {
   /**
    * Register a encoding and provide a function to deal with it.
    */
-  public function registerEncoding($name, $mimeType, \Closure $function) {
+  public function registerEncoding($name, $mimeType, \Closure $decode, \Closure $encode) {
     // It would be cool to allow decode callbacks to be injected to allow
     // support for arbitrary encodings.
     // TODO: The body of this function :D.
     $this->encodings[$name] = array(
-      'function' => $function,
+      'encode' => $encode,
+      'decode' => $decode,
       'mime type' => $mimeType,
     );
   }
