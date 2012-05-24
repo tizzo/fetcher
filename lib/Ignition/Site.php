@@ -7,38 +7,9 @@ use \Pimple;
 class Site extends Pimple {
 
   /**
-   * The system provider, a dependency injected into the constructor.
-   */
-  protected $system = FALSE;
-
-  /**
-   * The database provider, a dependency injected into the constructor.
-   */
-  protected $database = FALSE;
-
-  /**
-   * The vcs provider, a dependency injected into the constructor.
-   */
-  protected $vcs = FALSE;
-
-  /**
-   * The server provider, a dependency injected into the constructor.
-   */
-  protected $server = FALSE;
-
-
-  /**
    * A stdClass object of whatever information is available about the site.
    */
   protected $siteInfo = array();
-
-  /**
-   * The path on disk of the site's containing folder.
-   *
-   * Usually immediately inside the server's webroot and containing all code and
-   * files for the site.
-   */
-  protected $workingDirectory = '';
 
   /**
    * The path within the working directory where we are placing code during this
@@ -61,25 +32,9 @@ class Site extends Pimple {
    * Constructor function to allow dependency injection.
    *
    */
-  public function __construct(\Pimple $container) {
-
-    // TODO: lazy load all of these from their containers.
-    $this->container = $container;
-
-    $this['database'] = $container['database'];
-    
-    $this['siteInfo'] = $container['site.info'];
-
-    $this['vcs'] = $container['vcs'];
-
-    $this['server'] = $container['server'];
-
-    $this['system'] = $container['system'];
-
-    $this['site.working_directory'] = $container['site.working_directory'];
-
-    $this['codeDirectory'] = $container['site.code_directory'];
-
+  public function __construct() {
+    // Populate defaults.
+    $this->setDependencyDefaults();
   }
 
   /**
@@ -90,7 +45,7 @@ class Site extends Pimple {
       $this['database']->createDatabase();
     }
     if (!$this['database']->userExists()) {
-      $name = $this->siteInfo->name;
+      $name = $this['site.info']->name;
       $this['database']->createUser();
       $this['database']->grantAccessToUser();
     }
@@ -105,9 +60,9 @@ class Site extends Pimple {
     $drushFilePath = $this->getDrushAliasPath();
     if (!is_file($drushFilePath)) {
       $vars = array(
-        'local_root' => $this->drupalRoot,
-        'remote_root' => $this->drupalRoot,
-        'hostname' => $this->container['remote.url'],
+        'local_root' => $this['site.code_directory'],
+        'remote_root' => $this['site.code_directory'],
+        'hostname' => $this['remote.url'],
       );
       $content = \drush_ignition_get_asset('drush.alias', $vars);
       $this['system']->writeFile($drushFilePath, $content);
@@ -133,7 +88,7 @@ class Site extends Pimple {
 
     // Ensure we have our files folders.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server']->getWebUser());
-    if (isset($this->siteInfo->{'private files'})) {
+    if (isset($this['site.info']->{'private files'})) {
       $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
     }
 
@@ -145,9 +100,9 @@ class Site extends Pimple {
   public function ensureSettingsFileExists() {
     // TODO: Support multisite?
     // TODO: This is ugly, what we're doing with this container here...
-    $settingsFilePath = $this->container['site.webroot'] = $this->drupalRoot . '/sites/default/settings.php';
+    $settingsFilePath = $this['site.code_directory'] . '/sites/default/settings.php';
     if (!is_file($settingsFilePath)) {
-      $conf = $this->container;
+      $conf = $this;
       $vars = array();
       $vars =  array(
         'database' => $conf['database.database'],
@@ -157,11 +112,12 @@ class Site extends Pimple {
         'driver' => $conf['database.driver'],
       );
       // TODO: Get the settings.php for the appropriate version.
-      $content = \drush_ignition_get_asset('drupal.' . $this->container['version'] . '.settings.php', $vars);
+      $content = \drush_ignition_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
       // Allow settings to be checked into versioncontrol and automatically included from settings.php.
-      if (is_file($this->drupalRoot . '/sites/default/site-settings.php')) {
+      if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
         $content .= "\rrequire_once('site-settings.php');\r";
       }
+      drush_print($settingsFilePath);
       $this['system']->writeFile($settingsFilePath, $content);
     }
   }
@@ -171,18 +127,18 @@ class Site extends Pimple {
    *
    */
   public function ensureCode() {
-    if (!is_dir($this->codeDirectory)) {
+    if (!is_dir($this['site.code_directory'])) {
       $this['vcs']->initialCheckout();
     }
     else {
       // TODO: Switch to the right branch or something?
-      // $this['vcs']->update($this->siteInfo->vcsURL, $this->codeDirectory, $branch);
+       $this['vcs']->update($this['site.code_directory']);
     }
-    if (is_dir($this->codeDirectory . '/webroot')) {
-      $this->drupalRoot = $this->codeDirectory . '/webroot';
+    if (is_dir($this['site.code_directory'] . '/webroot')) {
+      $this['site.code_directory'] = $this['site.code_directory'] . '/webroot';
     }
     else {
-      $this->drupalRoot = $this->codeDirectory;
+      $this['site.code_directory'] = $this['site.code_directory'];
     }
   }
 
@@ -190,8 +146,8 @@ class Site extends Pimple {
    * Ensure that all symlinks besides the webroot symlink have been created.
    */
   public function ensureSymLinks() {
-    $this['system']->ensureSymLink($this['site.working_directory'] . '/public_files', $this->drupalRoot . '/sites/default/files');
-    $this['system']->ensureSymLink($this->drupalRoot, $this['site.working_directory'] . '/webroot');
+    $this['system']->ensureSymLink($this['site.working_directory'] . '/public_files', $this['site.code_directory'] . '/sites/default/files');
+    $this['system']->ensureSymLink($this['site.code_directory'], $this['site.working_directory'] . '/webroot');
   }
 
   /**
@@ -207,11 +163,11 @@ class Site extends Pimple {
   }
 
   public function syncDatabase(Array $conf) {
-    return $this->container['database synchronizer']->syncDB($conf);
+    return $this['database synchronizer']->syncDB($conf);
   }
 
   public function getDrushAliasPath() {
-    return $this['system']->getUserHomeFolder() . '/.drush/' . $this->siteInfo->name . '.aliases.drushrc.php';
+    return $this['system']->getUserHomeFolder() . '/.drush/' . $this['site.info']->name . '.aliases.drushrc.php';
   }
 
   /**
@@ -220,7 +176,7 @@ class Site extends Pimple {
   public function remove() {
     $this['system']->ensureDeleted($this['site.working_directory']);
     $this['system']->ensureDeleted($this->getDrushAliasPath());
-    //$this['system']->removeSite($this->siteInfo->name);
+    //$this['system']->removeSite($this['site.info']->name);
     if ($this['database']->exists()) {
       $this['database']->removeDatabase();
     }
@@ -236,7 +192,7 @@ class Site extends Pimple {
    * @return string
    */
   public function getCodeDirectory() {
-    return $this->codeDirectory;
+    return $this['site.code_directory'];
   }
 
   /**
@@ -252,7 +208,7 @@ class Site extends Pimple {
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
-    $conf = $this->container;
+    $conf = $this;
     // Simple Closure to convert recursively cast object to arrays.
     // TODO: Oh god, if we ever have an object in here life is a world of pain.
     $recursiveCaster = function($item) use (&$recursiveCaster) {
@@ -266,7 +222,7 @@ class Site extends Pimple {
       }
       return $item;
     };
-    $siteInfo = $this->siteInfo;
+    $siteInfo = $this['site.info'];
     $string = Yaml::dump($recursiveCaster($siteInfo), 5);
     $this['system']->writeFile($this['site.working_directory'] . '/site_info.yaml', $string);
   }
@@ -279,5 +235,217 @@ class Site extends Pimple {
     $info = (object) $info;
     // TODO: We should prolly turn this into an array in the importer.
     return $info;
+  }
+
+  /**
+   * Populate this object with defaults.
+   */
+  public function setDependencyDefaults() {
+
+    // Set our default system to Ubuntu.
+    // TODO: Do some detection?
+    $this['system class'] = '\Ignition\System\Ubuntu';
+
+    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
+    $this['system'] = $this->share(function($c) {
+      return new $c['system class']($c);
+    });
+
+    // Set our default server to Apache2.
+    $this['server class'] = '\Ignition\Server\Apache2';
+
+    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
+    $this['server'] = $this->share(function($c) {
+      return new $c['server class']($c);
+    });
+
+    // Set our default database to MySQL.
+    $this['database class'] = '\Ignition\DB\Mysql';
+
+    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
+    $this['database'] = $this->share(function($c) {
+      return new $c['database class']($c);
+    });
+
+    // Set our default VCS to Git.
+    $this['vcs class'] = '\Ignition\VCS\Git';
+
+    // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
+    $this['vcs'] = $this->share(function($c) {
+      $config = array();
+      $config['codeDirectory'] = $c['site.code_directory'];
+      if (isset($c['vcs.url'])) {
+        $config['vcsURL'] = $c['vcs.url'];
+      }
+      $vcs = new $c['vcs class']($c);
+      $vcs->configure($config);
+      return $vcs;
+    });
+
+    $this['database synchronizer class'] = 'Ignition\DBSynchronizer\DrushSqlSync';
+
+    $this['database synchronizer'] = $this->share(function($c) {
+      return new $c['database synchronizer class']($c);
+    });
+
+    // Set our default ignition client class to our own HTTPClient.
+    $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
+
+    // Set our default ignition client authentication class to our own HTTPClient.
+    $this['client.authentication class'] = '\Ignition\Authentication\OpenSshKeys';
+
+    // Instantiate the authentication object.
+    $this['client.authentication'] = $this->share(function($c) {
+      return new $c['client.authentication class']($c);
+    });
+
+    $this['simulate'] = FALSE;
+    $this['verbose'] = FALSE;
+
+    // TODO: use context to build hostname.
+    $this['site.hostname'] = function($c) {
+      return $c['site.name'] . '.local';
+    };
+
+    // TODO: This is retarderated:
+    // TODO: Add optional webroot from siteInfo.
+    $this['site.working_directory'] = function($c) {
+      return $c['server']->getWebroot() . '/' . $c['site.name'];
+    };
+
+    $this['site.code_directory'] = function($c) {
+      // TODO: This needs to be smarter:
+      return $c['site.working_directory'] . '/' . 'code';
+    };
+
+    /**
+     * Generate a random string.
+     *
+     * Essentially stolen from Drupal 7's `drupal_random_bytes`.
+     */
+    // Register our service for generating a random string.
+    $this['random'] = $this->protect(
+      function($count = 20) {
+        static $random_state, $bytes;
+        if (!isset($random_state)) {
+          $random_state = print_r($_SERVER, TRUE);
+          if (function_exists('getmypid')) {
+            $random_state .= getmypid();
+          }
+          $bytes = '';
+        }
+        if (strlen($bytes) < $count) {
+          if ($fh = @fopen('/dev/urandom', 'rb')) {
+            $bytes .= fread($fh, max(4096, $count));
+            fclose($fh);
+          }
+          while (strlen($bytes) < $count) {
+            $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
+            $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
+          }
+        }
+        $output = substr($bytes, 0, $count);
+        $bytes = substr($bytes, $count);
+        return base64_encode(substr(strtr($output, array('+' => '-', '/' => '_', '\\' => '_', '=' => '')), 0, -2));
+      }
+    );
+
+  }
+
+  /**
+   * Configure the service container with site information loaded from Ignition.
+   *
+   * @param $siteInfo
+   *   The information returned from `\drush_ignition_get_site_info()`.
+   */
+  public function configureWithSiteInfo($siteInfo) {
+    if (isset($site_info->vcs)) {
+      $this['vcs'] = $this->share(function() {
+        drush_ignition_get_handler('VCS', $site_info->vcs);
+      });
+    }
+
+    // Load the site variables.
+    $this['site.name'] = $siteInfo->name;
+
+    if (isset($siteInfo->vcs_url)) {
+      $this['vcs.url'] = $siteInfo->vcs_url;
+    }
+
+    // Load the environment variables.
+    // TODO: Replace with environment!
+    $this['remote.name'] = trim($siteInfo->environments->dev->server->name);
+    $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
+
+    // Setup the administrative db credentials ().
+    $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
+    $this['database.admin.password'] = drush_get_option('ignition-db-username', FALSE);
+    $this['database.admin.hostname'] = drush_get_option('ignition-db-username', 'localhost');
+    $this['database.admin.port'] = drush_get_option('ignition-db-username', '');
+
+    // TODO: If we're dealing with an already "gotten" site, we need to load the db_spec via drush
+    // rather than reading context options.
+    // TODO: When implementing the above, decide which should take precedence.
+    // Setup the site specific db credentails.
+    // TODO: Add support for this in siteInfo.
+    $this['database.hostname'] = 'localhost';
+    $this['database.username'] = drush_get_option('database-user', $siteInfo->name);
+    $this['database.password'] = drush_get_option('database-password', $this['random']());
+    $this['database.driver'] = $this['database class']::getDriver();
+    $this['database.port'] = drush_get_option('database-port', 3306);
+    $this['database.database'] = drush_get_option('database', $siteInfo->name);
+
+    // Drop the first character because our versions are formatted d*.
+    if (isset($siteInfo->version)) {
+      $this['version'] = substr($siteInfo->version, 1);
+    }
+
+    $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
+    $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
+
+    $this['site.info'] = $siteInfo;
+    return $this;
+  }
+
+  /**
+   * Create an Ignition ServiceContainer populated from the global Drush context.
+   */
+  static public function getServiceContainerFromDrushContext() {
+
+    $container = new static();
+
+    // Detect overrides passed in as Drush options.
+    if ($class = drush_get_option('ignition-system', FALSE)) {
+      $container['system class'] =  '\\Ignition\\System\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-database', FALSE)) {
+      $container['database class'] = 'Ignition\\DB\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-server', FALSE)) {
+      $container['server class'] = '\\Ignition\\Server\\' . $class;
+    }
+    if ($class = drush_get_option('ignition-vcs', FALSE)) {
+      $container['vcs class'] = '\\Ignition\\VCS\\' . $class;
+    }
+
+    $container['ignition client'] = function($c) {
+      if (!drush_get_option('ignition-host', FALSE)) {
+        $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
+        drush_log(dt($message), 'error');
+        throw new \Ignition\Exception\IgnitionException($message);
+      }
+      $client = new $c['ignition client class']();
+      $client->setURL(drush_get_option('ignition-host'))
+        ->setMethod('GET')
+        ->setTimeout(3)
+        ->setEncoding('json');
+
+      // Populate this object with the appropriate authorization credentials.
+      $c['client.authentication']->addAuthenticationToHTTPClientFromDrushContext($client);
+
+      return $client;
+    };
+
+    return $container;
   }
 }
