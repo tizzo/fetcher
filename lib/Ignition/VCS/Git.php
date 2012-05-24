@@ -72,6 +72,10 @@ class Git extends Base {
     ini_set('memory_limit', $timeLimit);
     ini_set('max_execution_time', $memoryLimit);
 
+    if (!$process->isSuccessful()) {
+      throw new Exception('Executing Git command failed: `' . $command . '`.');
+    }
+
     return $process->isSuccessful();
   }
 }
