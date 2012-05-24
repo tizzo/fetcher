@@ -117,6 +117,7 @@ class Site extends Pimple {
       if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
         $content .= "\rrequire_once('site-settings.php');\r";
       }
+      drush_print($settingsFilePath);
       $this['system']->writeFile($settingsFilePath, $content);
     }
   }
