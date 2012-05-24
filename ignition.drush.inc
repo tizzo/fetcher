@@ -345,11 +345,11 @@ function drush_ignition_delete($site_name) {
  * Factory function for instatiating a site object.
  */
 function drush_ignition_get_site($site_info = NULL) {
+  $class = drush_get_option('ignition_site_class', '\Ignition\Site');
+  $site = new $class();
+  $site->configureWithSiteInfo($site_info);
 
-  $container = drush_ignition_get_service_container();
-  $container->configureWithSiteInfo($site_info);
-
-  return $container['site'];
+  return $site;
 }
 
 function drush_ignition_release() {
@@ -430,27 +430,6 @@ function ignition_autoload($class) {
       return TRUE;
     }
   }
-}
-
-/**
- * Factory for loading a service containter from the global Drush context.
- *
- * @return \Ignition\Utility\ServiceContainer.
- *   A service container populated from the global Drush context.
- */
-function drush_ignition_get_service_container($handler = FALSE, $reset = FALSE) {
-  static $container = FALSE;
-  // If a container was provided, lets use that.
-  if ($handler !== FALSE) {
-    $container = $handler;
-  }
-  else if ($reset || $container == FALSE) {
-    // TODO: Check to see if we are in a site and try to load site info from the
-    // site somewhere...
-    // Load a new container from the global context.
-    $container = \Ignition\Utility\ServiceContainer::getServiceContainerFromDrushContext();
-  }
-  return $container;
 }
 
 /**
@@ -575,8 +554,8 @@ function drush_ignition_load_site_info_from_name_alias_or_context($site_name = F
 function drush_ignition_load_site_info_from_file($path) {
   $return = FALSE;
   if (is_file($path) && $site_info = file_get_contents($path)) {
-    $container = drush_ignition_get_service_container();
-    $return = $container['site class']::parseSiteInfo($site_info);
+    $class = drush_get_option('ignition_site_class', '\Ignition\Site');
+    $return = $class::parseSiteInfo($site_info);
   }
   return $return;
 }

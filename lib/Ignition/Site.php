@@ -16,7 +16,7 @@ class Site extends Pimple {
    * operation.
    *
    * For sites in development, this will usually be `code`.  For releases it
-   * will be a folder.
+   * will be a folder named for the release (usually a tag).
    *
    */
   protected $codeDirectory = '';
