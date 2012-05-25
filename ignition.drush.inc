@@ -243,11 +243,12 @@ function drush_ignition_get($site_name = FALSE) {
     $site = drush_ignition_get_site($site_info);
 
     // Make sure that the project direcotry is properly configured.
+    drush_log(dt('Ensuring the working directory for this repository is properly setup...'), 'ok');
     $site->ensureWorkingDirectory();
-    drush_log(dt('The working directory has been properly setup.'), 'success');
+    drush_log(dt('The working directory is properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
-    drush_log(dt('Checking out code from the repository.'));
+    drush_log(dt('Checking out code from the repository...'), 'ok');
     $site->ensureCode();
     drush_log(dt('The code is in place and up to date.'), 'success');
 
@@ -279,7 +280,9 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
 
     if (drush_get_option('sql-sync')) {
+      drush_log(dt('Attempting to sync database from remote...', 'ok'));
       $site->syncDatabase();
+      drush_log(dt('The database was properly synchronized.', 'success'));
     }
 
     /*
