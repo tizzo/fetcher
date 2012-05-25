@@ -13,7 +13,6 @@ class DrushSqlSync implements DBSynchronizerInterface {
 
   public function syncDB(array $alias) {
     // Don't hard code this and rework all of it to work properly with aliases.
-    drush_log(dt('Attempting to sync database from remote.'));
     $commandline_options = array(
       '--no-ordered-dump',
       '--yes',

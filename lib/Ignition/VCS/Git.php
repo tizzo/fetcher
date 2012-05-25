@@ -16,15 +16,15 @@ class Git extends Base {
 
   public function initialCheckout($branch = 'master') {
     $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->vcsURL, $this->codeDirectory, $branch);
-    if (is_file($this->codeDirectory . '/.gitmodules')) {
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule sync', $this->codeDirectory, $this->codeDirectory . '/.git');
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule update --init --recursive', $this->codeDirectory, $this->codeDirectory . '/.git');
-    }
   }
 
   public function update($localDirectory) {
     //update = "cd %s; git checkout %s; git pull; git submodule update --init" % (localDirectory, label)
-    $this->executeGitCommand('pull', $branch);
+    $this->executeGitCommand('pull');
+    if (is_file($this->codeDirectory . '/.gitmodules')) {
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule sync', $this->codeDirectory, $this->codeDirectory . '/.git');
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule update --init --recursive', $this->codeDirectory, $this->codeDirectory . '/.git');
+    }
   }
 
   public function checkoutBranch($branch) {
@@ -48,8 +48,14 @@ class Git extends Base {
   private function executeGitCommand($command) {
 
     $args = func_get_args();
-    // TODO: Allow the git path to be specified?
-    $args[0] = 'git ' . $args[0];
+
+    // By default, allow git to be located automatically within the include path.
+    $gitBinary = 'git';
+    // If an alternate binary path is specified, use it.
+    if (isset($this->container['git binary'])) {
+      $gitBinary = $this->container['git binary'];
+    }
+    $args[0] = $gitBinary . ' ' . $args[0];
     $command = call_user_func_array('sprintf', $args);
     drush_log('Executing `' . $command . '`.');
 
@@ -65,7 +71,13 @@ class Git extends Base {
     if (!$this->container['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);
-      $process->run();
+      $process->run(function ($type, $buffer) {
+        if ('err' === $type) {
+          drush_print_prompt('Git Error: '.$buffer, 4);
+        } else {
+          drush_print_prompt('Git Output: '.$buffer, 4);
+        }
+      });
     }
 
     // Restore the memory limit and execution time.
