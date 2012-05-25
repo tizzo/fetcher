@@ -5,7 +5,9 @@ namespace Ignition\InfoFetcher;
 class DrushAlias  implements InfoFetcherInterface {
 
   /**
+   * Implements Ignition\InfoFetcher\InfofetcherInterface::listSites().
    *
+   * List all sites specidied in the drush aliases.
    */
   public function listSites($name = '', $page = 0) {
     // TODO: Add name searching.
@@ -36,10 +38,14 @@ class DrushAlias  implements InfoFetcherInterface {
     return $list;
   }
 
+  /**
+   * Implements Ignition\InfoFetcher\InfofetcherInterface::getInfo().
+   */
   public function getInfo($name) {
     $sites = $this->listSites($name);
     if (isset($sites[$name])) {
       return $sites[$name];
     }
   }
+
 }
