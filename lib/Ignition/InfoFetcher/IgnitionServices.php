@@ -2,10 +2,14 @@
 
 namespace Ignition\InfoFetcher;
 
-class IgnitionServices /*implements Ignition\InfoFetcher\InfoFetcherInterface*/ {
+class IgnitionServices implements InfoFetcherInterface {
+
+  public function __construct(Pimple $site) {
+    $this->site = $site;
+  }
 
   public function listSites($name = '', $page = 0) {
-    $container = drush_ignition_get_service_container();
+    $container = \Ignition\Site::getServiceContainerFromDrushContext();
     $client = $container['ignition client'];
     $client->setPath('ignition/api/site.json');
 
@@ -29,7 +33,7 @@ class IgnitionServices /*implements Ignition\InfoFetcher\InfoFetcherInterface*/ 
   }
 
   public function getInfo($site_name) {
-    $container = drush_ignition_get_service_container();
+    $container = \Ignition\Site::getServiceContainerFromDrushContext();
     $client = $container['ignition client'];
     $result = $client
       ->setPath("ignition/api/site/$site_name.json")
