@@ -95,7 +95,8 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
    * Sign some text and return the signature.
    */
   public function getSignature($text) {
-    if ($this->sshAgentExists() && $signature = $this->getSignatureFromSSHAgent()) {
+    if ($this->sshAgentExists() && $signature = $this->getSignatureFromSSHAgent($text)) {
+      $signature = base64_decode($signature . '=');
       return $signature;
     }
     else {
@@ -121,13 +122,22 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
    */
   public function sshAgentExists() {
     // TODO: Change this whet getSignatureFromSSHAgent() works.
-    return FALSE;
+    if (getenv('SSH_AUTH_SOCK')) {
+      return TRUE;
+    }
   }
 
   /**
    *
    */
-  public function getSignatureFromSSHAgent() {
+  public function getSignatureFromSSHAgent($text) {
+    $process = new Process('python ' . __DIR__ . '/SSHAgentCommunicator.py ' . $text);
+    $process->setTimeout(3600);
+    $process->run();
+    if (!$process->isSuccessful()) {
+      throw new \Exception($process->getErrorOutput());
+    }
+    return $process->getOutput();
     // TODO: This is a start at getting ssh-agent to do the signing for us.
     // Finish it to prevent password mutiny.
     // This is based on http://ptspts.blogspot.com/2010/06/how-to-use-ssh-agent-programmatically.html
