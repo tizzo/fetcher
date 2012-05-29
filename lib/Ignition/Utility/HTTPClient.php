@@ -297,7 +297,7 @@ class HTTPClient {
         $context_parameters['http']['content'] = $params;
       }
       else {
-        $params = http_build_query($params);
+        $params = http_build_query($this->params);
         $request_url .= '?' . $params;
       }
     }

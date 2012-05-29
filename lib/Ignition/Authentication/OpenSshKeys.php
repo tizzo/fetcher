@@ -131,6 +131,10 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
    * Retrieve the SSH signature from ssh-agent.
    */
   public function getSignatureFromSSHAgent($text) {
+    // TODO: We found working python code that can communicate with ssh-agent,
+    // so we're using an approach based on that code.  Everything done in python
+    // has a PHP analogue and it shouldn't be too hard to write a PHP implementation
+    // rather than shelling out to the included python script.
     $process = new Process('python ' . __DIR__ . '/SSHAgentCommunicator.py ' . $text);
     $process->setTimeout(3600);
     $process->run();
