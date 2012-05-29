@@ -128,7 +128,7 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
   }
 
   /**
-   *
+   * Retrieve the SSH signature from ssh-agent.
    */
   public function getSignatureFromSSHAgent($text) {
     $process = new Process('python ' . __DIR__ . '/SSHAgentCommunicator.py ' . $text);

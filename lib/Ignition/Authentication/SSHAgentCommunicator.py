@@ -6,6 +6,7 @@ import sha
 import socket
 import struct
 import sys
+import base64
 
 SSH2_AGENTC_REQUEST_IDENTITIES = 11
 SSH2_AGENT_IDENTITIES_ANSWER = 12
@@ -102,10 +103,7 @@ if __name__ == '__main__':
   sigf = cStringIO.StringIO(signature[11:])
   signed_value = int(RecvStr(sigf).encode('hex'), 16)
   assert '' == sigf.read(1), 'EOF expected in sigf'
-  import base64
-  #print >>sys.stdout, base64.b64encode(signature)
   print >>sys.stdout, base64.b64encode(signature[15:])
-  #print >>sys.stdout, signed_value
   
   # Verify the signature.
   decoded_value = pow(signed_value, public_exponent, modulus)
