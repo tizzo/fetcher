@@ -7,6 +7,8 @@ import socket
 import struct
 import sys
 import base64
+import hashlib
+import json
 
 SSH2_AGENTC_REQUEST_IDENTITIES = 11
 SSH2_AGENT_IDENTITIES_ANSWER = 12
@@ -46,7 +48,6 @@ def AppendStr(ary, data):
   ary.append(data)
 
 if __name__ == '__main__':
-  ssh_key_comment = '%s/.ssh/id_rsa' % os.getenv('HOME')
 
   if len(sys.argv) > 1:
     # There is no limitation on the message size (because ssh-agent will
@@ -71,12 +72,10 @@ if __name__ == '__main__':
   for i in xrange(num_keys):
     key = RecvStr(resf)
     comment = RecvStr(resf)
-    if comment == ssh_key_comment:
+    if key.startswith('\x00\x00\x00\x07ssh-rsa\x00\x00'):
       matching_keys.append(key)
   assert '' == resf.read(1), 'EOF expected in resf'
   assert matching_keys, 'no keys in ssh-agent with comment %r' % ssh_key_comment
-  assert len(matching_keys) == 1, (
-      'multiple keys in ssh-agent with comment %r' % ssh_key_comment)
   assert matching_keys[0].startswith('\x00\x00\x00\x07ssh-rsa\x00\x00'), (
       'non-RSA key in ssh-agent with comment %r' % ssh_key_comment)
   keyf = cStringIO.StringIO(matching_keys[0][11:])
@@ -103,7 +102,13 @@ if __name__ == '__main__':
   sigf = cStringIO.StringIO(signature[11:])
   signed_value = int(RecvStr(sigf).encode('hex'), 16)
   assert '' == sigf.read(1), 'EOF expected in sigf'
-  print >>sys.stdout, base64.b64encode(signature[15:])
+
+
+  # TODO: Enable this command to somehow pass back the public key's fingerprint.
+  fp_plain = hashlib.md5(matching_keys[0]).hexdigest()
+  fingerprint = ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
+  base64_signature = base64.b64encode(signature[15:])
+  print >>sys.stdout, json.dumps({'signature': base64_signature, 'fingerprint': fingerprint})
   
   # Verify the signature.
   decoded_value = pow(signed_value, public_exponent, modulus)
