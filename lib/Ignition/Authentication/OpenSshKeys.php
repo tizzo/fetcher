@@ -31,13 +31,11 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
     // Generate pseudo random noise to sign for this transaction.
     // The current time is included preventing replay attacks.
     $text = $this->container['random'](64) . '-' . time();
-    $signature = $this->getSignature($text);
-    $keyData = $this->parsePublicKey($this->getPublicKey());
-    $fingerprint = $keyData['fingerprint'];
+    $data = $this->getSignatureAndFingerprint($text);
 
     $client->addParam('ssh_plaintext', base64_encode($text));
-    $client->addParam('ssh_signature', base64_encode($signature));
-    $client->addParam('ssh_fingerprint', base64_encode($fingerprint));
+    $client->addParam('ssh_signature', base64_encode($data['signature']));
+    $client->addParam('ssh_fingerprint', base64_encode($data['fingerprint']));
 
   }
 
@@ -94,14 +92,18 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
   /**
    * Sign some text and return the signature.
    */
-  public function getSignature($text) {
-    if ($this->sshAgentExists() && $signature = $this->getSignatureFromSSHAgent($text)) {
-      $signature = base64_decode($signature . '=');
-      return $signature;
+  public function getSignatureAndFingerprint($text) {
+    // Attempt to load the signature from the ssh-agent.
+    if ($this->sshAgentExists() && $signature_and_fingerprint = $this->getSignatureAndFingerprintFromSSHAgent($text)) {
+      return $signature_and_fingerprint;
     }
     else {
+      // ssh-agent isn't running or failed, try to use a local key.
       // Load the private key in .pem format.
       // TODO: Make this smarter/configurable.
+
+      $keyData = $this->parsePublicKey($this->getPublicKey());
+      $fingerprint = $keyData['fingerprint'];
       $process = new Process('openssl rsa -in ' . $this->container['system']->getUserHomeFolder() . '/.ssh/id_rsa');
       $process->setTimeout(3600);
       $process->run();
@@ -110,10 +112,9 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
       }
       $pemText = $process->getOutput();
       $privateKeyId = openssl_get_privatekey($pemText);
-      // TODO: Dynamically generate the source to prevent replay attacks.
       $signature = '';
       openssl_sign($text, $signature, $privateKeyId);
-      return $signature;
+      return array('fingerprint' => $fingerprint, 'signature' => $signature);
     }
   }
 
@@ -122,7 +123,9 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
    */
   public function sshAgentExists() {
     // TODO: Change this whet getSignatureFromSSHAgent() works.
-    if (getenv('SSH_AUTH_SOCK')) {
+    $address = getenv('SSH_AUTH_SOCK');
+    // Ensure we have an address
+    if ($address && stream_socket_client('unix://' . $address)) {
       return TRUE;
     }
   }
@@ -130,7 +133,7 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
   /**
    * Retrieve the SSH signature from ssh-agent.
    */
-  public function getSignatureFromSSHAgent($text) {
+  public function getSignatureAndFingerprintFromSSHAgent($text) {
     // TODO: We found working python code that can communicate with ssh-agent,
     // so we're using an approach based on that code.  Everything done in python
     // has a PHP analogue and it shouldn't be too hard to write a PHP implementation
@@ -141,7 +144,10 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
     if (!$process->isSuccessful()) {
       throw new \Exception($process->getErrorOutput());
     }
-    return $process->getOutput();
+    $output = (array) json_decode($process->getOutput());
+    $output['signature'] = base64_decode($output['signature']);
+    $output['fingerprint'] = str_replace(':', '', $output['fingerprint']);
+    return $output;
     // TODO: This is a start at getting ssh-agent to do the signing for us.
     // Finish it to prevent password mutiny.
     // This is based on http://ptspts.blogspot.com/2010/06/how-to-use-ssh-agent-programmatically.html
