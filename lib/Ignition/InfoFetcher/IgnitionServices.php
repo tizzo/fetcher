@@ -38,7 +38,6 @@ class IgnitionServices implements InfoFetcherInterface {
     $result = $client
       ->setPath("ignition/api/site/$site_name.json")
       ->fetch();
-    drush_print_r($result);
     if ($result === FALSE) {
       $code = $client->getResponseCode();
       if ($code == 401) {
@@ -64,6 +63,7 @@ class IgnitionServices implements InfoFetcherInterface {
       }
       return FALSE;
     }
+    return $result;
   }
 
 }
