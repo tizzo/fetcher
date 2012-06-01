@@ -20,7 +20,6 @@ class DrushSqlSync implements DBSynchronizerInterface {
     if ($this->container['verbose']) {
       $commandline_options[] = '--verbose';
     }
-    $conf = drush_ignition_get_service_container();
     $commandline_args = array(
       // TODO: Support multisite?
       // TODO: Get this dynamically.
