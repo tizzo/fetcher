@@ -59,12 +59,38 @@ class Site extends Pimple {
     $this['system']->ensureFolderExists($drushPath);
     $drushFilePath = $this->getDrushAliasPath();
     if (!is_file($drushFilePath)) {
+      /*
       $vars = array(
         'local_root' => $this['site.code_directory'],
         'remote_root' => $this['site.code_directory'],
         'hostname' => $this['remote.url'],
       );
       $content = \drush_ignition_get_asset('drush.alias', $vars);
+      // Allow settings to be checked into versioncontrol and automatically included from settings.php.
+      */
+      $content = '';
+      $content = "<?php\n";
+      $environments = (array) $this['site.info']->environments;
+      $environments['local'] = array(
+        'uri' => $this['site.hostname'],
+        // TODO: We use this in other places so this should be an element in our container config.
+        'root' => $this['site.working_directory'] . '/webroot',
+      );
+      foreach ($environments as $name =>  $environment) {
+        $environment = (array) $environment;
+        $string = '';
+        if (isset($environment['ignition'])) {
+          $copy = (array) $environment['ignition'];
+          array_walk_recursive($copy, function(&$value) {
+            if (get_class($value) == 'stdClass') {
+              return (array) $value;
+            }
+            return $value;
+          });
+          $environment['ignition'] = $copy;
+        }
+        $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";\n";
+      }
       $this['system']->writeFile($drushFilePath, $content);
     }
   }
@@ -113,11 +139,11 @@ class Site extends Pimple {
       );
       // TODO: Get the settings.php for the appropriate version.
       $content = \drush_ignition_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
-      // Allow settings to be checked into versioncontrol and automatically included from settings.php.
+      
+
       if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
-        $content .= "\rrequire_once('site-settings.php');\r";
+        $content .= "\nrequire_once('site-settings.php');\n";
       }
-      drush_print($settingsFilePath);
       $this['system']->writeFile($settingsFilePath, $content);
     }
   }
@@ -447,5 +473,43 @@ class Site extends Pimple {
     };
 
     return $container;
+  }
+
+  /**
+   * Export an array as executable PHP code.
+   *
+   * @param (Array) $data
+   *  The array to be exported.
+   * @param (string) $string
+   *  The string to add to this array to.
+   * @param (int) $indentLevel
+   *  The level of indentation this should be run at.
+   */
+  public function arrayExport(Array $data, &$string, $indentLevel) {
+    $i = 0;
+    $indent = '';
+    while ($i < $indentLevel) {
+      $indent .= '  ';
+      $i++;
+    }
+    $string .= "array(\n";
+    foreach ($data as $name => $value) {
+      $string .= "$indent  '$name' => ";
+      if (is_array($value)) {
+        $inner_string = '';
+        $string .= $this->arrayExport($value, $inner_string, $indentLevel + 1) . ",\n";
+      }
+      else if (is_numeric($value)) {
+        $string .= "$value,\n";
+      }
+      elseif (is_string($value)) {
+        $string .= "'" . str_replace("'", "\'", $value) . "',\n";
+      }
+      else {
+        $string .= serialize($value);
+      }
+    }
+    $string .= "$indent)";
+    return $string;
   }
 }
