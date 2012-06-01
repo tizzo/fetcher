@@ -76,7 +76,7 @@ class Git extends Base {
       $process->setTimeout(3600);
       $process->run(function ($type, $buffer) {
         if ('err' === $type) {
-          drush_print_prompt('Git Error: '.$buffer, 4);
+          drush_print_prompt('Git Status: '.$buffer, 4);
         } else {
           drush_print_prompt('Git Output: '.$buffer, 4);
         }
