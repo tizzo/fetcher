@@ -133,17 +133,22 @@ function ignition_drush_command() {
  * List sites in the ignition install.
  */
 function drush_ignition_list($name = '', $page = 0) {
-  $result = drush_ignition_get_info_fetcher()->listSites($name, $page);
-  // TODO: We should have one common error status to check.
-  if (!empty($result)) {
-    $rows[] = array(
-      'Title',
-      'Name',
-    );
-    foreach($result as $name => $info) {
-      $rows[] = array($info->title, $name);
+  try {
+    $result = drush_ignition_get_info_fetcher()->listSites($name, $page);
+    // TODO: We should have one common error status to check.
+    if (!empty($result)) {
+      $rows[] = array(
+        'Title',
+        'Name',
+      );
+      foreach($result as $name => $info) {
+        $rows[] = array($info->title, $name);
+      }
+      drush_print_table($rows, TRUE);
     }
-    drush_print_table($rows, TRUE);
+  }
+  catch (Exception $e) {
+    drush_log($e->getMessage(), 'error');
   }
 }
 

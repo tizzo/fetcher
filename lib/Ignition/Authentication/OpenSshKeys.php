@@ -67,18 +67,18 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
      // "<algorithm type> <base64-encoded key> <comment>"
      $keyParts = explode(' ', $parsed['value'], 3);
      if (count($keyParts) < 2) {
-       throw new IgnitionException(dt('The key is invalid.'));
+       throw new IgnitionException(dt('Ignition Services Authentication Error: The key is invalid.'));
      }
 
      $parsed['algorithm'] = $keyParts[0];
      if (!in_array($parsed['algorithm'], array('ssh-rsa', 'ssh-dss'))) {
-       throw new IgnitionException(dt("The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
+       throw new IgnitionException(dt("Ignition Services Authentication Error: The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
      }
 
      $parsed['key'] = $keyParts[1];
      $keyBase64Decoded = base64_decode($parsed['key']);
      if ($keyBase64Decoded === FALSE) {
-       throw new IgnitionException(dt('The key could not be decoded.'));
+       throw new IgnitionException(dt('Ignition Services Authentication Error: The key could not be decoded.'));
      }
      $parsed['fingerprint'] = md5($keyBase64Decoded);
 
@@ -142,7 +142,7 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
     $process->setTimeout(3600);
     $process->run();
     if (!$process->isSuccessful()) {
-      throw new \Exception($process->getErrorOutput());
+      return FALSE;
     }
     $output = (array) json_decode($process->getOutput());
     $output['signature'] = base64_decode($output['signature']);
