@@ -154,7 +154,7 @@ class Site extends Pimple {
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
-      $this['vcs']->initialCheckout();
+      $this['vcs']->initialCheckout($this['vcs.branch']);
     }
     else {
       // TODO: Switch to the right branch or something?
@@ -399,9 +399,14 @@ class Site extends Pimple {
     }
 
     // Load the environment variables.
-    // TODO: Replace with environment!
-    $this['remote.name'] = trim($siteInfo->environments->dev->server->name);
+    // TODO: Make this configurable
     $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
+    if (isset($siteInfo->environments->dev->server->hostname)) {
+      $this['vcs.branch'] = trim($siteInfo->environments->dev->ignition->branch);
+    }
+    else {
+      $this['vcs.branch'] = 'master';
+    }
 
     // Setup the administrative db credentials ().
     $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
@@ -414,6 +419,7 @@ class Site extends Pimple {
     // TODO: When implementing the above, decide which should take precedence.
     // Setup the site specific db credentails.
     // TODO: Add support for this in siteInfo.
+    // TODO: Add support for remote db servers.
     $this['database.hostname'] = 'localhost';
     $this['database.username'] = drush_get_option('database-user', $siteInfo->name);
     $this['database.password'] = drush_get_option('database-password', $this['random']());
@@ -422,9 +428,7 @@ class Site extends Pimple {
     $this['database.database'] = drush_get_option('database', $siteInfo->name);
 
     // Drop the first character because our versions are formatted d*.
-    if (isset($siteInfo->version)) {
-      $this['version'] = substr($siteInfo->version, 1);
-    }
+    $this['version'] = $siteInfo->environments->dev->ignition->version;
 
     $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
     $this['verbose'] = drush_get_context('DRUSH_VERBOSE');

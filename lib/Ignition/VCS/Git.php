@@ -1,7 +1,7 @@
 <?php
 
 namespace Ignition\VCS;
-use Ignition\Base as Base;
+use Ignition\Base;
 use Symfony\Component\Process\Process;
 
 class Git extends Base {
@@ -20,10 +20,13 @@ class Git extends Base {
 
   public function update($localDirectory) {
     //update = "cd %s; git checkout %s; git pull; git submodule update --init" % (localDirectory, label)
-    $this->executeGitCommand('pull');
+    $this->executeGitCommand('pull --work-tree=%s --git-dir=%s');
     if (is_file($this->codeDirectory . '/.gitmodules')) {
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule sync', $this->codeDirectory, $this->codeDirectory . '/.git');
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s submodule update --init --recursive', $this->codeDirectory, $this->codeDirectory . '/.git');
+      $oldWD = getcwd();
+      chdir($this->codeDirectory);
+      $this->executeGitCommand('submodule sync');
+      $this->executeGitCommand('submodule update --init --recursive');
+      chdir($oldWD);
     }
   }
 
