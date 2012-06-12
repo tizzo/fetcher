@@ -549,3 +549,22 @@ function drush_ignition_load_site_info_from_file($path) {
   }
   return $return;
 }
+
+/**
+ * Get an option from the configured Ignition array.
+ *
+ * @param $option
+ *   The name of the option.
+ * @param $default
+ *  The default to use if no value is specified.
+ */
+function ignition_drush_get_option($option, $default = NULL) {
+  $options = drush_get_option('ignition');
+  if (isset($options[$option])) {
+    $return = $options[$option];
+  }
+  else {
+    $return = $default;
+  }
+  return $return;
+}

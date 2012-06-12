@@ -459,11 +459,12 @@ class Site extends Pimple {
     }
 
     $container['ignition client'] = function($c) {
-      if (!drush_get_option('ignition-host', FALSE)) {
+      if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
         $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
         drush_log(dt($message), 'error');
         throw new \Ignition\Exception\IgnitionException($message);
       }
+      $container['info-fetcher.config'] = ignition_drush_get_option('info-fetcher.config');
       $client = new $c['ignition client class']();
       $client->setURL(drush_get_option('ignition-host'))
         ->setMethod('GET')
