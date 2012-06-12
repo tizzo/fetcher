@@ -106,18 +106,12 @@ function ignition_drush_command() {
   // Add the base options for all Ignition commands.
   foreach ($items as &$item) {
     $item['bootstrap'] = DRUSH_BOOTSTRAP_DRUSH;
-    if (isset($item['options'])) {
-      $item['options'] = array_merge($shared, $item['options']);
-    }
-    else {
-      $item['options'] = $shared;
-    }
   }
   return $items;
 }
 
 /**
- * List sites in the ignition install.
+ * List sites available with the current configuration.
  */
 function drush_ignition_list($name = '', $page = 0) {
   try {
@@ -135,7 +129,7 @@ function drush_ignition_list($name = '', $page = 0) {
     }
   }
   catch (Exception $e) {
-    drush_log($e->getMessage(), 'error');
+    drush_log($e->getMessage() . ' on line ' . $e->getLine() . ' of ' . $e->getFile() . '.', 'error');
   }
 }
 
