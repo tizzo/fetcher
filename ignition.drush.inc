@@ -19,17 +19,8 @@ function ignition_drush_command() {
 
   $items = array();
 
-  // Options necessary for all commands connecting to the Ignitions server.
-  $shared = array(
-    'ignition-server' => 'The URL of the ignition server.',
-    'ignition-key' => 'The URL of the ignition server.',
-  );
-
   // Options necessary for interacting with sites on this server.
   $environment_options = array(
-    'ignition-system' => 'The type of system used (currently only supports Ubuntu).',
-    'ignition-server' => 'The type of server to use (currently only supports Apache2).',
-    'ignition-database' => 'The type of database to use (currently only supports MySQL).',
     'ignition-sql-user' => 'The database username to use for administration commands.',
     'ignition-sql-password' => 'The database password to use for administration commands.',
   );
@@ -65,11 +56,7 @@ function ignition_drush_command() {
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       // TODO: This should probably use a configurable "file-fetcher" option
       // rather than speciying local or remote.
-      'sync-public-files' => 'Whether to syncronize the public files with the selected remote environment.',
-      //'sync-private-files' => 'Whether to syncronize the private files with the selected remote environment.',
-      // TODO: Implement this:
-      //'environment' => 'The environment to use for database and file syncing (defaults to dev if it exists).',
-      // TODO: Implement this:
+      'file-sync' => 'Whether to syncronize the public files with the selected remote environment.',
       //'deploy-name' => 'The name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
     ),
   );
