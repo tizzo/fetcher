@@ -172,16 +172,16 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
     );
     $commandline_options = array(
       // Default our package hander to git_drupalorg.
-      'package-handler' => drush_get_option('package-handler', 'git_drupalorg'),
-      'drupal-project-rename' => 'code',
-      'destination' => $site->getWorkingDirectory(),
+      '--package-handler=' . drush_get_option('package-handler', 'git_drupalorg'),
+      '--drupal-project-rename=code',
+      '--destination=' . $site->getWorkingDirectory(),
     );
     foreach ($commandline_options as $name => $value) {
       drush_set_option($name, $value);
     }
-    // Note we don't use drush_invoke_process() because it requires an existinge
+    // Note we don't use drush_invoke_process() because it requires an existing
     // site.
-    drush_invoke('pm-download', $commandline_args);
+    drush_invoke_process('@none', 'pm-download', $commandline_args);
     return;
 
     // Create necessary symlinks.
@@ -453,6 +453,7 @@ function drush_ignition_get_handler($type, $handler) {
  *   An array of variables for the asset folder.
  */
 function drush_ignition_get_asset($asset_name, array $vars = array()) {
+  // TODO: Allow external paths to be specified.
   $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
   if (is_file($path)) {
     foreach ($vars as $name => $value) {
