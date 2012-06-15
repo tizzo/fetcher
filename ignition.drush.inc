@@ -42,11 +42,12 @@ function ignition_drush_command() {
     ),
   );
 
+  // Environment items are the items that inherit the environment options.
   $environment_items['ignition-get'] = array(
     'description' => 'Setup a site on this machine managed by Ignition synchronizing the database and files if desired.',
     'aliases' => array('ig'),
     'arguments' => array(
-      'site' => 'The name of a site to search install.',
+      'site' => 'The name of a site to install on this server.',
       'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
     ),
     'options' => array(
@@ -57,7 +58,7 @@ function ignition_drush_command() {
       // TODO: This should probably use a configurable "file-fetcher" option
       // rather than speciying local or remote.
       'file-sync' => 'Whether to syncronize the public files with the selected remote environment.',
-      //'deploy-name' => 'The name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
+      'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
     ),
   );
 
@@ -219,14 +220,20 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
     return FALSE;
   }
+  // Instantiate the site object.
+  $site = drush_ignition_get_site($site_info);
 
+  drush_ignition_ensure_site($site);
+}
+
+/**
+ *
+ */
+function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
   // Note that the Ignition library generally throws exceptions with helpful
   // error messages if anything goes wrong anywhere, so we wrap all our work
   // in one big try/catch.
   try {
-
-    // Instantiate the site object.
-    $site = drush_ignition_get_site($site_info);
 
     // Make sure that the project direcotry is properly configured.
     drush_log(dt('Ensuring the working directory for this repository is properly setup...'), 'ok');
@@ -239,7 +246,7 @@ function drush_ignition_get($site_name = FALSE) {
     drush_log(dt('The code is in place and up to date.'), 'success');
 
     // Create the settings.php file.
-    $success = $site->ensureSettingsFileExists();
+    $site->ensureSettingsFileExists();
     drush_log(dt('The settings.php file is in place.'), 'success');
 
     // Create necessary symlinks.
@@ -282,7 +289,6 @@ function drush_ignition_get($site_name = FALSE) {
       drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
     }
     */
-
     drush_log('Your site has been setup!', 'success');
   }
   catch (Exception $e) {
@@ -295,8 +301,13 @@ function drush_ignition_get($site_name = FALSE) {
  * Issue a request against Ignition to retrieve a site's information by name.
  */
 function drush_ignition_get_site_info($site_name) {
-  $result = drush_ignition_get_info_fetcher()->getInfo($site_name);
-  return $result;
+  try {
+    $result = drush_ignition_get_info_fetcher()->getInfo($site_name);
+    return $result;
+  }
+  catch (Exception $e) {
+    drush_log(dt('Site info loading failed - @message', array('@message' => $e->getMessage())), 'error');
+  }
 }
 
 /**
@@ -304,7 +315,7 @@ function drush_ignition_get_site_info($site_name) {
  *
  */
 function drush_ignition_get_info_fetcher() {
-  $class = drush_get_option('ignition-info-fetcher-class', 'Ignition\InfoFetcher\DrushAlias');
+  $class = ignition_drush_get_option('info-fetcher.class', 'Ignition\InfoFetcher\DrushAlias');
   return new $class();
 }
 
@@ -334,7 +345,7 @@ function drush_ignition_delete($site_name) {
  * Factory function for instatiating a site object.
  */
 function drush_ignition_get_site($site_info = NULL) {
-  $class = drush_get_option('ignition_site_class', '\Ignition\Site');
+  $class = drush_get_option('ignition-site-class', '\Ignition\Site');
   $site = new $class();
   $site->configureWithSiteInfo($site_info);
 
