@@ -38,7 +38,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Create a new database
+   * Ensure the database exists, the user exists and the user can connect.
    */
   public function ensureDatabase() {
     if (!$this['database']->exists()) {
@@ -52,22 +52,13 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   *
+   * Build the drush alias and place it in the home folder.
    */
   public function ensureDrushAlias() {
     $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
     $this['system']->ensureFolderExists($drushPath);
     $drushFilePath = $this->getDrushAliasPath();
     if (!is_file($drushFilePath)) {
-      /*
-      $vars = array(
-        'local_root' => $this['site.code_directory'],
-        'remote_root' => $this['site.code_directory'],
-        'hostname' => $this['remote.url'],
-      );
-      $content = \drush_ignition_get_asset('drush.alias', $vars);
-      // Allow settings to be checked into versioncontrol and automatically included from settings.php.
-      */
       $content = '';
       $content = "<?php\n";
       $environments = (array) $this['site.info']->environments;
@@ -150,7 +141,7 @@ class Site extends Pimple implements SiteInterface {
 
 
   /**
-   *
+   * Ensure the code is in place.
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
@@ -170,6 +161,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure that all symlinks besides the webroot symlink have been created.
+   *
+   * TODO: Allow additional symlinks?
    */
   public function ensureSymLinks() {
     $this['system']->ensureSymLink($this['site.working_directory'] . '/public_files', $this['site.code_directory'] . '/sites/default/files');
@@ -177,7 +170,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   *
+   * Ensure the site has been added to the appropriate server (e.g. apache vhost).
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -188,10 +181,16 @@ class Site extends Pimple implements SiteInterface {
     }
   }
 
+  /**
+   * Synchronize the database with a remote environment.
+   */
   public function syncDatabase(Array $conf) {
     return $this['database synchronizer']->syncDB($conf);
   }
 
+  /**
+   * Calculate the drush alias path.
+   */
   public function getDrushAliasPath() {
     return $this['system']->getUserHomeFolder() . '/.drush/' . $this['site.info']->name . '.aliases.drushrc.php';
   }
@@ -308,8 +307,10 @@ class Site extends Pimple implements SiteInterface {
       return $vcs;
     });
 
+    // For most cases, the Drush sql-sync command can be used for synchronizing.
     $this['database synchronizer class'] = 'Ignition\DBSynchronizer\DrushSqlSync';
 
+    // Load the configured db synchronizer.
     $this['database synchronizer'] = $this->share(function($c) {
       return new $c['database synchronizer class']($c);
     });
