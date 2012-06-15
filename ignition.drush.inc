@@ -348,7 +348,16 @@ function drush_ignition_get_site($site_info = NULL) {
   $class = drush_get_option('ignition-site-class', '\Ignition\Site');
   $site = new $class();
   $site->configureWithSiteInfo($site_info);
-
+  $ignition_config = drush_get_option('ignition', array());
+  // Merge in global configuration.
+  foreach ($ignition_config as $name => $value) {
+    if (!empty($site[$name]) && is_array($site[$name]) && is_array($value)) {
+      $site[$name] = array_merge($site[$name], $value);
+    }
+    else {
+      $site[$name] = $value;
+    }
+  }
   return $site;
 }
 
@@ -459,13 +468,15 @@ function drush_ignition_get_handler($type, $handler) {
  * simple php template engine here.
  *
  * @param $asset_name
- *   The name of the file as it appears in the `/assets` directory.
+ *   The name of the file as it appears in the `/assets` directory or a fully .
  * @param $vars
- *   An array of variables for the asset folder.
+ *   An array of variables for the asset, each will be available in the scope
+ *   of the asset template with a variable name of the key and a value of the value.
  */
 function drush_ignition_get_asset($asset_name, array $vars = array()) {
-  // TODO: Allow external paths to be specified.
-  $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
+  if (!is_file($asset)) {
+    $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
+  }
   if (is_file($path)) {
     foreach ($vars as $name => $value) {
       $$name = $value;
@@ -512,36 +523,40 @@ function drush_ignition_load_site_info_from_name_alias_or_context($site_name = F
 
   $site_info = FALSE;
 
-  // If we have a drush alias starting with `@` then we look up the local alias
-  // and try to get the site info from the parent folder of the webroot
-  // indicated by the alias root.
-  if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
-    // We may have multiple environments but if we wrote the aliases then the
-    // first one is the local one.
-    $spec = array_shift($specs);
-    $site_info = drush_ignition_find_site_by_directory($spec['root']);
+  try {
+    // If we have a drush alias starting with `@` then we look up the local alias
+    // and try to get the site info from the parent folder of the webroot
+    // indicated by the alias root.
+    if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
+      // We may have multiple environments but if we wrote the aliases then the
+      // first one is the local one.
+      $spec = array_shift($specs);
+      $site_info = drush_ignition_find_site_by_directory($spec['root']);
+    }
+
+    // If a site was not selected, we may be loading the site information from
+    // the site info file in the current working directory, have a look.
+    $path = getcwd();
+    if (!$site_name && !($site_info = drush_ignition_find_site_by_directory($path))) {
+      $site_name = drush_ignition_prompt_for_site_name();
+    }
+
+    // Otherwise load the site from the Ignition web service based on the site
+    // name.
+    if ($site_name && !$site_info) {
+      $site_info = drush_ignition_get_site_info($site_name);
+    }
+
+    if ($site_info === FALSE) {
+      drush_log(dt('This site information could not be loaded.'), 'error');
+      return;
+    }
+
+    return $site_info;
   }
-
-  // If a site was not selected, we may be loading the site information from
-  // the site info file in the current working directory, have a look.
-  $path = getcwd();
-  if (!$site_name && !($site_info = drush_ignition_find_site_by_directory($path))) {
-    $site_name = drush_ignition_prompt_for_site_name();
+  catch (Exception $e) {
+    drush_log(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())), 'error');
   }
-
-  // Otherwise load the site from the Ignition web service based on the site
-  // name.
-  if ($site_name && !$site_info) {
-    $site_info = drush_ignition_get_site_info($site_name);
-  }
-
-  if ($site_info === FALSE) {
-    drush_log(dt('This site information could not be loaded.'), 'error');
-    return;
-  }
-
-  return $site_info;
-
 }
 
 /**
