@@ -4,7 +4,7 @@ namespace Ignition;
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
 
-class Site extends Pimple {
+class Site extends Pimple implements SiteInterface {
 
   /**
    * A stdClass object of whatever information is available about the site.
