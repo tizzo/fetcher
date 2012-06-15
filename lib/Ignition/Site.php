@@ -421,14 +421,15 @@ class Site extends Pimple implements SiteInterface {
     // Setup the site specific db credentails.
     // TODO: Add support for this in siteInfo.
     // TODO: Add support for remote db servers.
-    $this['database.hostname'] = 'localhost';
     $this['database.username'] = drush_get_option('database-user', $siteInfo->name);
+    $this['database.database'] = drush_get_option('database', $siteInfo->name);
+
+    // TODO: Where should this go, it doesn't touch site info:
+    $this['database.hostname'] = 'localhost';
     $this['database.password'] = drush_get_option('database-password', $this['random']());
     $this['database.driver'] = $this['database class']::getDriver();
     $this['database.port'] = drush_get_option('database-port', 3306);
-    $this['database.database'] = drush_get_option('database', $siteInfo->name);
 
-    // Drop the first character because our versions are formatted d*.
     $this['version'] = $siteInfo->environments->dev->ignition->version;
 
     $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
@@ -445,20 +446,6 @@ class Site extends Pimple implements SiteInterface {
 
     $container = new static();
 
-    // Detect overrides passed in as Drush options.
-    if ($class = drush_get_option('ignition-system', FALSE)) {
-      $container['system class'] =  '\\Ignition\\System\\' . $class;
-    }
-    if ($class = drush_get_option('ignition-database', FALSE)) {
-      $container['database class'] = 'Ignition\\DB\\' . $class;
-    }
-    if ($class = drush_get_option('ignition-server', FALSE)) {
-      $container['server class'] = '\\Ignition\\Server\\' . $class;
-    }
-    if ($class = drush_get_option('ignition-vcs', FALSE)) {
-      $container['vcs class'] = '\\Ignition\\VCS\\' . $class;
-    }
-
     $container['ignition client'] = function($c) {
       if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
         $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
@@ -467,12 +454,12 @@ class Site extends Pimple implements SiteInterface {
       }
       $container['info-fetcher.config'] = ignition_drush_get_option('info-fetcher.config');
       $client = new $c['ignition client class']();
-      $client->setURL(drush_get_option('ignition-host'))
+      $client->setURL($container['info-fetcher.config']['host'])
         ->setMethod('GET')
         ->setTimeout(3)
         ->setEncoding('json');
 
-      // Populate this object with the appropriate authorization credentials.
+      // Populate this object with the appropriate authentication credentials.
       $c['client.authentication']->addAuthenticationToHTTPClientFromDrushContext($client);
 
       return $client;
