@@ -422,8 +422,8 @@ class Site extends Pimple implements SiteInterface {
     // Setup the site specific db credentails.
     // TODO: Add support for this in siteInfo.
     // TODO: Add support for remote db servers.
-    $this['database.username'] = drush_get_option('database-user', $siteInfo->name);
-    $this['database.database'] = drush_get_option('database', $siteInfo->name);
+    $this['database.username'] = drush_get_option('database-user',  function($c) { return $c['site.name']; });
+    $this['database.database'] = drush_get_option('database', function($c) { return $c['site.name']; });
 
     // TODO: Where should this go, it doesn't touch site info:
     $this['database.hostname'] = 'localhost';
