@@ -346,6 +346,9 @@ class Site extends Pimple implements SiteInterface {
       return $c['server']->getWebroot() . '/' . $c['site.name'];
     };
 
+    // Some systems place the Drupal webroot in a subdirectory.  This option configures that subdirectory.
+    $this['webroot subdirectory'] = 'webroot';
+
     $this['site.code_directory'] = function($c) {
       // TODO: This needs to be smarter:
       return $c['site.working_directory'] . '/' . 'code';

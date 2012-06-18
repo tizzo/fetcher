@@ -118,7 +118,7 @@ class Posix {
     // Note: PHP doesn't have a recursive deletion function, so we just shell out here.
     // Also git sets file permissions that require the -f.
     if (!$this->site['simulate']) {
-      $process = new Process(sprintf('rm -rf %s', $path);
+      $process = new Process(sprintf('rm -rf %s', $path));
       $process->run();
       if ($process->isSuccessful()) {
         return $process->getOutput();
