@@ -34,7 +34,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function __construct() {
     // Populate defaults.
-    $this->setDependencyDefaults();
+    $this->setDefaults();
   }
 
   /**
@@ -265,7 +265,7 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Populate this object with defaults.
    */
-  public function setDependencyDefaults() {
+  public function setDefaults() {
 
     // Set our default system to Ubuntu.
     // TODO: Do some detection?
