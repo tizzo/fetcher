@@ -13,10 +13,10 @@ class Mysql {
 
   private $db_spec = array();
 
-  private $container = FALSE;
+  private $site = FALSE;
 
-  public function __construct(\Pimple $container) {
-    $this->container = $container;
+  public function __construct(\Pimple $site) {
+    $this->site = $site;
   }
 
   /**
@@ -37,7 +37,7 @@ class Mysql {
    * Create the database.
    */
   public function createDatabase() {
-    $database = $this->container['database.database'];
+    $database = $this->site['database.database'];
     $result = $this->executeQuery('create database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
       throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be created.', $database));
@@ -48,7 +48,7 @@ class Mysql {
    * Check that the user exists.
    */
   public function userExists() {
-    $conf = $this->container;
+    $conf = $this->site;
     $process = $this->executeQuery(sprintf("SELECT user FROM mysql.user WHERE User='%s' AND Host='%s'", $conf['database.username'], $conf['database.hostname']), FALSE);
     if (!$process->isSuccessful()) {
       throw new \Ignition\Exception\IgnitionException('MySQL command failed.');
@@ -65,13 +65,13 @@ class Mysql {
    *
    */
   public function createUser() {
-    $conf = $this->container;
+    $conf = $this->site;
     $command = sprintf('create user "%s"@"%s" identified by "%s"', $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
     $this->executeQuery($command, FALSE);
   }
   
   public function grantAccessToUser() {
-    $conf = $this->container;
+    $conf = $this->site;
     $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
     $this->executeQuery($command, FALSE);
     $this->executeQuery('flush privileges', FALSE);
@@ -81,7 +81,7 @@ class Mysql {
    * Remove the database.
    */
   public function removeDatabase() {
-    $database = $this->container['database.database'];
+    $database = $this->site['database.database'];
     $result = $this->executeQuery('drop database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
       throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be dropped.', $database));
@@ -92,7 +92,7 @@ class Mysql {
    * Remove the database user.
    */
   public function removeUser() {
-    $conf = $this->container;
+    $conf = $this->site;
     $command = sprintf('drop user "%s"@"%s"', $conf['database.username'], $conf['database.hostname']);
     $this->executeQuery($command, FALSE);
   }
@@ -104,30 +104,30 @@ class Mysql {
     // TODO: Allow the mysql path to be specified?
     $base_command = 'mysql';
 
-    $config = $this->container;
+    $site = $this->site;
 
     if ($setDatabase) {
-      $base_command .= ' --database=' . escapeshellarg($config['database.database']);
+      $base_command .= ' --database=' . escapeshellarg($site['database.database']);
     }
 
-    if ($config['database.admin.user']) {
-      $base_command .= ' --user=' . escapeshellarg($config['database.admin.user']);
+    if ($site['database.admin.user']) {
+      $base_command .= ' --user=' . escapeshellarg($site['database.admin.user']);
     }
-    if ($config['database.admin.password']) {
-      $base_command .= ' --password=' . escapeshellarg($config['database.admin.password']);
+    if ($site['database.admin.password']) {
+      $base_command .= ' --password=' . escapeshellarg($site['database.admin.password']);
     }
-    if ($config['database.admin.hostname']) {
-      $base_command .= ' --host=' . escapeshellarg($config['database.admin.hostname']);
+    if ($site['database.admin.hostname']) {
+      $base_command .= ' --host=' . escapeshellarg($site['database.admin.hostname']);
     }
-    if ($config['database.admin.port']) {
-      $base_command .= ' --port=' . escapeshellarg($config['database.admin.port']);
+    if ($site['database.admin.port']) {
+      $base_command .= ' --port=' . escapeshellarg($site['database.admin.port']);
     }
 
     $command = $base_command . ' -e ' . escapeshellarg($command);
     drush_log(dt('Executing MySQL command `@command`', array('@command' => $command)));
     $process = new Process($command);
 
-    if ($config['simulate']) {
+    if ($site['simulate']) {
       return $process;
     }
 
