@@ -3,7 +3,7 @@
 namespace Ignition\CodeFetcher\VCS;
 use Symfony\Component\Process\Process;
 
-class Git /* implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface */ {
+class Git implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface {
 
   protected $site = FALSE;
 
