@@ -145,11 +145,11 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
-      $this['vcs']->initialCheckout($this['vcs.branch']);
+      $this['code fetcher']->initialCheckout();
     }
     else {
       // TODO: Switch to the right branch or something?
-       $this['vcs']->update($this['site.code_directory']);
+       $this['code fetcher']->update($this['site.code_directory']);
     }
     if (is_dir($this['site.code_directory'] . '/webroot')) {
       $this['site.code_directory'] = $this['site.code_directory'] . '/webroot';
@@ -293,17 +293,14 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Set our default VCS to Git.
-    $this['vcs class'] = '\Ignition\VCS\Git';
+    $this['code fetcher class'] = '\Ignition\CodeFetcher\VCS\Git';
+    $this['code fetcher.config'] = array();
 
-    // Attempt to load a plugin appropriate to the VCS, defaulting to Git.
-    $this['vcs'] = $this->share(function($c) {
+    // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
+    $this['code fetcher'] = $this->share(function($c) {
       $config = array();
       $config['codeDirectory'] = $c['site.code_directory'];
-      if (isset($c['vcs.url'])) {
-        $config['vcsURL'] = $c['vcs.url'];
-      }
-      $vcs = new $c['vcs class']($c);
-      $vcs->configure($config);
+      $vcs = new $c['code fetcher class']($c);
       return $vcs;
     });
 
@@ -384,30 +381,34 @@ class Site extends Pimple implements SiteInterface {
    *
    * @param $siteInfo
    *   The information returned from `\drush_ignition_get_site_info()`.
+   * TODO: Deprecate this in favor of a constructor the receives an alias.
    */
   public function configureWithSiteInfo($siteInfo) {
     if (isset($site_info->vcs)) {
-      $this['vcs'] = $this->share(function() {
-        drush_ignition_get_handler('VCS', $site_info->vcs);
+      $this['code fetcher'] = $this->share(function() {
+        drush_ignition_get_handler('code fetcher', $site_info->vcs);
       });
     }
 
     // Load the site variables.
     $this['site.name'] = $siteInfo->name;
 
+    $fetch_config = array();
     if (isset($siteInfo->vcs_url)) {
-      $this['vcs.url'] = $siteInfo->vcs_url;
+      $fetch_config['url'] = trim($siteInfo->vcs_url);
     }
 
     // Load the environment variables.
     // TODO: Make this configurable
     $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
-    if (isset($siteInfo->environments->dev->server->hostname)) {
-      $this['vcs.branch'] = trim($siteInfo->environments->dev->ignition->branch);
+
+    if (isset($siteInfo->environments->dev->ignition->branch)) {
+      $fetch_config['branch'] = trim($siteInfo->environments->dev->ignition->branch);
     }
     else {
-      $this['vcs.branch'] = 'master';
+      $fetch_config['branch'] = 'master';
     }
+    $this['code fetcher.config'] = $fetch_config;
 
     // Setup the administrative db credentials ().
     $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
