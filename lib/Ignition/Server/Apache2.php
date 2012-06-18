@@ -58,7 +58,7 @@ class Apache2 {
     if (!is_file($vhostPath)) {
       $vars = array(
         'site_name' => $container['site.name'],
-        'hostname' => $container['site.hostname'],
+        'hostname' => $container['hostname'],
         'site_folder' => $container['site.working_directory'],
       );
       $content = \drush_ignition_get_asset('drupal.' . $container['version'] . '.vhost', $vars);

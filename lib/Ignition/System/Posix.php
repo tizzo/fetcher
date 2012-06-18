@@ -1,6 +1,7 @@
 <?php
 
 namespace Ignition\System;
+use Symfony\Component\Process\Process;
 
 class Posix {
 
@@ -124,21 +125,36 @@ class Posix {
     $containing_path = implode('/', $path_parts);
     if (is_dir($containing_path)) {
       drush_log("Writing file to $path");
-      if (!$this->container['simulate']) {
+      if (!$this->site['simulate']) {
         if (file_put_contents($path, $content) === FALSE) {
           throw new \Ignition\Exception\IgnitionException(sprintf('Writing file %s failed.', $path));
         }
       }
     }
-    else if (!$this->container['simulate']) {
-      drush_print((string) gettype($this->container['simulate']));
+    else if (!$this->site['simulate']) {
+      drush_print((string) gettype($this->site['simulate']));
       throw new \Ignition\Exception\IgnitionException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
     }
   }
 
+  /**
+   * Return the user's home folder.
+   */
   public function getUserHomeFolder() {
     $user = posix_getpwuid(getmyuid());
     return $user['dir'];
+  }
+
+  /**
+   * Get this machine's configured hostname.
+   */
+  public function getHostname() {
+    $process = new Process('hostname');
+    $process->run();
+    if (!$process->isSuccessful()) {
+      throw new \Ignition\Exception\IgnitionException('The hostname could not be found.');
+    }
+    return trim($process->getOutput());
   }
 
 }

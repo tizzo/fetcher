@@ -63,7 +63,7 @@ class Site extends Pimple implements SiteInterface {
       $content = "<?php\n";
       $environments = (array) $this['site.info']->environments;
       $environments['local'] = array(
-        'uri' => $this['site.hostname'],
+        'uri' => $this['hostname'],
         // TODO: We use this in other places so this should be an element in our container config.
         'root' => $this['site.working_directory'] . '/webroot',
       );
@@ -327,8 +327,8 @@ class Site extends Pimple implements SiteInterface {
     $this['verbose'] = FALSE;
 
     // TODO: use context to build hostname.
-    $this['site.hostname'] = function($c) {
-      return $c['site.name'] . '.local';
+    $this['hostname'] = function($c) {
+      return $c['site.name'] . '.' . $c['system']->getHostname();
     };
 
     // TODO: This is retarderated:
