@@ -164,12 +164,11 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure that all symlinks besides the webroot symlink have been created.
-   *
-   * TODO: Allow additional symlinks?
    */
   public function ensureSymLinks() {
-    $this['system']->ensureSymLink($this['site.working_directory'] . '/public_files', $this['site.code_directory'] . '/sites/default/files');
-    $this['system']->ensureSymLink($this['site.code_directory'], $this['site.working_directory'] . '/webroot');
+    foreach ($this['symlinks'] as $realPath => $symLink) {
+      $this['system']->ensureSymLink($realPath, $symLink);
+    }
   }
 
   /**
@@ -269,6 +268,13 @@ class Site extends Pimple implements SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults() {
+
+    $this['symlinks'] = function ($c) {
+      return array(
+        $c['site.working_directory'] . '/public_files' => $c['site.code_directory'] . '/sites/default/files',
+        $c['site.code_directory'] => $c['site.working_directory'] . '/webroot',
+      );
+    };
 
     // Set our default system to Ubuntu.
     // TODO: Do some detection?
