@@ -3,18 +3,17 @@
 namespace Ignition\CodeFetcher\VCS;
 use Symfony\Component\Process\Process;
 
-class Git extends Base {
+class Git /* implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface */ {
 
-  protected $vcsURL = '';
-  protected $codeDirectory = '';
-  protected $container = FALSE;
+  protected $site = FALSE;
 
-  public function __construct(\Pimple $container) {
-    $this->container = $container;
+  public function __construct(\Pimple $site) {
+    $this->site = $site;
   }
 
-  public function initialCheckout($branch = 'master') {
-    $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->vcsURL, $this->codeDirectory, $branch);
+  public function initialCheckout() {
+    $site = $this->site;
+    $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->site['code fetcher.config']['url'], $this->site['site.code_directory'], $this->site['code fetcher.config']['branch']);
   }
 
   public function update($localDirectory) {
@@ -54,8 +53,8 @@ class Git extends Base {
     // By default, allow git to be located automatically within the include path.
     $gitBinary = 'git';
     // If an alternate binary path is specified, use it.
-    if (isset($this->container['git binary'])) {
-      $gitBinary = $this->container['git binary'];
+    if (isset($this->site['git binary'])) {
+      $gitBinary = $this->site['git binary'];
     }
     $args[0] = $gitBinary . ' ' . $args[0];
     $command = call_user_func_array('sprintf', $args);
@@ -70,7 +69,7 @@ class Git extends Base {
     ini_set('max_execution_time', 0);
 
     $process = new Process($command);
-    if (!$this->container['simulate']) {
+    if (!$this->site['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);
       $process->run(function ($type, $buffer) {
