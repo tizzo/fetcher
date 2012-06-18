@@ -3,7 +3,7 @@
 namespace Ignition\CodeFetcher\VCS;
 use Symfony\Component\Process\Process;
 
-class Git implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface {
+class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface {
 
   protected $site = FALSE;
 
@@ -16,9 +16,14 @@ class Git implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\
     $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->site['code fetcher.config']['url'], $this->site['site.code_directory'], $this->site['code fetcher.config']['branch']);
   }
 
-  public function update($localDirectory) {
-    //update = "cd %s; git checkout %s; git pull; git submodule update --init" % (localDirectory, label)
+  public function update() {
+    // If we have a branch set, ensure that we're on it.
+    if (isset($this->site['code fetcher.config']['branch'])) {
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $this->codeDirectory, $this->codeDirectory . '/.git', $this->site['code fetcher.config']['branch']);
+    }
+    // Pull in the latest code.
     $this->executeGitCommand('pull --work-tree=%s --git-dir=%s');
+    // If we have submodules update them.
     if (is_file($this->codeDirectory . '/.gitmodules')) {
       $oldWD = getcwd();
       chdir($this->codeDirectory);
@@ -26,18 +31,6 @@ class Git implements\Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\
       $this->executeGitCommand('submodule update --init --recursive');
       chdir($oldWD);
     }
-  }
-
-  public function checkoutBranch($branch) {
-    return $this->checkoutRef($branch);
-  }
-
-  public function checkoutTag($tag) {
-    return $this->checkoutRef($tag);
-  }
-
-  private function checkoutRef($ref) {
-    $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $this->codeDirectory, $this->codeDirectory . '/.git', $branch);
   }
 
   /**

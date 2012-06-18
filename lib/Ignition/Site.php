@@ -148,11 +148,14 @@ class Site extends Pimple implements SiteInterface {
       $this['code fetcher']->initialCheckout();
     }
     else {
-      // TODO: Switch to the right branch or something?
-       $this['code fetcher']->update($this['site.code_directory']);
+      // If the code fetcher supports updating already fetched code, update the code.
+      if (in_array('\Ignition\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
+        $this['code fetcher']->update();
+      }
     }
-    if (is_dir($this['site.code_directory'] . '/webroot')) {
-      $this['site.code_directory'] = $this['site.code_directory'] . '/webroot';
+    // If our webroot is in a configured subdirectory, use that for the root.
+    if (is_dir($this['site.code_directory'] . '/' . $this['webroot subdirectory'])) {
+      $this['site.code_directory'] = $this['site.code_directory'] . '/' . $this['webroot subdirectory'];
     }
     else {
       $this['site.code_directory'] = $this['site.code_directory'];
