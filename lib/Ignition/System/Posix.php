@@ -5,15 +5,23 @@ use Symfony\Component\Process\Process;
 
 class Posix {
 
-  private $container;
+  private $site;
 
-  public function __construct(\Pimple $container) {
-    $this->container = $container;
+  public function __construct(\Pimple $site) {
+    $this->site = $site;
   }
 
   /**
-   * 
-   * TODO: Move to Posix provider.
+   * Ensures a path exists creating each folder necessary.
+   *
+   * @param $path
+   *   The path of the folder.
+   * @param $owning_user
+   *   A string representing the existing owner to set for the elements created in the path.
+   * @param $owning_group
+   *   A string representing the existing owning group to set for the elements created in the path.
+   * @param $permissions
+   *   The permission to set for the file, specified as a file mode creation mask (umask, e.g. 777).
    */
   public function ensureFolderExists($path, $owning_user = NULL, $owning_group = NULL, $permission = 0755) {
     $old_mask = umask(0);
@@ -24,19 +32,29 @@ class Posix {
       $path .= $part . '/';
       if ($success && !is_dir($path)) {
         drush_log("Creating folder $path");
-        if (!$this->container['simulate']) {
+        if (!$this->site['simulate']) {
           $success = mkdir($path, $permission);
         }
       }
     }
     umask($old_mask);
+    if (!$success) {
+      throw new \Exception(sprintf('Folder creation failed on path "%s".', $path));
+    }
     return $success;
   }
 
   /**
    * Ensure that a file exists and is owned by the appropriate user.
    *
-   * TODO: Move to Posix provider.
+   * @param $path
+   *   The path of the file.
+   * @param $owning_user
+   *   A string representing the existing owner to set for the elements created in the path.
+   * @param $owning_group
+   *   A string representing the existing owning group to set for the elements created in the path.
+   * @param $permissions
+   *   The permission to set for the file, specified as a file mode creation mask (umask, e.g. 777).
    */
   public function ensureFileExists($path, $owning_user = NULL, $owning_group = NULL, $permission = 0755) {
     $old_mask = umask(0);
@@ -48,7 +66,7 @@ class Posix {
       $vars = array('@path' => $path, '@permissions' => (string) $permission);
       drush_log(dt('Creating file @path', $vars));
       drush_log(dt('Setting permissions of @path to @permissions', $vars));
-      if (!$this->container['simulate']) {
+      if (!$this->site['simulate']) {
         if (!touch($path)) {
           throw new \Ignition\Exception\IgnitionException(dt('File creation failed for @path.', $vars));
         }
@@ -66,8 +84,6 @@ class Posix {
    *   The path to the real thing we are linking to.
    * @param $link
    *   The path of the desired link.
-   * @return
-   *   True on success.
    */
   public function ensureSymLink($realPath, $link) {
     $pathParts = explode('/', $link);
@@ -75,14 +91,14 @@ class Posix {
     $destinationDirectory = implode('/', $pathParts);
     if (is_dir($destinationDirectory) && !is_link($link)) {
       drush_log("Creating a symlink to point from $link to $realPath");
-      if (!$this->container['simulate']) {
+      if (!$this->site['simulate']) {
         if (!symlink($realPath, $link)) {
           // Throw an exception
           throw new \Exception('Link creation failed.');
         }
       }
     }
-    else if (!$this->container['simulate']) {
+    else if (!$this->site['simulate']) {
       if (!is_dir($destinationDirectory)) {
         throw new \Exception(sprintf('The directory where the symlink is desired (%s) does not exist.', $destinationDirectory));
       }
@@ -90,19 +106,26 @@ class Posix {
         throw new \Exception(sprintf('A symlink already exists at %s but it points to %s rather than %s.', $link, readlink($link), $realPath));
       }
     }
-    else {
-      return TRUE;
-    }
   }
 
  /**
+  * Ensure that a path has been deleted.
   *
+  * @param $path
+  *   The path to delete.
   */
   public function ensureDeleted($path) {
     // Note: PHP doesn't have a recursive deletion function, so we just shell out here.
     // Also git sets file permissions that require the -f.
-    if (!$this->container['simulate']) {
-      return drush_shell_exec('rm -rf %s', $path);
+    if (!$this->site['simulate']) {
+      $process = new Process(sprintf('rm -rf %s', $path);
+      $process->run();
+      if ($process->isSuccessful()) {
+        return $process->getOutput();
+      }
+      else {
+        throw new \Exception(sprintf('The path "%s" could not be deleted.', $path));
+      }
     }
     else {
       drush_log(sprintf('rm -rf %s', $path));
@@ -116,8 +139,6 @@ class Posix {
    *   A string representing the absolute path on disk.
    * @param $content
    *   The content to write into the file.
-   * @return
-   *   Boolean, the result of the file write.
    */
   public function writeFile($path, $content) {
     $path_parts = explode('/', $path);
