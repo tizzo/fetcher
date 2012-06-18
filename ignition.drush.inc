@@ -222,7 +222,9 @@ function drush_ignition_get($site_name = FALSE) {
   }
   // Instantiate the site object.
   $site = drush_ignition_get_site($site_info);
-
+  if ($local_name = drush_get_option('local-name', FALSE)) {
+    $site['site.name'] = $local_name;
+  }
   drush_ignition_ensure_site($site);
 }
 
