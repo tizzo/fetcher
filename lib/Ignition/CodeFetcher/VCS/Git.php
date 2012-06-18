@@ -1,7 +1,6 @@
 <?php
 
-namespace Ignition\VCS;
-use Ignition\Base;
+namespace Ignition\CodeFetcher\VCS;
 use Symfony\Component\Process\Process;
 
 class Git extends Base {
