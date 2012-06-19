@@ -19,7 +19,7 @@
   RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 </Directory>
 <VirtualHost *:80>
-  ServerName <?php print $hostname . "\n"; ?>
+  ServerName <?php print $hostname; ?>
   DocumentRoot /var/www/<?php print $site_name; ?>/webroot
   LogLevel warn
   CustomLog <?php print $site_folder; ?>/logs/access.log combined

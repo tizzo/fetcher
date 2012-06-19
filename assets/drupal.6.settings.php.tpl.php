@@ -1,4 +1,4 @@
-<?php
+<?php print '<?php' . PHP_EOL; ?>
 ini_set('arg_separator.output',     '&amp;');
 ini_set('magic_quotes_runtime',     0);
 ini_set('magic_quotes_sybase',      0);
