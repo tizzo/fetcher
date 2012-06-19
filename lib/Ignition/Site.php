@@ -60,7 +60,7 @@ class Site extends Pimple implements SiteInterface {
     $drushFilePath = $this->getDrushAliasPath();
     if (!is_file($drushFilePath)) {
       $content = '';
-      $content = "<?php\n";
+      $content = "<?php" . PHP_EOL;
       $environments = (array) $this['site.info']->environments;
       $environments['local'] = array(
         'uri' => $this['hostname'],
@@ -80,7 +80,7 @@ class Site extends Pimple implements SiteInterface {
           });
           $environment['ignition'] = $copy;
         }
-        $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";\n";
+        $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";" . PHP_EOL;
       }
       $this['system']->writeFile($drushFilePath, $content);
     }
@@ -130,10 +130,10 @@ class Site extends Pimple implements SiteInterface {
       );
       // TODO: Get the settings.php for the appropriate version.
       $content = \drush_ignition_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
-      
 
+      // If we have a site-settings.php file for this site, add it here.
       if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
-        $content .= "\nrequire_once('site-settings.php');\n";
+        $content .= PHP_EOL . "require_once('site-settings.php');" . PHP_EOL;
       }
       $this['system']->writeFile($settingsFilePath, $content);
     }
@@ -498,18 +498,18 @@ class Site extends Pimple implements SiteInterface {
       $indent .= '  ';
       $i++;
     }
-    $string .= "array(\n";
+    $string .= "array(" . PHP_EOL;
     foreach ($data as $name => $value) {
       $string .= "$indent  '$name' => ";
       if (is_array($value)) {
         $inner_string = '';
-        $string .= $this->arrayExport($value, $inner_string, $indentLevel + 1) . ",\n";
+        $string .= $this->arrayExport($value, $inner_string, $indentLevel + 1) . "," . PHP_EOL;
       }
       else if (is_numeric($value)) {
-        $string .= "$value,\n";
+        $string .= "$value," . PHP_EOL;
       }
       elseif (is_string($value)) {
-        $string .= "'" . str_replace("'", "\'", $value) . "',\n";
+        $string .= "'" . str_replace("'", "\'", $value) . "'," . PHP_EOL;
       }
       else {
         $string .= serialize($value);
