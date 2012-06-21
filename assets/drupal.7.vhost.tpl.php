@@ -19,11 +19,9 @@
   RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 </Directory>
 <VirtualHost *:80>
-  ServerName <?php print $hostname; ?>
+  ServerName <?php print $hostname . PHP_EOL;  ?>
   DocumentRoot /var/www/<?php print $site_name; ?>/webroot
   LogLevel warn
-  CustomLog <?php print $site_folder; ?>/logs/access.log combined
-  ErrorLog  <?php print $site_folder; ?>/logs/access.log
   ServerSignature Off
 </VirtualHost>
 
