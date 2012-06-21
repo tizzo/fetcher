@@ -145,7 +145,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
-      $this['code fetcher']->initialCheckout();
+      $this['code fetcher']->setup();
     }
     else {
       // If the code fetcher supports updating already fetched code, update the code.

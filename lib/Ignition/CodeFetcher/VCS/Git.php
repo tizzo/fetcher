@@ -11,7 +11,7 @@ class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher
     $this->site = $site;
   }
 
-  public function initialCheckout() {
+  public function setup() {
     $site = $this->site;
     $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->site['code fetcher.config']['url'], $this->site['site.code_directory'], $this->site['code fetcher.config']['branch']);
   }
