@@ -7,28 +7,6 @@ use \Pimple;
 class Site extends Pimple implements SiteInterface {
 
   /**
-   * A stdClass object of whatever information is available about the site.
-   */
-  protected $siteInfo = array();
-
-  /**
-   * The path within the working directory where we are placing code during this
-   * operation.
-   *
-   * For sites in development, this will usually be `code`.  For releases it
-   * will be a folder named for the release (usually a tag).
-   *
-   */
-  protected $codeDirectory = '';
-
-  /**
-   * The path containing Drupal's index.php.
-   */
-  protected $drupalRoot = '';
-
-  protected $container = FALSE;
-
-  /**
    * Constructor function to allow dependency injection.
    *
    */
@@ -214,24 +192,6 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Get the code directory.
-   *
-   * @return string
-   */
-  public function getCodeDirectory() {
-    return $this['site.code_directory'];
-  }
-
-  /**
-   * Get the working directory.
-   *
-   * @return string
-   */
-  public function getWorkingDirectory() {
-    return $this['site.working_directory'];
-  }
-
-  /**
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
@@ -329,9 +289,12 @@ class Site extends Pimple implements SiteInterface {
     $this['simulate'] = FALSE;
     $this['verbose'] = FALSE;
 
-    // TODO: use context to build hostname.
+    $this['system hostname'] = function ($c) {
+      return $c['system']->getHostname();
+    };
+
     $this['hostname'] = function($c) {
-      return $c['site.name'] . '.' . $c['system']->getHostname();
+      return strtolower($c['site.name'] . '.' . $c['system hostname']);
     };
 
     // TODO: This is retarderated:
