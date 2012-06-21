@@ -156,48 +156,26 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
     return;
   }
 
-  // TODO: Most of this should probably be moved into the site class iteslf.
-
   // Build a new site object.
   $site_info = new stdClass;
   $site_info->name = $site_name;
-  $site_info->version = $version;
   $site = drush_ignition_get_site($site_info);
 
+  $site['version'] = $version;
+  $site['code fetcher class'] = 'Ignition\CodeFetcher\Download';
+  $site['site.name'] = $site_name;
+
   try {
-    // Make sure that the project direcotry is properly configured on the server.
-    $success = $site->ensureWorkingDirectory();
-
-    $commandline_args = array(
-      'drupal-' . $version,
-    );
-    $commandline_options = array(
-      // Default our package hander to git_drupalorg.
-      '--package-handler=' . drush_get_option('package-handler', 'git_drupalorg'),
-      '--drupal-project-rename=code',
-      '--destination=' . $site->getWorkingDirectory(),
-    );
-    foreach ($commandline_options as $name => $value) {
-      drush_set_option($name, $value);
-    }
-    // Note we don't use drush_invoke_process() because it requires an existing
-    // site.
-    drush_invoke_process('@none', 'pm-download', $commandline_args);
-    return;
-
-    // Create necessary symlinks.
-    $success = $site->ensureSymLinks();
-
+    drush_ignition_ensure_site($site);
     // Install the site
     $commandline_args = array();
     $commandline_options = array(
-      'root' => $site->getCodePath(),
-      'db-url' => '',
+      'root' => $site['site.code_directory'],
       'account-name' => 'admin',
       'account-pass' => 'pass',
-      'site-name' => $ite_name,
+      'site-name' => $site['site.name'],
     );
-    drush_invoke_process('@self', 'site-install', $commandline_args, $commandline_options, TRUE);
+    drush_invoke_process('@' . $site['site.name'] . '.local', 'site-install', $commandline_args, $commandline_options);
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
