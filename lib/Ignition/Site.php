@@ -321,12 +321,6 @@ class Site extends Pimple implements SiteInterface {
       return new $c['database synchronizer class']($c);
     });
 
-    // Set our default ignition client class to our own HTTPClient.
-    $this['ignition client class'] = '\Ignition\Utility\HTTPClient';
-
-    // Set our default ignition client authentication class to our own HTTPClient.
-    $this['client.authentication class'] = '\Ignition\Authentication\OpenSshKeys';
-
     // Instantiate the authentication object.
     $this['client.authentication'] = $this->share(function($c) {
       return new $c['client.authentication class']($c);
@@ -450,35 +444,6 @@ class Site extends Pimple implements SiteInterface {
 
     $this['site.info'] = $siteInfo;
     return $this;
-  }
-
-  /**
-   * Create an Ignition ServiceContainer populated from the global Drush context.
-   */
-  static public function getServiceContainerFromDrushContext() {
-
-    $container = new static();
-
-    $container['ignition client'] = function($c) {
-      if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
-        $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
-        drush_log(dt($message), 'error');
-        throw new \Ignition\Exception\IgnitionException($message);
-      }
-      $container['info-fetcher.config'] = ignition_drush_get_option('info-fetcher.config');
-      $client = new $c['ignition client class']();
-      $client->setURL($container['info-fetcher.config']['host'])
-        ->setMethod('GET')
-        ->setTimeout(3)
-        ->setEncoding('json');
-
-      // Populate this object with the appropriate authentication credentials.
-      $c['client.authentication']->addAuthenticationToHTTPClientFromDrushContext($client);
-
-      return $client;
-    };
-
-    return $container;
   }
 
   /**
