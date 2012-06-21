@@ -299,7 +299,8 @@ function drush_ignition_get_site_info($site_name) {
  */
 function drush_ignition_get_info_fetcher() {
   $class = ignition_drush_get_option('info-fetcher.class', 'Ignition\InfoFetcher\DrushAlias');
-  return new $class();
+  $site = drush_ignition_get_site();
+  return new $class($site);
 }
 
 
@@ -324,6 +325,16 @@ function drush_ignition_delete($site_name) {
   }
 }
 
+function drush_ignition_release() {
+  // Optionally create a MySQL backup.
+  // Checkout a new tag.
+  // Create settings.php and files symlinks.
+  // Put the site in offline mode.
+  // Update the webroot symlink.
+  // Run update.php
+  // Take the site out of offline mode.
+}
+
 /**
  * Factory function for instatiating a site object.
  */
@@ -344,21 +355,11 @@ function drush_ignition_get_site($site_info = NULL) {
   return $site;
 }
 
-function drush_ignition_release() {
-  // Optionally create a MySQL backup.
-  // Checkout a new tag.
-  // Create settings.php and files symlinks.
-  // Put the site in offline mode.
-  // Update the webroot symlink.
-  // Run update.php
-  // Take the site out of offline mode.
-}
-
 /**
- *
+ * Prompt for a valid site name.
  */
 function drush_ignition_prompt_for_site_name() {
-  $site_name = drush_prompt(dt('Please enter the site name you would like to create or n to cancel'));
+  $site_name = drush_prompt(dt('Please enter the site name you would like to work with or n to cancel'));
   if ($site_name = 'n') {
     return FALSE;
   }
@@ -367,7 +368,14 @@ function drush_ignition_prompt_for_site_name() {
   }
 }
 
-// TODO: Add this to the hook_command implementation above.
+/**
+ * This came from an @drewish request, he wanted to be able to execute just *part* of a getSite.
+ *
+ * This is a build system and the idea is to register the common actions that can be performed
+ * so that they can be run individually.
+ *
+ * TODO: Do we need a dependency system? Can't get the code without a working directory.
+ */
 function drush_ignition_subcommand() {
   // Just planning the available subcommands.
   $subcommands = array(
@@ -425,25 +433,6 @@ function ignition_autoload($class) {
 }
 
 /**
- * Retrieve a specific handler object.
- *
- * @param $type
- *   The type of handler we are loading (e.g. System, DB, etc.).
- * @param
- *   The specific handler to load, this should map directly to a class.
- * @return
- *   A loaded handler object.
- */
-function drush_ignition_get_handler($type, $handler) {
-  // TODO: Determine whether we could have a much better plugin system (hint:
-  // we can).
-  $handler = strtolower($handler);
-  $handler[0] = strtoupper($handler[0]);
-  $class = 'Ignition\\' . $type . '\\' . $handler;
-  return new $class;
-}
-
-/**
  * Load an Ignition asset and populate it with variables.
  *
  * We do not have Drupal's templating system available to us at the bootstrap
@@ -496,6 +485,7 @@ function drush_ignition_find_site_by_directory($directory) {
 }
 
 /**
+ * Find a site from a site name, drush alias or current path.
  *
  * @param $site_name
  *   An optional param representing a site name or drush alias to the site.
