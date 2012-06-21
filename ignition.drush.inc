@@ -204,6 +204,26 @@ function drush_ignition_get($site_name = FALSE) {
     $site['site.name'] = $local_name;
   }
   drush_ignition_ensure_site($site);
+  
+  // If requested, sync the database.
+  if (drush_get_option('sql-sync')) {
+    drush_log(dt('Attempting to sync database from remote...', 'ok'));
+    $site->syncDatabase();
+    drush_log(dt('The database was properly synchronized.', 'success'));
+  }
+
+  /*
+  if (drush_get_option('sync-public-files')) {
+    $commandline_args = array(
+      // TODO: Build these dynamically!
+      'webadmin@bart.zivtech.com/var/www/roadside/webroot:%files',
+      '/var/www/roadside/webroot:%files',
+    );
+    // TODO: The sorts of logging above!
+    drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
+  }
+  */
+
 }
 
 /**
@@ -216,14 +236,13 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
   try {
 
     // Make sure that the project direcotry is properly configured.
-    drush_log(dt('Ensuring the working directory for this repository is properly setup...'), 'ok');
     $site->ensureWorkingDirectory();
     drush_log(dt('The working directory is properly setup.'), 'success');
 
     // Checkout the site in the appropriate location.
-    drush_log(dt('Checking out code from the repository...'), 'ok');
+    drush_log(dt('Fetching code...'), 'ok');
     $site->ensureCode();
-    drush_log(dt('The code is in place and up to date.'), 'success');
+    drush_log(dt('The code is in place.'), 'success');
 
     // Create the settings.php file.
     $site->ensureSettingsFileExists();
@@ -231,7 +250,7 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
 
     // Create necessary symlinks.
     $site->ensureSymLinks();
-    drush_log(dt('All symlinks have exist and point to the correct path.'), 'success');
+    drush_log(dt('All symlinks exist and point to the correct path.'), 'success');
 
     // Ensure we have a database and user.
     $site->ensureDatabase();
@@ -239,7 +258,7 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
 
     // Create a drush alias for this site.
     $site->ensureDrushAlias();
-    drush_log(dt('The alias @!alias exists and resides in the file @path', array('!alias' => $site_name, '@path' => $site->getDrushAliasPath())), 'success');
+    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['site.name'], '@path' => $site->getDrushAliasPath())), 'success');
 
     // Write a file with the site information so that we can track down
     // which site this is even if it has been placed in an unexpected location
@@ -250,25 +269,9 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
     // Add the site to the server.
     $site->ensureSiteEnabled();
     // TODO: Fill in hosntame.
-    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => 'hostname')), 'success');
+    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
 
-    if (drush_get_option('sql-sync')) {
-      drush_log(dt('Attempting to sync database from remote...', 'ok'));
-      $site->syncDatabase();
-      drush_log(dt('The database was properly synchronized.', 'success'));
-    }
 
-    /*
-    if (drush_get_option('sync-public-files')) {
-      $commandline_args = array(
-        // TODO: Build these dynamically!
-        'webadmin@bart.zivtech.com/var/www/roadside/webroot:%files',
-        '/var/www/roadside/webroot:%files',
-      );
-      // TODO: The sorts of logging above!
-      drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
-    }
-    */
     drush_log('Your site has been setup!', 'success');
   }
   catch (Exception $e) {
