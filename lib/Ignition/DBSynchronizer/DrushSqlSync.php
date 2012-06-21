@@ -11,7 +11,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $this->container = $container;
   }
 
-  public function syncDB(array $alias) {
+  public function syncDB() {
     // Don't hard code this and rework all of it to work properly with aliases.
     $commandline_options = array(
       '--no-ordered-dump',
@@ -23,7 +23,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $commandline_args = array(
       // TODO: Support multisite?
       // TODO: Get this dynamically.
-      '@' . $this->container['site.name'] . '.live',
+      '@' . $this->container['site.name'] . '.dev',
       '@' . $this->container['site.name'] . '.local',
     );
     if ($this->container['verbose']) {

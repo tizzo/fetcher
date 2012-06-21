@@ -186,8 +186,8 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Synchronize the database with a remote environment.
    */
-  public function syncDatabase(Array $conf) {
-    return $this['database synchronizer']->syncDB($conf);
+  public function syncDatabase() {
+    return $this['database synchronizer']->syncDB();
   }
 
   /**

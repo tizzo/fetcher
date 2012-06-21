@@ -3,5 +3,5 @@
 namespace Ignition\DBSynchronizer;
 
 interface DBSynchronizerInterface {
-  public function syncDB(array $conf);
+  public function syncDB();
 }
