@@ -162,7 +162,7 @@ class Posix {
    * Return the user's home folder.
    */
   public function getUserHomeFolder() {
-    $user = posix_getpwuid(getmyuid());
+    $user = posix_getpwuid(posix_geteuid());
     return $user['dir'];
   }
 
