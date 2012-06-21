@@ -197,7 +197,6 @@ class Site extends Pimple implements SiteInterface {
   public function ensureSiteInfoFileExists() {
     $conf = $this;
     // Simple Closure to convert recursively cast object to arrays.
-    // TODO: Oh god, if we ever have an object in here life is a world of pain.
     $recursiveCaster = function($item) use (&$recursiveCaster) {
       if (is_object($item)) {
         $item = (array) $item;
@@ -229,6 +228,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function setDefaults() {
 
+    // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
         $c['site.working_directory'] . '/public_files' => $c['site.code_directory'] . '/sites/default/files',
@@ -267,8 +267,6 @@ class Site extends Pimple implements SiteInterface {
 
     // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
     $this['code fetcher'] = $this->share(function($c) {
-      $config = array();
-      $config['codeDirectory'] = $c['site.code_directory'];
       $vcs = new $c['code fetcher class']($c);
       return $vcs;
     });
@@ -276,23 +274,24 @@ class Site extends Pimple implements SiteInterface {
     // For most cases, the Drush sql-sync command can be used for synchronizing.
     $this['database synchronizer class'] = 'Ignition\DBSynchronizer\DrushSqlSync';
 
-    // Load the configured db synchronizer.
     $this['database synchronizer'] = $this->share(function($c) {
       return new $c['database synchronizer class']($c);
     });
 
-    // Instantiate the authentication object.
-    $this['client.authentication'] = $this->share(function($c) {
-      return new $c['client.authentication class']($c);
-    });
-
+    // Usually set by the drush option.
+    // If set print logs but take no action.
     $this['simulate'] = FALSE;
+
+    // Usually set by drush option.
+    // Prints more verbose logs.
     $this['verbose'] = FALSE;
 
+    // The hostname of the system.
     $this['system hostname'] = function ($c) {
       return $c['system']->getHostname();
     };
 
+    // The URI of the site.
     $this['hostname'] = function($c) {
       return strtolower($c['site.name'] . '.' . $c['system hostname']);
     };
@@ -303,11 +302,13 @@ class Site extends Pimple implements SiteInterface {
       return $c['server']->getWebroot() . '/' . $c['site.name'];
     };
 
-    // Some systems place the Drupal webroot in a subdirectory.  This option configures that subdirectory.
+    // Some systems place the Drupal webroot in a subdirectory.
+    // This option configures the name of the subdirectory (some use htdocs).
     $this['webroot subdirectory'] = 'webroot';
 
+    // The directory inside the working directory to place the drupal code.
+    // Note the Drupal root may be in a subdirectory, see 'webroot subdirectory'.
     $this['site.code_directory'] = function($c) {
-      // TODO: This needs to be smarter:
       return $c['site.working_directory'] . '/' . 'code';
     };
 
