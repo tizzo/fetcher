@@ -3,8 +3,12 @@
 namespace Ignition;
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
+use Symfony\Component\Process\Process;
 
 class Site extends Pimple implements SiteInterface {
+
+  // An multi-dimensional array of build hooks.
+  protected $buildHooks = array();
 
   /**
    * Constructor function to allow dependency injection.
@@ -192,6 +196,67 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   *
+   * @param $operation
+   *   The operation upon wh
+   *    'initial' - 
+   *    'before' - 
+   *    'after' - 
+   * @param $action
+   *   This can be either a string to be executed at the command
+   *   line or a Closure that accepts the site object as an argument.
+   */
+  public function registerBuildHook($operation, $action) {
+    if (empty($this->buildHooks[$operation])) {
+      $this->buildHooks[$operation] = array();
+    }
+    $this->buildHooks[$operation][] = $action;
+  }
+
+  /**
+   *
+   */
+  public function getOperationBuildHooks($operation) {
+    if (!empty($this->buildHooks[$operation])) {
+      return $this->buildHooks[$operation];
+    }
+  }
+
+  /**
+   * Run all registered callbacks for an operation.
+   */
+  public function runOperationBuildHooks($operation) {
+    if (!empty($this->buildHooks[$operation])) {
+      foreach ($this->buildHooks[$operation] as $hook) {
+        if (!empty($hook['subdirectory'])) {
+          $current = getcwd();
+          chdir()
+        }
+        if (is_string($hook['action'])) {
+          $process = new Process($hook);
+          drush_log(dt('Executing command: `@command`', array('@command' => $hook), 'info'));
+          $process->run(function ($type, $buffer) {
+            if ('err' === $type) {
+              drush_log($buffer, 'error');
+            }
+            else {
+              drush_log($buffer, 'info');
+            }
+          });
+          if (!$process->isSuccessful()) {
+            throw new \Exception(dt('Build hook failed: @hook wtih output "@error"', array('@hook' => $hook, '@error' => $process->getErrorOutput())));
+          }
+        }
+        else if (is_object($hook) && get_class($hook) == 'Closure') {
+          $hook($this);
+        }
+      }
+    }
+  }
+
+
+
+  /**
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
@@ -235,6 +300,12 @@ class Site extends Pimple implements SiteInterface {
         $c['site.code_directory'] => $c['site.working_directory'] . '/webroot',
       );
     };
+
+    $this['process'] = $this->protect(function() {
+      $reflection = new \ReflectionClass('Symfony\Component\Process\Process'); 
+      $process = $reflection->newInstanceArgs(func_get_args());
+      return $process;
+    });
 
     // Set our default system to Ubuntu.
     // TODO: Do some detection?

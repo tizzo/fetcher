@@ -16,6 +16,10 @@ class IgnitionServices implements InfoFetcherInterface {
       $site['client.authentication class'] = '\Ignition\Authentication\OpenSshKeys';
     }
 
+    $site['client.authentication'] = $site->share(function($c) {
+      return new $c['client.authentication class']($c);
+    });
+
     $site['ignition client'] = function($c) {
       if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
         $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
@@ -28,10 +32,6 @@ class IgnitionServices implements InfoFetcherInterface {
         ->setMethod('GET')
         ->setTimeout(3)
         ->setEncoding('json');
-
-      $site['client.authentication'] = $site->share(function($c) {
-        return new $c['client.authentication class']($c);
-      });
 
       // Populate this object with the appropriate authentication credentials.
       $c['client.authentication']->addAuthenticationToHTTPClientFromDrushContext($client);

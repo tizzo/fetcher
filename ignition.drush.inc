@@ -235,6 +235,13 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
   // in one big try/catch.
   try {
 
+    // Run "before" build hooks.
+    if (count($site->getOperationBuildHooks('before'))) {
+      drush_log(dt('Running before build hooks...'), 'ok');
+      $site->runOperationBuildHooks('before');
+      drush_log(dt('Before build hooks completed.'), 'success');
+    }
+
     // Make sure that the project direcotry is properly configured.
     $site->ensureWorkingDirectory();
     drush_log(dt('The working directory is properly setup.'), 'success');
@@ -271,6 +278,17 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
 
+    // If there is an ignition.make.php file, load it to allow build hooks to be registered.
+    if (is_file($site['site.code_directory'] . '/sites/default/ignition.make.php')) {
+      require($site['site.code_directory'] . '/sites/default/ignition.make.php');
+    }
+
+    // Run "after" build hooks.
+    if (count($site->getOperationBuildHooks('after'))) {
+      drush_log(dt('Running after build hooks...'), 'ok');
+      $site->runOperationBuildHooks('after');
+      drush_log(dt('After build hooks completed.'), 'success');
+    }
 
     drush_log('Your site has been setup!', 'success');
   }
