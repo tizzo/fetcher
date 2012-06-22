@@ -235,14 +235,14 @@ class Site extends Pimple implements SiteInterface {
   public function runOperationBuildHooks($operation) {
     if (!empty($this->buildHooks[$operation])) {
       $startingDir = getcwd();
-      foreach ($this->buildHooks[$operation] as $hook) {
+      foreach ($this->buildHooks as $hook) {
         chdir($c['site.code_directory']);
         if (!empty($hook['directory'])) {
           chdir($hook['directory']);
         }
         if (is_string($hook['action'])) {
-          $process = new Process($hook);
-          drush_log(dt('Executing command: `@command`', array('@command' => $hook), 'info'));
+          $process = new Process($hook['action']);
+          drush_log(dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
           $process->run(function ($type, $buffer) {
             if ('err' === $type) {
               drush_log($buffer, 'error');
