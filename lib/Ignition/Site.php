@@ -203,14 +203,21 @@ class Site extends Pimple implements SiteInterface {
    *    'before' - 
    *    'after' - 
    * @param $action
-   *   This can be either a string to be executed at the command
-   *   line or a Closure that accepts the site object as an argument.
+   *   This can be either a string to be executed at the command line or a
+   *   Closure that accepts the site object as an argument.
+   * @param $directory
+   *   (Optional) Each hook is executed from inside the drupal code root.  If
+   *   necessary a directory can be specified to run the command from.  This can
+   *   either be a path relative to the Drupal root or an absolute path.
    */
-  public function registerBuildHook($operation, $action) {
+  public function registerBuildHook($operation, $action, $directory = NULL) {
     if (empty($this->buildHooks[$operation])) {
       $this->buildHooks[$operation] = array();
     }
-    $this->buildHooks[$operation][] = $action;
+    $this->buildHooks[$operation] = array(
+      'action' => $action,
+      'directory' => $directory,
+    );
   }
 
   /**
@@ -227,10 +234,11 @@ class Site extends Pimple implements SiteInterface {
    */
   public function runOperationBuildHooks($operation) {
     if (!empty($this->buildHooks[$operation])) {
+      $startingDir = getcwd();
       foreach ($this->buildHooks[$operation] as $hook) {
-        if (!empty($hook['subdirectory'])) {
-          $current = getcwd();
-          chdir()
+        chdir($c['site.code_directory']);
+        if (!empty($hook['directory'])) {
+          chdir($hook['directory']);
         }
         if (is_string($hook['action'])) {
           $process = new Process($hook);
@@ -247,10 +255,11 @@ class Site extends Pimple implements SiteInterface {
             throw new \Exception(dt('Build hook failed: @hook wtih output "@error"', array('@hook' => $hook, '@error' => $process->getErrorOutput())));
           }
         }
-        else if (is_object($hook) && get_class($hook) == 'Closure') {
-          $hook($this);
+        else if (is_object($hook['action']) && get_class($hook['action']) == 'Closure') {
+          $hook['action']($this);
         }
       }
+      chdir($startingDir);
     }
   }
 
