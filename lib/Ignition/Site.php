@@ -243,20 +243,28 @@ class Site extends Pimple implements SiteInterface {
         if (is_string($hook['action'])) {
           $process = new Process($hook['action']);
           drush_log(dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
-          $process->run(function ($type, $buffer) {
-            if ('err' === $type) {
-              drush_log($buffer, 'error');
-            }
-            else {
-              drush_log($buffer, 'info');
-            }
-          });
+          $logger = NULL;
+          if ($this['verbose']) {
+            $logger = function ($type, $buffer) {
+              print $buffer;
+            };
+          }
+          $process->run($logger);
           if (!$process->isSuccessful()) {
-            throw new \Exception(dt('Build hook failed: @hook wtih output "@error"', array('@hook' => $hook, '@error' => $process->getErrorOutput())));
+            $message = 'Build hook failed: @hook';
+            if ($errorOutput = $process->getErrorOutput() && !empty($errorOutput)) {
+              $message .= 'and exited with "@error"';
+            }
+            throw new \Exception(dt($message, array('@hook' => $hook['action'], '@error' => $getErrorOutput)));
           }
         }
         else if (is_object($hook['action']) && get_class($hook['action']) == 'Closure') {
-          $hook['action']($this);
+          try {
+            $hook['action']($this);
+          }
+          catch (\Exception $e) {
+            drush_log('Build hook failed.', 'error');
+          }
         }
       }
       chdir($startingDir);
