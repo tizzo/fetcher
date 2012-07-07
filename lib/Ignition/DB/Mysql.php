@@ -1,7 +1,6 @@
 <?php
 
 namespace Ignition\DB;
-use Symfony\Component\Process\Process;
 
 class Mysql {
 
@@ -124,8 +123,8 @@ class Mysql {
     }
 
     $command = $base_command . ' -e ' . escapeshellarg($command);
-    drush_log(dt('Executing MySQL command `@command`', array('@command' => $command)));
-    $process = new Process($command);
+    $site['log'](dt('Executing MySQL command `@command`', array('@command' => $command)));
+    $process = $this->site['process']($command);
 
     if ($site['simulate']) {
       return $process;

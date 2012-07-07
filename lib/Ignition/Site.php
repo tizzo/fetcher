@@ -131,7 +131,7 @@ class Site extends Pimple implements SiteInterface {
     }
     else {
       // If the code fetcher supports updating already fetched code, update the code.
-      if (in_array('\Ignition\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
+      if (in_array('Ignition\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
         $this['code fetcher']->update();
       }
     }
@@ -241,8 +241,8 @@ class Site extends Pimple implements SiteInterface {
           chdir($hook['directory']);
         }
         if (is_string($hook['action'])) {
-          $process = new Process($hook['action']);
-          drush_log(dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
+          $process = $this['process']($hook['action']);
+          $this['log'](dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
           $logger = NULL;
           if ($this['verbose']) {
             $logger = function ($type, $buffer) {
@@ -255,7 +255,7 @@ class Site extends Pimple implements SiteInterface {
             if ($errorOutput = $process->getErrorOutput() && !empty($errorOutput)) {
               $message .= 'and exited with "@error"';
             }
-            throw new \Exception(dt($message, array('@hook' => $hook['action'], '@error' => $getErrorOutput)));
+       #     throw new \Exception(dt($message, array('@hook' => $hook['action'], '@error' => $getErrorOutput)));
           }
         }
         else if (is_object($hook['action']) && get_class($hook['action']) == 'Closure') {
@@ -263,7 +263,7 @@ class Site extends Pimple implements SiteInterface {
             $hook['action']($this);
           }
           catch (\Exception $e) {
-            drush_log('Build hook failed.', 'error');
+            $this['log']('Build hook failed.', 'error');
           }
         }
       }
@@ -278,7 +278,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureSiteInfoFileExists() {
     $conf = $this;
-    // Simple Closure to convert recursively cast object to arrays.
+    // Simple Closure to recursively cast object to arrays.
     $recursiveCaster = function($item) use (&$recursiveCaster) {
       if (is_object($item)) {
         $item = (array) $item;
@@ -323,6 +323,18 @@ class Site extends Pimple implements SiteInterface {
       $process = $reflection->newInstanceArgs(func_get_args());
       return $process;
     });
+
+
+    // If the log function is changed it must have the same function signature.
+    $this['log function'] = 'drush_log';
+
+    // We need a copy of site to close over in our closure.
+    $site = $this;
+    $this['log'] = $this->protect(function() use ($site) {
+      $args = func_get_args();
+      return call_user_func_array($site['log function'], $args);
+    });
+    unset($site);
 
     // Set our default system to Ubuntu.
     // TODO: Do some detection?
@@ -435,7 +447,8 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Configure the service container with site information loaded from Ignition.
+   * Configure the service container with site information loaded from a class
+   * implementing Ignition\InfoFetcherInterface.
    *
    * @param $siteInfo
    *   The information returned from `\drush_ignition_get_site_info()`.

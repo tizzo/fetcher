@@ -1,7 +1,6 @@
 <?php
 
 namespace Ignition\CodeFetcher\VCS;
-use Symfony\Component\Process\Process;
 
 class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface {
 
@@ -17,9 +16,10 @@ class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher
   }
 
   public function update() {
+    $site = $this->site;
     // If we have a branch set, ensure that we're on it.
-    if (isset($this->site['code fetcher.config']['branch'])) {
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $this->codeDirectory, $this->codeDirectory . '/.git', $this->site['code fetcher.config']['branch']);
+    if (isset($site['code fetcher.config']['branch'])) {
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code fetcher.config']['branch']);
     }
     // Pull in the latest code.
     $this->executeGitCommand('pull --work-tree=%s --git-dir=%s');
@@ -42,16 +42,17 @@ class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher
   private function executeGitCommand($command) {
 
     $args = func_get_args();
+    $site = $this->site;
 
     // By default, allow git to be located automatically within the include path.
     $gitBinary = 'git';
     // If an alternate binary path is specified, use it.
-    if (isset($this->site['git binary'])) {
-      $gitBinary = $this->site['git binary'];
+    if (isset($site['git binary'])) {
+      $gitBinary = $site['git binary'];
     }
     $args[0] = $gitBinary . ' ' . $args[0];
     $command = call_user_func_array('sprintf', $args);
-    drush_log('Executing `' . $command . '`.');
+    $site['log']('Executing `' . $command . '`.');
 
     // Attempt to ramp up the memory limit and execution time
     // to ensure big or slow chekcouts are not interrupted, storing
@@ -61,8 +62,8 @@ class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher
     $memoryLimit = ini_get('max_execution_time');
     ini_set('max_execution_time', 0);
 
-    $process = new Process($command);
-    if (!$this->site['simulate']) {
+    $process = $site['process']($command);
+    if (!$site['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);
       $process->run(function ($type, $buffer) {
