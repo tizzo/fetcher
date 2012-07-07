@@ -71,6 +71,7 @@ function ignition_drush_command() {
     ),
     'options' => array(
       'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
+      'host-name' => NULL,
     ),
   );
 
@@ -378,11 +379,11 @@ function drush_ignition_get_site($site_info = NULL) {
  */
 function drush_ignition_prompt_for_site_name() {
   $site_name = drush_prompt(dt('Please enter the site name you would like to work with or n to cancel'));
-  if ($site_name = 'n') {
+  if ($site_name == 'n') {
     return FALSE;
   }
   else {
-    return $site_name;
+    return trim($site_name);
   }
 }
 
