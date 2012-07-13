@@ -433,14 +433,9 @@ function ignition_autoload($class) {
 
   // Only take action if searching for an Ignition class.
   if ($search_paths === NULL) {
-    // TODO: use a proper method for discovering the base path to the cmd file
-    $command = drush_get_command();
-    $search_paths = array(
-      // Classes in base Ignition install.
-      $command['path'] . '/lib/',
-    );
+    $search_paths = drush_command_invoke_all('ignition_search_paths');
+    drush_command_invoke_all_ref('ignition_search_paths_alter', $search_paths);
   }
-
   // Try the search paths in order.
   foreach ($search_paths as $base_path) {
     $file = $base_path . strtr($class, '\\', '/') . '.php';
@@ -449,6 +444,18 @@ function ignition_autoload($class) {
       return TRUE;
     }
   }
+}
+
+/**
+ * Implements hook_ignition_search_paths().
+ */
+function ignition_ignition_search_paths() {
+  // TODO: use a proper method for discovering the base path to the cmd file
+  $command = drush_get_command();
+  return array(
+    // Classes in base Ignition install.
+    $command['path'] . '/lib/',
+  );
 }
 
 /**
