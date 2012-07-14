@@ -61,7 +61,7 @@ class Apache2 {
         'hostname' => $container['hostname'],
         'site_folder' => $container['site.working_directory'],
       );
-      $content = \drush_ignition_get_asset('drupal.' . $container['version'] . '.vhost', $vars);
+      $content = \drush_fetcher_get_asset('drupal.' . $container['version'] . '.vhost', $vars);
       $container['system']->writeFile($vhostPath, $content);
     }
   }

@@ -115,9 +115,9 @@ function ignition_drush_command() {
 /**
  * List sites available with the current configuration.
  */
-function drush_ignition_list($name = '', $page = 0) {
+function drush_fetcher_list($name = '', $page = 0) {
   try {
-    $result = drush_ignition_get_info_fetcher()->listSites($name, $page);
+    $result = drush_fetcher_get_info_fetcher()->listSites($name, $page);
     // TODO: We should have one common error status to check.
     if (!empty($result)) {
       $rows[] = array(
@@ -138,11 +138,11 @@ function drush_ignition_list($name = '', $page = 0) {
 /**
  * Print out information about a single site.
  */
-function drush_ignition_info($site_name = NULL) {
-  if (is_null($site_name) && !$site_name != drush_ignition_prompt_for_site_name()) {
+function drush_fetcher_info($site_name = NULL) {
+  if (is_null($site_name) && !$site_name != drush_fetcher_prompt_for_site_name()) {
     return;
   }
-  $site_info = drush_ignition_get_site_info($site_name);
+  $site_info = drush_fetcher_get_site_info($site_name);
   if ($site_info) {
     drush_print_r($site_info);
   }
@@ -151,23 +151,23 @@ function drush_ignition_info($site_name = NULL) {
 /**
  * Create and install a new site.
  */
-function drush_ignition_create($site_name = FALSE, $version = '7') {
+function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
-  if (!$site_name && !$site_name = drush_ignition_prompt_for_site_name()) {
+  if (!$site_name && !$site_name = drush_fetcher_prompt_for_site_name()) {
     return;
   }
 
   // Build a new site object.
   $site_info = new stdClass;
   $site_info->name = $site_name;
-  $site = drush_ignition_get_site($site_info);
+  $site = drush_fetcher_get_site($site_info);
 
   $site['version'] = $version;
   $site['code fetcher class'] = 'Ignition\CodeFetcher\Download';
   $site['site.name'] = $site_name;
 
   try {
-    drush_ignition_ensure_site($site);
+    drush_fetcher_ensure_site($site);
     // Install the site
     $commandline_args = array();
     $commandline_options = array(
@@ -193,18 +193,18 @@ function drush_ignition_create($site_name = FALSE, $version = '7') {
  *
  * TODO: Document installation instructions.
  */
-function drush_ignition_get($site_name = FALSE) {
+function drush_fetcher_get($site_name = FALSE) {
 
-  if (!$site_info = drush_ignition_load_site_info_from_name_alias_or_context($site_name)) {
+  if (!$site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name)) {
     drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
     return FALSE;
   }
   // Instantiate the site object.
-  $site = drush_ignition_get_site($site_info);
+  $site = drush_fetcher_get_site($site_info);
   if ($local_name = drush_get_option('local-name', FALSE)) {
     $site['site.name'] = $local_name;
   }
-  drush_ignition_ensure_site($site);
+  drush_fetcher_ensure_site($site);
   
   // If requested, sync the database.
   if (drush_get_option('sql-sync')) {
@@ -230,7 +230,7 @@ function drush_ignition_get($site_name = FALSE) {
 /**
  *
  */
-function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
+function drush_fetcher_ensure_site(Ignition\SiteInterface $site) {
   // Note that the Ignition library generally throws exceptions with helpful
   // error messages if anything goes wrong anywhere, so we wrap all our work
   // in one big try/catch.
@@ -302,9 +302,9 @@ function drush_ignition_ensure_site(Ignition\SiteInterface $site) {
 /**
  * Issue a request against Ignition to retrieve a site's information by name.
  */
-function drush_ignition_get_site_info($site_name) {
+function drush_fetcher_get_site_info($site_name) {
   try {
-    $result = drush_ignition_get_info_fetcher()->getInfo($site_name);
+    $result = drush_fetcher_get_info_fetcher()->getInfo($site_name);
     return $result;
   }
   catch (Exception $e) {
@@ -316,9 +316,9 @@ function drush_ignition_get_site_info($site_name) {
  * Get the conifugred siteInfoFetcher().
  *
  */
-function drush_ignition_get_info_fetcher() {
+function drush_fetcher_get_info_fetcher() {
   $class = ignition_drush_get_option('info-fetcher.class', 'Ignition\InfoFetcher\DrushAlias');
-  $site = drush_ignition_get_site();
+  $site = drush_fetcher_get_site();
   return new $class($site);
 }
 
@@ -326,7 +326,7 @@ function drush_ignition_get_info_fetcher() {
 /**
  * Delete an ignition site.
  */
-function drush_ignition_delete($site_name) {
+function drush_fetcher_delete($site_name) {
   // TODO: Validate $site_name.
   // TODO: Allow deletion of other webroots (check site info?).
   if (!drush_confirm("Are you sure you want to delete $site_name?")) {
@@ -335,7 +335,7 @@ function drush_ignition_delete($site_name) {
   try {
     $site_info = new stdClass;
     $site_info->name = $site_name;
-    $site = drush_ignition_get_site($site_info);
+    $site = drush_fetcher_get_site($site_info);
     $site->remove();
     drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
   }
@@ -344,7 +344,7 @@ function drush_ignition_delete($site_name) {
   }
 }
 
-function drush_ignition_release() {
+function drush_fetcher_release() {
   // Optionally create a MySQL backup.
   // Checkout a new tag.
   // Create settings.php and files symlinks.
@@ -357,7 +357,7 @@ function drush_ignition_release() {
 /**
  * Factory function for instatiating a site object.
  */
-function drush_ignition_get_site($site_info = NULL) {
+function drush_fetcher_get_site($site_info = NULL) {
   $class = drush_get_option('ignition-site-class', '\Ignition\Site');
   $site = new $class();
   $site->configureWithSiteInfo($site_info);
@@ -377,7 +377,7 @@ function drush_ignition_get_site($site_info = NULL) {
 /**
  * Prompt for a valid site name.
  */
-function drush_ignition_prompt_for_site_name() {
+function drush_fetcher_prompt_for_site_name() {
   $site_name = drush_prompt(dt('Please enter the site name you would like to work with or n to cancel'));
   if ($site_name == 'n') {
     return FALSE;
@@ -395,7 +395,7 @@ function drush_ignition_prompt_for_site_name() {
  *
  * TODO: Do we need a dependency system? Can't get the code without a working directory.
  */
-function drush_ignition_subcommand() {
+function drush_fetcher_subcommand() {
   // Just planning the available subcommands.
   $subcommands = array(
     'setup-working-directory' => '',
@@ -471,7 +471,7 @@ function ignition_ignition_search_paths() {
  *   An array of variables for the asset, each will be available in the scope
  *   of the asset template with a variable name of the key and a value of the value.
  */
-function drush_ignition_get_asset($asset_name, array $vars = array()) {
+function drush_fetcher_get_asset($asset_name, array $vars = array()) {
   if (!is_file($asset)) {
     $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
   }
@@ -496,13 +496,13 @@ function drush_ignition_get_asset($asset_name, array $vars = array()) {
  * @return
  *   A stdClass object containing site information or FALSE on failure.
  */
-function drush_ignition_find_site_by_directory($directory) {
+function drush_fetcher_find_site_by_directory($directory) {
   $parts = explode(DIRECTORY_SEPARATOR, $directory);
   $site_info = FALSE;
   while (count($parts)) {
     $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
     if (file_exists($path)) {
-      $site_info = drush_ignition_load_site_info_from_file($path);
+      $site_info = drush_fetcher_load_site_info_from_file($path);
       break;
     }
     array_pop($parts);
@@ -518,7 +518,7 @@ function drush_ignition_find_site_by_directory($directory) {
  * @return
  *   A stdClass object containing site information.
  */
-function drush_ignition_load_site_info_from_name_alias_or_context($site_name = FALSE) {
+function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FALSE) {
 
   $site_info = FALSE;
 
@@ -530,20 +530,20 @@ function drush_ignition_load_site_info_from_name_alias_or_context($site_name = F
       // We may have multiple environments but if we wrote the aliases then the
       // first one is the local one.
       $spec = array_shift($specs);
-      $site_info = drush_ignition_find_site_by_directory($spec['root']);
+      $site_info = drush_fetcher_find_site_by_directory($spec['root']);
     }
 
     // If a site was not selected, we may be loading the site information from
     // the site info file in the current working directory, have a look.
     $path = getcwd();
-    if (!$site_name && !($site_info = drush_ignition_find_site_by_directory($path))) {
-      $site_name = drush_ignition_prompt_for_site_name();
+    if (!$site_name && !($site_info = drush_fetcher_find_site_by_directory($path))) {
+      $site_name = drush_fetcher_prompt_for_site_name();
     }
 
     // Otherwise load the site from the Ignition web service based on the site
     // name.
     if ($site_name && !$site_info) {
-      $site_info = drush_ignition_get_site_info($site_name);
+      $site_info = drush_fetcher_get_site_info($site_name);
     }
 
     if ($site_info === FALSE) {
@@ -566,7 +566,7 @@ function drush_ignition_load_site_info_from_name_alias_or_context($site_name = F
  * @return
  *   A stdClass object with data about the site.
  */
-function drush_ignition_load_site_info_from_file($path) {
+function drush_fetcher_load_site_info_from_file($path) {
   $return = FALSE;
   if (is_file($path) && $site_info = file_get_contents($path)) {
     $class = drush_get_option('ignition_site_class', '\Ignition\Site');

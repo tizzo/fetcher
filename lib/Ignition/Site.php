@@ -111,7 +111,7 @@ class Site extends Pimple implements SiteInterface {
         'driver' => $conf['database.driver'],
       );
       // TODO: Get the settings.php for the appropriate version.
-      $content = \drush_ignition_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
+      $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
 
       // If we have a site-settings.php file for this site, add it here.
       if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
@@ -451,13 +451,13 @@ class Site extends Pimple implements SiteInterface {
    * implementing Ignition\InfoFetcherInterface.
    *
    * @param $siteInfo
-   *   The information returned from `\drush_ignition_get_site_info()`.
+   *   The information returned from `\drush_fetcher_get_site_info()`.
    * TODO: Deprecate this in favor of a constructor the receives an alias.
    */
   public function configureWithSiteInfo($siteInfo) {
     if (isset($site_info->vcs)) {
       $this['code fetcher'] = $this->share(function() {
-        drush_ignition_get_handler('code fetcher', $site_info->vcs);
+        drush_fetcher_get_handler('code fetcher', $site_info->vcs);
       });
     }
 
