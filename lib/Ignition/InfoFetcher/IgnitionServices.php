@@ -6,12 +6,12 @@ class FetcherServices implements InfoFetcherInterface {
 
   public function __construct(Pimple $site) {
 
-    // Set our default ignition client class to our own HTTPClient.
-    if (!isset($site['ignition client class'])) {
-      $site['ignition client class'] = '\Fetcher\Utility\HTTPClient';
+    // Set our default fetcher client class to our own HTTPClient.
+    if (!isset($site['fetcher client class'])) {
+      $site['fetcher client class'] = '\Fetcher\Utility\HTTPClient';
     }
 
-    // Set our default ignition client authentication class to our own HTTPClient.
+    // Set our default fetcher client authentication class to our own HTTPClient.
     if (!isset($site['client.authentication class'])) {
       $site['client.authentication class'] = '\Fetcher\Authentication\OpenSshKeys';
     }
@@ -20,14 +20,14 @@ class FetcherServices implements InfoFetcherInterface {
       return new $c['client.authentication class']($c);
     });
 
-    $site['ignition client'] = function($c) {
-      if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
-        $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
+    $site['fetcher client'] = function($c) {
+      if (!fetcher_drush_get_option('info-fetcher.config', FALSE)) {
+        $message = 'The fetcher server option must be set, we recommend setting it in your .drushrc.php file.';
         drush_log(dt($message), 'error');
         throw new \Fetcher\Exception\FetcherException($message);
       }
-      $c['info-fetcher.config'] = ignition_drush_get_option('info-fetcher.config');
-      $client = new $c['ignition client class']();
+      $c['info-fetcher.config'] = fetcher_drush_get_option('info-fetcher.config');
+      $client = new $c['fetcher client class']();
       $client->setURL($c['info-fetcher.config']['host'])
         ->setMethod('GET')
         ->setTimeout(3)
@@ -43,8 +43,8 @@ class FetcherServices implements InfoFetcherInterface {
   }
 
   public function listSites($name = '', $page = 0) {
-    $client = $this->site['ignition client'];
-    $client->setPath('ignition/api/site.json');
+    $client = $this->site['fetcher client'];
+    $client->setPath('fetcher/api/site.json');
 
     // If we have a name to search for add it to the query.
     if ($name != '') {
@@ -66,9 +66,9 @@ class FetcherServices implements InfoFetcherInterface {
   }
 
   public function getInfo($site_name) {
-    $client = $this->site['ignition client'];
+    $client = $this->site['fetcher client'];
     $result = $client
-      ->setPath("ignition/api/site/$site_name.json")
+      ->setPath("fetcher/api/site/$site_name.json")
       ->fetch();
     if ($result === FALSE) {
       $code = $client->getResponseCode();

@@ -3,7 +3,7 @@
 /**
  * Fetcher allows build hooks to be registered and these hooks will be run
  * immediately after the site code has been fetched in the order that they were
- * registered.  A file named ignition.make.php should be placed in the site
+ * registered.  A file named fetcher.make.php should be placed in the site
  * folder of the site for which it should be
  * run
  *

@@ -25,7 +25,7 @@ It is also worth noting that while settings.php will be dynamically generated ap
 
 ## For Developers: ##
 
-The ignition suite was designed to be (relatively) easy to follow and to make as few assumptions as are reasonable.  Where possible, command line options are available for
+The fetcher suite was designed to be (relatively) easy to follow and to make as few assumptions as are reasonable.  Where possible, command line options are available for
 swapping out the handling classes for different functionality.  Fetcher Drush uses PSR-0 compliant classes and leverages several Symfony 2 components to keey things nice
 and easy for us.
 

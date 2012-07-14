@@ -3,11 +3,11 @@
 /**
  * Implements hook_drush_help().
  */
-function ignition_drush_help($section) {
+function fetcher_drush_help($section) {
   switch ($section) {
-    case 'meta:ignition:title':
+    case 'meta:fetcher:title':
       return dt('Fetcher commands');
-    case 'meta:ignition:summary':
+    case 'meta:fetcher:summary':
       return dt('Interact locally with sites managed by Fetcher.');
   }
 }
@@ -15,17 +15,17 @@ function ignition_drush_help($section) {
 /**
  * Implements hook_drush_command().
  */
-function ignition_drush_command() {
+function fetcher_drush_command() {
 
   $items = array();
 
   // Options necessary for interacting with sites on this server.
   $environment_options = array(
-    'ignition-sql-user' => 'The database username to use for administration commands.',
-    'ignition-sql-password' => 'The database password to use for administration commands.',
+    'fetcher-sql-user' => 'The database username to use for administration commands.',
+    'fetcher-sql-password' => 'The database password to use for administration commands.',
   );
 
-  $items['ignition-list'] = array(
+  $items['fetcher-list'] = array(
     'description' => 'List all sites available to Fetcher that this user has access to.',
     'aliases' => array('il'),
     'arguments' => array(
@@ -34,7 +34,7 @@ function ignition_drush_command() {
     ),
   );
 
-  $items['ignition-info'] = array(
+  $items['fetcher-info'] = array(
     'description' => 'List known information about a site managed by Fetcher.',
     'aliases' => array('if'),
     'arguments' => array(
@@ -43,7 +43,7 @@ function ignition_drush_command() {
   );
 
   // Environment items are the items that inherit the environment options.
-  $environment_items['ignition-get'] = array(
+  $environment_items['fetcher-get'] = array(
     'description' => 'Setup a site on this machine managed by Fetcher synchronizing the database and files if desired.',
     'aliases' => array('ig'),
     'arguments' => array(
@@ -62,7 +62,7 @@ function ignition_drush_command() {
     ),
   );
 
-  $environment_items['ignition-create'] =  array(
+  $environment_items['fetcher-create'] =  array(
     'description' => 'Setup a site on this machine similar to an Fetcher site.  Note this will not add the site to the Fetcher server.',
     'aliases' => array('ic'),
     'arguments' => array(
@@ -75,7 +75,7 @@ function ignition_drush_command() {
     ),
   );
 
-  $environment_items['ignition-release'] = array(
+  $environment_items['fetcher-release'] = array(
     'description' => 'Release an Fetcher managed site to a specific tag.',
     'aliases' => array('ir'),
     'arguments' => array(
@@ -88,7 +88,7 @@ function ignition_drush_command() {
     ),
   );
 
-  $environment_items['ignition-delete'] = array(
+  $environment_items['fetcher-delete'] = array(
     'description' => 'Remove an Fetcher managed site from this server entirely.',
     'aliases' => array('id'),
     'arguments' => array(
@@ -99,7 +99,7 @@ function ignition_drush_command() {
   );
 
   // Add environment specific options relevant to the server
-  // on which ignition is being run for the appropriate commands.
+  // on which fetcher is being run for the appropriate commands.
   foreach ($environment_items as $name => $item) {
     $item['options'] = array_merge($environment_options, $item['options']);
     $items[$name] = $item;
@@ -180,7 +180,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
-    drush_log(dt('Something failed in site creation, consider running `drush ignition-delete @site_name.', array('@site_name', $site_name)), 'error');
+    drush_log(dt('Something failed in site creation, consider running `drush fetcher-delete @site_name.', array('@site_name', $site_name)), 'error');
   }
 }
 
@@ -279,9 +279,9 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
 
-    // If there is an ignition.make.php file, load it to allow build hooks to be registered.
-    if (is_file($site['site.code_directory'] . '/sites/default/ignition.make.php')) {
-      require($site['site.code_directory'] . '/sites/default/ignition.make.php');
+    // If there is an fetcher.make.php file, load it to allow build hooks to be registered.
+    if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
+      require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
     }
 
     // Run "after" build hooks.
@@ -317,14 +317,14 @@ function drush_fetcher_get_site_info($site_name) {
  *
  */
 function drush_fetcher_get_info_fetcher() {
-  $class = ignition_drush_get_option('info-fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
+  $class = fetcher_drush_get_option('info-fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
   $site = drush_fetcher_get_site();
   return new $class($site);
 }
 
 
 /**
- * Delete an ignition site.
+ * Delete an fetcher site.
  */
 function drush_fetcher_delete($site_name) {
   // TODO: Validate $site_name.
@@ -358,12 +358,12 @@ function drush_fetcher_release() {
  * Factory function for instatiating a site object.
  */
 function drush_fetcher_get_site($site_info = NULL) {
-  $class = drush_get_option('ignition-site-class', '\Fetcher\Site');
+  $class = drush_get_option('fetcher-site-class', '\Fetcher\Site');
   $site = new $class();
   $site->configureWithSiteInfo($site_info);
-  $ignition_config = drush_get_option('ignition', array());
+  $fetcher_config = drush_get_option('fetcher', array());
   // Merge in global configuration.
-  foreach ($ignition_config as $name => $value) {
+  foreach ($fetcher_config as $name => $value) {
     if (!empty($site[$name]) && is_array($site[$name]) && is_array($value)) {
       $site[$name] = array_merge($site[$name], $value);
     }
@@ -411,11 +411,11 @@ function drush_fetcher_subcommand() {
  *
  * Register our autoloader.
  */
-function ignition_drush_init() {
+function fetcher_drush_init() {
   $command = drush_get_command();
   // Check to see if we're running a Fetcher command.
-  if (strpos($command['command-hook'], 'ignition-') === 0) {
-    spl_autoload_register('ignition_autoload');
+  if (strpos($command['command-hook'], 'fetcher-') === 0) {
+    spl_autoload_register('fetcher_autoload');
   }
 }
 
@@ -427,14 +427,14 @@ function ignition_drush_init() {
  * @return
  *   True if the class was successfully loaded.
  */
-function ignition_autoload($class) {
+function fetcher_autoload($class) {
 
   static $search_paths;
 
   // Only take action if searching for an Fetcher class.
   if ($search_paths === NULL) {
-    $search_paths = drush_command_invoke_all('ignition_search_paths');
-    drush_command_invoke_all_ref('ignition_search_paths_alter', $search_paths);
+    $search_paths = drush_command_invoke_all('fetcher_search_paths');
+    drush_command_invoke_all_ref('fetcher_search_paths_alter', $search_paths);
   }
   // Try the search paths in order.
   foreach ($search_paths as $base_path) {
@@ -447,9 +447,9 @@ function ignition_autoload($class) {
 }
 
 /**
- * Implements hook_ignition_search_paths().
+ * Implements hook_fetcher_search_paths().
  */
-function ignition_ignition_search_paths() {
+function fetcher_fetcher_search_paths() {
   // TODO: use a proper method for discovering the base path to the cmd file
   $command = drush_get_command();
   return array(
@@ -569,7 +569,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
 function drush_fetcher_load_site_info_from_file($path) {
   $return = FALSE;
   if (is_file($path) && $site_info = file_get_contents($path)) {
-    $class = drush_get_option('ignition_site_class', '\Fetcher\Site');
+    $class = drush_get_option('fetcher_site_class', '\Fetcher\Site');
     $return = $class::parseSiteInfo($site_info);
   }
   return $return;
@@ -583,8 +583,8 @@ function drush_fetcher_load_site_info_from_file($path) {
  * @param $default
  *  The default to use if no value is specified.
  */
-function ignition_drush_get_option($option, $default = NULL) {
-  $options = drush_get_option('ignition');
+function fetcher_drush_get_option($option, $default = NULL) {
+  $options = drush_get_option('fetcher');
   if (isset($options[$option])) {
     $return = $options[$option];
   }

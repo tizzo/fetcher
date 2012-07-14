@@ -16,8 +16,8 @@ class DrushAlias  implements InfoFetcherInterface {
     $list = array();
     // TODO: We need to handle multiple environments here.
     foreach ($aliases as $name => $alias) {
-      if (!empty($alias['ignition'])) {
-        $info = $alias['ignition'];
+      if (!empty($alias['fetcher'])) {
+        $info = $alias['fetcher'];
         if (!empty($list[$info['name']])) {
           $info = ((array) $list[$info['name']] + $info);
         }

@@ -52,15 +52,15 @@ class Site extends Pimple implements SiteInterface {
       foreach ($environments as $name =>  $environment) {
         $environment = (array) $environment;
         $string = '';
-        if (isset($environment['ignition'])) {
-          $copy = (array) $environment['ignition'];
+        if (isset($environment['fetcher'])) {
+          $copy = (array) $environment['fetcher'];
           array_walk_recursive($copy, function(&$value) {
             if (get_class($value) == 'stdClass') {
               return (array) $value;
             }
             return $value;
           });
-          $environment['ignition'] = $copy;
+          $environment['fetcher'] = $copy;
         }
         $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";" . PHP_EOL;
       }
@@ -473,8 +473,8 @@ class Site extends Pimple implements SiteInterface {
     // TODO: Make this configurable
     $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
 
-    if (isset($siteInfo->environments->dev->ignition->branch)) {
-      $fetch_config['branch'] = trim($siteInfo->environments->dev->ignition->branch);
+    if (isset($siteInfo->environments->dev->fetcher->branch)) {
+      $fetch_config['branch'] = trim($siteInfo->environments->dev->fetcher->branch);
     }
     else {
       $fetch_config['branch'] = 'master';
@@ -482,10 +482,10 @@ class Site extends Pimple implements SiteInterface {
     $this['code fetcher.config'] = $fetch_config;
 
     // Setup the administrative db credentials ().
-    $this['database.admin.user'] = drush_get_option('ignition-db-username', FALSE);
-    $this['database.admin.password'] = drush_get_option('ignition-db-username', FALSE);
-    $this['database.admin.hostname'] = drush_get_option('ignition-db-username', 'localhost');
-    $this['database.admin.port'] = drush_get_option('ignition-db-username', '');
+    $this['database.admin.user'] = drush_get_option('fetcher-db-username', FALSE);
+    $this['database.admin.password'] = drush_get_option('fetcher-db-username', FALSE);
+    $this['database.admin.hostname'] = drush_get_option('fetcher-db-username', 'localhost');
+    $this['database.admin.port'] = drush_get_option('fetcher-db-username', '');
 
     // TODO: If we're dealing with an already "gotten" site, we need to load the db_spec via drush
     // rather than reading context options.
@@ -502,7 +502,7 @@ class Site extends Pimple implements SiteInterface {
     $this['database.driver'] = $this['database class']::getDriver();
     $this['database.port'] = drush_get_option('database-port', 3306);
 
-    $this['version'] = $siteInfo->environments->dev->ignition->version;
+    $this['version'] = $siteInfo->environments->dev->fetcher->version;
 
     $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
     $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
