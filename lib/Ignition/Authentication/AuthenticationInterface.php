@@ -1,5 +1,5 @@
 <?php
-namespace Ignition\Authentication;
+namespace Fetcher\Authentication;
 
   /**
    *
@@ -7,12 +7,12 @@ namespace Ignition\Authentication;
 interface AuthenticationInterface {
 
   /**
-   * Recieve a client object similar to \Ignition\Utility\HTTPClient() and add authentication parameters.
+   * Recieve a client object similar to \Fetcher\Utility\HTTPClient() and add authentication parameters.
    *
    * @param $client
    *   An HTTPClient descended object.
    * @return Void
    */
-  public function addAuthenticationToHTTPClientFromDrushContext(\Ignition\Utility\HTTPClient $client);
+  public function addAuthenticationToHTTPClientFromDrushContext(\Fetcher\Utility\HTTPClient $client);
 
 }

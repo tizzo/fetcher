@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\DB;
+namespace Fetcher\DB;
 
 class Mysql {
 
@@ -39,7 +39,7 @@ class Mysql {
     $database = $this->site['database.database'];
     $result = $this->executeQuery('create database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
-      throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be created.', $database));
+      throw new \Fetcher\Exception\FetcherException(sprintf('The database %s could not be created.', $database));
     }
   }
 
@@ -50,7 +50,7 @@ class Mysql {
     $conf = $this->site;
     $process = $this->executeQuery(sprintf("SELECT user FROM mysql.user WHERE User='%s' AND Host='%s'", $conf['database.username'], $conf['database.hostname']), FALSE);
     if (!$process->isSuccessful()) {
-      throw new \Ignition\Exception\IgnitionException('MySQL command failed.');
+      throw new \Fetcher\Exception\FetcherException('MySQL command failed.');
     }
     if ($process->getOutput() == '') {
       return FALSE;
@@ -83,7 +83,7 @@ class Mysql {
     $database = $this->site['database.database'];
     $result = $this->executeQuery('drop database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
-      throw new \Ignition\Exception\IgnitionException(sprintf('The database %s could not be dropped.', $database));
+      throw new \Fetcher\Exception\FetcherException(sprintf('The database %s could not be dropped.', $database));
     }
   }
 

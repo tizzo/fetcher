@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\InfoFetcher;
+namespace Fetcher\InfoFetcher;
 
 interface InfoFetcherInterface {
   public function getInfo($name);

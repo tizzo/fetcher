@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\System;
+namespace Fetcher\System;
 
 // 
 class Debian extends Posix {

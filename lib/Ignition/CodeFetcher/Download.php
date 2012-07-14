@@ -1,18 +1,18 @@
 <?php
 
-namespace Ignition\CodeFetcher;
+namespace Fetcher\CodeFetcher;
 use Symfony\Component\Process\Process;
 
-class Download implements \Ignition\CodeFetcher\SetupInterface {
+class Download implements \Fetcher\CodeFetcher\SetupInterface {
 
   private $site = FALSE; 
 
-  public function __construct(\Ignition\Site $site) {
+  public function __construct(\Fetcher\Site $site) {
     $this->site = $site;
   }
 
   /**
-   * Implements \Ignition\CodeFetcher\SetupInterface::Setup().
+   * Implements \Fetcher\CodeFetcher\SetupInterface::Setup().
    */
   public function setup() {
 
@@ -37,7 +37,7 @@ class Download implements \Ignition\CodeFetcher\SetupInterface {
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
     if (!drush_invoke_process('@none', 'dl', $commandline_args, $commandline_options)) {
-      throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
+      throw new \Fetcher\Exception\FetcherException('Database syncronization FAILED!');
     }
   }
 

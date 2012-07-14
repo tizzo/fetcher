@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\DBSynchronizer;
+namespace Fetcher\DBSynchronizer;
 use Symfony\Component\Process\Process;
 
 class DrushSqlSync implements DBSynchronizerInterface {
@@ -31,7 +31,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
     if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
-      throw new \Ignition\Exception\IgnitionException('Database syncronization FAILED!');
+      throw new \Fetcher\Exception\FetcherException('Database syncronization FAILED!');
     }
   }
 }

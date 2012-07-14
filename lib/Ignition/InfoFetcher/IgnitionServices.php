@@ -1,19 +1,19 @@
 <?php
 
-namespace Ignition\InfoFetcher;
+namespace Fetcher\InfoFetcher;
 
-class IgnitionServices implements InfoFetcherInterface {
+class FetcherServices implements InfoFetcherInterface {
 
   public function __construct(Pimple $site) {
 
     // Set our default ignition client class to our own HTTPClient.
     if (!isset($site['ignition client class'])) {
-      $site['ignition client class'] = '\Ignition\Utility\HTTPClient';
+      $site['ignition client class'] = '\Fetcher\Utility\HTTPClient';
     }
 
     // Set our default ignition client authentication class to our own HTTPClient.
     if (!isset($site['client.authentication class'])) {
-      $site['client.authentication class'] = '\Ignition\Authentication\OpenSshKeys';
+      $site['client.authentication class'] = '\Fetcher\Authentication\OpenSshKeys';
     }
 
     $site['client.authentication'] = $site->share(function($c) {
@@ -24,7 +24,7 @@ class IgnitionServices implements InfoFetcherInterface {
       if (!ignition_drush_get_option('info-fetcher.config', FALSE)) {
         $message = 'The ignition server option must be set, we recommend setting it in your .drushrc.php file.';
         drush_log(dt($message), 'error');
-        throw new \Ignition\Exception\IgnitionException($message);
+        throw new \Fetcher\Exception\FetcherException($message);
       }
       $c['info-fetcher.config'] = ignition_drush_get_option('info-fetcher.config');
       $client = new $c['ignition client class']();

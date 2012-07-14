@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\System;
+namespace Fetcher\System;
 
-class Ubuntu extends Debian /*implements Ignition\System\SystemInterface*/ {
+class Ubuntu extends Debian /*implements Fetcher\System\SystemInterface*/ {
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\System;
+namespace Fetcher\System;
 use Symfony\Component\Process\Process;
 
 class Posix {
@@ -68,10 +68,10 @@ class Posix {
       drush_log(dt('Setting permissions of @path to @permissions', $vars));
       if (!$this->site['simulate']) {
         if (!touch($path)) {
-          throw new \Ignition\Exception\IgnitionException(dt('File creation failed for @path.', $vars));
+          throw new \Fetcher\Exception\FetcherException(dt('File creation failed for @path.', $vars));
         }
         if (!chmod($path, $permission)) {
-          throw new \Ignition\Exception\IgnitionException(dt('File permission setting failed while setting @path to @permissions.', $path));
+          throw new \Fetcher\Exception\FetcherException(dt('File permission setting failed while setting @path to @permissions.', $path));
         }
       }
     }
@@ -148,13 +148,13 @@ class Posix {
       drush_log("Writing file to $path");
       if (!$this->site['simulate']) {
         if (file_put_contents($path, $content) === FALSE) {
-          throw new \Ignition\Exception\IgnitionException(sprintf('Writing file %s failed.', $path));
+          throw new \Fetcher\Exception\FetcherException(sprintf('Writing file %s failed.', $path));
         }
       }
     }
     else if (!$this->site['simulate']) {
       drush_print((string) gettype($this->site['simulate']));
-      throw new \Ignition\Exception\IgnitionException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
+      throw new \Fetcher\Exception\FetcherException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
     }
   }
 
@@ -173,7 +173,7 @@ class Posix {
     $process = new Process('hostname');
     $process->run();
     if (!$process->isSuccessful()) {
-      throw new \Ignition\Exception\IgnitionException('The hostname could not be found.');
+      throw new \Fetcher\Exception\FetcherException('The hostname could not be found.');
     }
     return trim($process->getOutput());
   }

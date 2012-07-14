@@ -1,15 +1,15 @@
-# Ignition Drush #
+# Fetcher Drush #
 
-Ignition Drush is a command line client to interact wiht your Ignition site and to do interesting things with the data retrieved from there.
+Fetcher Drush is a command line client to interact wiht your Fetcher site and to do interesting things with the data retrieved from there.
 
-This is the drush command to interact with sites managed by Ignition.  All `\Ignition\Site` class (the main, top level, class) methods are
-intended to work in a declaritive, rather than imperitive, way.  This means that generally Ignition Drush commands are intended to be capable
+This is the drush command to interact with sites managed by Fetcher.  All `\Fetcher\Site` class (the main, top level, class) methods are
+intended to work in a declaritive, rather than imperitive, way.  This means that generally Fetcher Drush commands are intended to be capable
 of being run more than once.  Each call will verify that it is necessary before actually taking action.  If a folder needs to be created, the
 existence of that folder is first tested and the path to that folder is created if necessary.
 
 ## Folder layout ##
 
-Ignition creates a "working diredctory" with a specific layout for its uses.  That directory is laid 
+Fetcher creates a "working diredctory" with a specific layout for its uses.  That directory is laid 
 out as follows:
 
 - public_files - The drupal pubic files directory which will be symlinked to `sites/default/files` by default.  Generally group writable and group owned by the webserver.
@@ -26,7 +26,7 @@ It is also worth noting that while settings.php will be dynamically generated ap
 ## For Developers: ##
 
 The ignition suite was designed to be (relatively) easy to follow and to make as few assumptions as are reasonable.  Where possible, command line options are available for
-swapping out the handling classes for different functionality.  Ignition Drush uses PSR-0 compliant classes and leverages several Symfony 2 components to keey things nice
+swapping out the handling classes for different functionality.  Fetcher Drush uses PSR-0 compliant classes and leverages several Symfony 2 components to keey things nice
 and easy for us.
 
 ## Dependency Injection ##

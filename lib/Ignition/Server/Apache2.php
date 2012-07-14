@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\Server;
+namespace Fetcher\Server;
 
 class Apache2 {
 
@@ -11,11 +11,11 @@ class Apache2 {
   }
 
   /**
-   * Implements \Ignition\Server\ServerInterface::registerSettings().
+   * Implements \Fetcher\Server\ServerInterface::registerSettings().
    *
    * TODO: I think this is a good idea...
    */
-  public function registerSettings(\Ignition\Site $site) {
+  public function registerSettings(\Fetcher\Site $site) {
     $site['server.user'] = 'www-data';
     $site['server.basewebroot'] = '/var/www';
   }
@@ -97,7 +97,7 @@ class Apache2 {
     $command = 'a2ensite ' . $this->container['site.name'];
     drush_log('Executing `' . $command . '`.');
     if (!drush_shell_exec($command)) {
-      throw new \Ignition\IgnitionException(dt('The site @site could not be enabled.'), array('@site' => $this->container['site.name']));
+      throw new \Fetcher\FetcherException(dt('The site @site could not be enabled.'), array('@site' => $this->container['site.name']));
     }
   }
 
@@ -110,7 +110,7 @@ class Apache2 {
     $command = 'a2dissite ' . $this->container['site.name'];
     drush_log('Executing `' . $command . '`.');
     if (!drush_shell_exec($command)) {
-      throw new \Ignition\IgnitionException(dt('The site @site could not be disabled.', array('@site' => $this->container['site.name'])));
+      throw new \Fetcher\FetcherException(dt('The site @site could not be disabled.', array('@site' => $this->container['site.name'])));
     }
   }
 
@@ -124,7 +124,7 @@ class Apache2 {
   public function restart() {
     $command = 'sudo service apache2 reload';
     if (!drush_shell_exec($command)) {
-      throw new \Ignition\Exception\IgnitionException(dt('Apache failed to restart, the server may be down.'));
+      throw new \Fetcher\Exception\FetcherException(dt('Apache failed to restart, the server may be down.'));
     }
   }
 

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Ignition allows build hooks to be registered and these hooks will be run
+ * Fetcher allows build hooks to be registered and these hooks will be run
  * immediately after the site code has been fetched in the order that they were
  * registered.  A file named ignition.make.php should be placed in the site
  * folder of the site for which it should be
@@ -12,7 +12,7 @@
  */
 
 // This registers a closure to be run after the build process.
-// The closure accepts an \Ignition\Site object as context and
+// The closure accepts an \Fetcher\Site object as context and
 // so it has access to all of the site's data, methods and component
 // handlers and it has a chance to alter much behavior for any subsequent
 // step.

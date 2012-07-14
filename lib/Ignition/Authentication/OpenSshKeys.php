@@ -5,11 +5,11 @@
  *  Provides authentication
  */
 
-namespace Ignition\Authentication;
-use Ignition\Exception\IgnitionException;
+namespace Fetcher\Authentication;
+use Fetcher\Exception\FetcherException;
 use Symfony\Component\Process\Process;
 
-class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
+class OpenSshKeys implements \Fetcher\Authentication\AuthenticationInterface {
 
   private $container = NULL;
 
@@ -18,13 +18,13 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
   }
 
   /**
-   * Recieve a client object similar to \Ignition\Utility\HTTPClient() and add authentication parameters.
+   * Recieve a client object similar to \Fetcher\Utility\HTTPClient() and add authentication parameters.
    *
    * @param $client
    *   An HTTPClient descended object.
    * @return Void
    */
-  public function addAuthenticationToHTTPClientFromDrushContext(\Ignition\Utility\HTTPClient $client) {
+  public function addAuthenticationToHTTPClientFromDrushContext(\Fetcher\Utility\HTTPClient $client) {
 
     // TODO: Allow the specification of the key to use.
 
@@ -67,18 +67,18 @@ class OpenSshKeys implements \Ignition\Authentication\AuthenticationInterface {
      // "<algorithm type> <base64-encoded key> <comment>"
      $keyParts = explode(' ', $parsed['value'], 3);
      if (count($keyParts) < 2) {
-       throw new IgnitionException(dt('Ignition Services Authentication Error: The key is invalid.'));
+       throw new FetcherException(dt('Fetcher Services Authentication Error: The key is invalid.'));
      }
 
      $parsed['algorithm'] = $keyParts[0];
      if (!in_array($parsed['algorithm'], array('ssh-rsa', 'ssh-dss'))) {
-       throw new IgnitionException(dt("Ignition Services Authentication Error: The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
+       throw new FetcherException(dt("Fetcher Services Authentication Error: The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
      }
 
      $parsed['key'] = $keyParts[1];
      $keyBase64Decoded = base64_decode($parsed['key']);
      if ($keyBase64Decoded === FALSE) {
-       throw new IgnitionException(dt('Ignition Services Authentication Error: The key could not be decoded.'));
+       throw new FetcherException(dt('Fetcher Services Authentication Error: The key could not be decoded.'));
      }
      $parsed['fingerprint'] = md5($keyBase64Decoded);
 

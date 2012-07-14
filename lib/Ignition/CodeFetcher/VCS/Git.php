@@ -1,8 +1,8 @@
 <?php
 
-namespace Ignition\CodeFetcher\VCS;
+namespace Fetcher\CodeFetcher\VCS;
 
-class Git implements \Ignition\CodeFetcher\SetupInterface, \Ignition\CodeFetcher\UpdateInterface {
+class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\UpdateInterface {
 
   protected $site = FALSE;
 

@@ -1,7 +1,7 @@
 <?php
 
-namespace Ignition\Exception;
+namespace Fetcher\Exception;
 use \Exception;
 
-class IgnitionException extends Exception {
+class FetcherException extends Exception {
 }

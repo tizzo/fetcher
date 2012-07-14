@@ -1,5 +1,5 @@
 <?php
-namespace Ignition\InfoFetcher;
+namespace Fetcher\InfoFetcher;
 
 class DrushAlias /*implements InfoFetcherInterface*/ {
 

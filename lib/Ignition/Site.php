@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition;
+namespace Fetcher;
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
 use Symfony\Component\Process\Process;
@@ -131,7 +131,7 @@ class Site extends Pimple implements SiteInterface {
     }
     else {
       // If the code fetcher supports updating already fetched code, update the code.
-      if (in_array('Ignition\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
+      if (in_array('Fetcher\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
         $this['code fetcher']->update();
       }
     }
@@ -338,7 +338,7 @@ class Site extends Pimple implements SiteInterface {
 
     // Set our default system to Ubuntu.
     // TODO: Do some detection?
-    $this['system class'] = '\Ignition\System\Ubuntu';
+    $this['system class'] = '\Fetcher\System\Ubuntu';
 
     // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
     $this['system'] = $this->share(function($c) {
@@ -346,7 +346,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Set our default server to Apache2.
-    $this['server class'] = '\Ignition\Server\Apache2';
+    $this['server class'] = '\Fetcher\Server\Apache2';
 
     // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
     $this['server'] = $this->share(function($c) {
@@ -354,7 +354,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Set our default database to MySQL.
-    $this['database class'] = '\Ignition\DB\Mysql';
+    $this['database class'] = '\Fetcher\DB\Mysql';
 
     // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
     $this['database'] = $this->share(function($c) {
@@ -362,7 +362,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Set our default VCS to Git.
-    $this['code fetcher class'] = '\Ignition\CodeFetcher\VCS\Git';
+    $this['code fetcher class'] = '\Fetcher\CodeFetcher\VCS\Git';
     $this['code fetcher.config'] = array();
 
     // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
@@ -372,7 +372,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // For most cases, the Drush sql-sync command can be used for synchronizing.
-    $this['database synchronizer class'] = 'Ignition\DBSynchronizer\DrushSqlSync';
+    $this['database synchronizer class'] = 'Fetcher\DBSynchronizer\DrushSqlSync';
 
     $this['database synchronizer'] = $this->share(function($c) {
       return new $c['database synchronizer class']($c);
@@ -448,7 +448,7 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Configure the service container with site information loaded from a class
-   * implementing Ignition\InfoFetcherInterface.
+   * implementing Fetcher\InfoFetcherInterface.
    *
    * @param $siteInfo
    *   The information returned from `\drush_fetcher_get_site_info()`.

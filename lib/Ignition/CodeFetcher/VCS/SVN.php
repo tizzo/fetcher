@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\CodeFetcher\VCS;
+namespace Fetcher\CodeFetcher\VCS;
 
 class SVN {
 

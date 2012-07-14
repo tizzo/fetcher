@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition;
+namespace Fetcher;
 
 class Base {
 

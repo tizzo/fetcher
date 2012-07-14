@@ -1,6 +1,6 @@
 <?php
 
-namespace Ignition\CodeFetcher;
+namespace Fetcher\CodeFetcher;
 
 
 interface UpdateInterface {

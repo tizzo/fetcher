@@ -1,5 +1,5 @@
 <?php
 
-namespace Ignition\InfoFetcher;
+namespace Fetcher\InfoFetcher;
 
-class DrushAlias  extends Debian /*implements Ignition\System\SystemInterface*/ {
+class DrushAlias  extends Debian /*implements Fetcher\System\SystemInterface*/ {

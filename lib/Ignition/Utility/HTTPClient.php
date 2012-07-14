@@ -7,7 +7,7 @@
  *   enabling `allow_url_fopen` by using PHP streams.
  */
 
-namespace Ignition\Utility;
+namespace Fetcher\Utility;
 
 
 class HTTPClient {
