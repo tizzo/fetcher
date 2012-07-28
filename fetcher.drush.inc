@@ -27,7 +27,7 @@ function fetcher_drush_command() {
 
   $items['fetcher-list'] = array(
     'description' => 'List all sites available to Fetcher that this user has access to.',
-    'aliases' => array('fl'),
+    'aliases' => array('fel'),
     'arguments' => array(
       'search' => 'Any part of the name of a site to search for.',
       'page' => 'The page of listings starting from zero.  Necessary only if there are too many results to display on a page of 100.',
@@ -36,7 +36,7 @@ function fetcher_drush_command() {
 
   $items['fetcher-info'] = array(
     'description' => 'List known information about a site managed by Fetcher.',
-    'aliases' => array('ff'),
+    'aliases' => array('fef'),
     'arguments' => array(
       'search' => 'The name of a site to list information for.',
     ),
@@ -45,7 +45,7 @@ function fetcher_drush_command() {
   // Environment items are the items that inherit the environment options.
   $environment_items['fetcher-get'] = array(
     'description' => 'Setup a site on this machine managed by Fetcher synchronizing the database and files if desired.',
-    'aliases' => array('fg'),
+    'aliases' => array('feg'),
     'arguments' => array(
       'site' => 'The name of a site to install on this server.',
       'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
@@ -64,7 +64,7 @@ function fetcher_drush_command() {
 
   $environment_items['fetcher-create'] =  array(
     'description' => 'Setup a site on this machine similar to an Fetcher site.  Note this will not add the site to the Fetcher server.',
-    'aliases' => array('fc'),
+    'aliases' => array('fec'),
     'arguments' => array(
       'site_name' => 'The name of a site to create.',
       'version' => 'The version of Drupal to install (the same options that would be passed to pm-download without the `drupal-` prefix).',
@@ -77,7 +77,7 @@ function fetcher_drush_command() {
 
   $environment_items['fetcher-release'] = array(
     'description' => 'Release an Fetcher managed site to a specific tag.',
-    'aliases' => array('fr'),
+    'aliases' => array('fer'),
     'arguments' => array(
       'site name' => 'The name of the site to release.',
       'tag' => 'The tag to release. Branches are not supported.',
@@ -90,7 +90,7 @@ function fetcher_drush_command() {
 
   $environment_items['fetcher-delete'] = array(
     'description' => 'Remove an Fetcher managed site from this server entirely.',
-    'aliases' => array('fd'),
+    'aliases' => array('fed'),
     'arguments' => array(
       'site' => 'The name of the site to delete.',
     ),
