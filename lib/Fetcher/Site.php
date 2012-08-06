@@ -55,7 +55,7 @@ class Site extends Pimple implements SiteInterface {
         if (isset($environment['fetcher'])) {
           $copy = (array) $environment['fetcher'];
           array_walk_recursive($copy, function(&$value) {
-            if (get_class($value) == 'stdClass') {
+            if (is_object($value) && get_class($value) == 'stdClass') {
               return (array) $value;
             }
             return $value;
