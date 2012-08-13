@@ -42,6 +42,8 @@ All objects are lazy loaded and then a single object is reused after instantiati
   - 'system' - The handler object for loading data from or making changes to the system.
   - 'system class' - The class used for the system object.
   - 'system hostname' - The hostname of the system the site is installed on.
+  - 'title' - The human readible title of the site.
   - 'verbose' - Whether to perform verbose logging.  Generally triggered by drush's global verbose option.
   - 'version' - The version of Drupal this site is on specified as an integer.
   - 'webroot subdirectory' - If there is a path within the code directory (usually for version control) that contains the actual webroot, this setting specifies that path.
+
