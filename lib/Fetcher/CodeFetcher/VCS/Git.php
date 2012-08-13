@@ -12,14 +12,14 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
 
   public function setup() {
     $site = $this->site;
-    $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->site['code fetcher.config']['url'], $this->site['site.code_directory'], $this->site['code fetcher.config']['branch']);
+    $this->executeGitCommand('clone %s %s --branch=%s --recursive', $this->site['code_fetcher.config']['url'], $this->site['site.code_directory'], $this->site['code_fetcher.config']['branch']);
   }
 
   public function update() {
     $site = $this->site;
     // If we have a branch set, ensure that we're on it.
-    if (isset($site['code fetcher.config']['branch'])) {
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code fetcher.config']['branch']);
+    if (isset($site['code_fetcher.config']['branch'])) {
+      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
     }
     // Pull in the latest code.
     $this->executeGitCommand('pull --work-tree=%s --git-dir=%s');

@@ -163,7 +163,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   $site = drush_fetcher_get_site($site_info);
 
   $site['version'] = $version;
-  $site['code fetcher class'] = 'Fetcher\CodeFetcher\Download';
+  $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
   $site['name'] = $site_name;
 
   try {

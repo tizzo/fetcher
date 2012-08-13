@@ -5,9 +5,9 @@ All objects are lazy loaded and then a single object is reused after instantiati
   - 'client.authentication' - 
   - 'client.authentication class' - 
 
-  - 'code fetcher' - The instantiated code fetcher object.
-  - 'code fetcher class' - The class used to fetch the code for the site.  This may download a fresh copy from Drupal or fetch the site using version control.
-  - 'code fetcher.config' - An array, often containing a "branch" key.
+  - 'code_fetcher' - The instantiated code fetcher object.
+  - 'code_fetcher.class' - The class used to fetch the code for the site.  This may download a fresh copy from Drupal or fetch the site using version control.
+  - 'code_fetcher.config' - An array, often containing a "branch" key.
   - 'database' - The database handler object used to perform database operations.
   - 'database.admin.hostname' - The hostname used to perform administrative mysql tasks.
   - 'database.admin.password' - The password for the administrative user.
