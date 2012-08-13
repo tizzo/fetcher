@@ -1,6 +1,7 @@
 <?php
 
 namespace Fetcher\InfoFetcher;
+use Fetcher\InfoFetcher\InfoFetcherInterface;
 
 class DrushAlias  implements InfoFetcherInterface {
 

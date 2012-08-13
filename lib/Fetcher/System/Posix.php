@@ -1,13 +1,14 @@
 <?php
 
 namespace Fetcher\System;
+use Fetcher\Exception\FetcherException;
 use Symfony\Component\Process\Process;
 
 class Posix {
 
   private $site;
 
-  public function __construct(\Pimple $site) {
+  public function __construct(\Fetcher\SiteInterface $site) {
     $this->site = $site;
   }
 
@@ -64,14 +65,14 @@ class Posix {
     $this->ensureFolderExists($directory, $owning_user, $owning_group);
     if (!file_exists($path)) {
       $vars = array('@path' => $path, '@permissions' => (string) $permission);
-      drush_log(dt('Creating file @path', $vars));
-      drush_log(dt('Setting permissions of @path to @permissions', $vars));
+      $this->site['log'](dt('Creating file @path', $vars));
+      $this->site['log'](dt('Setting permissions of @path to @permissions', $vars));
       if (!$this->site['simulate']) {
         if (!touch($path)) {
-          throw new \Fetcher\Exception\FetcherException(dt('File creation failed for @path.', $vars));
+          throw new FetcherException(dt('File creation failed for @path.', $vars));
         }
         if (!chmod($path, $permission)) {
-          throw new \Fetcher\Exception\FetcherException(dt('File permission setting failed while setting @path to @permissions.', $path));
+          throw new FetcherException(dt('File permission setting failed while setting @path to @permissions.', $path));
         }
       }
     }
@@ -148,13 +149,13 @@ class Posix {
       drush_log("Writing file to $path");
       if (!$this->site['simulate']) {
         if (file_put_contents($path, $content) === FALSE) {
-          throw new \Fetcher\Exception\FetcherException(sprintf('Writing file %s failed.', $path));
+          throw new FetcherException(sprintf('Writing file %s failed.', $path));
         }
       }
     }
     else if (!$this->site['simulate']) {
       drush_print((string) gettype($this->site['simulate']));
-      throw new \Fetcher\Exception\FetcherException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
+      throw new FetcherException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
     }
   }
 
@@ -173,7 +174,7 @@ class Posix {
     $process = new Process('hostname');
     $process->run();
     if (!$process->isSuccessful()) {
-      throw new \Fetcher\Exception\FetcherException('The hostname could not be found.');
+      throw new FetcherException('The hostname could not be found.');
     }
     return trim($process->getOutput());
   }
