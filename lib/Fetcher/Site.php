@@ -393,13 +393,13 @@ class Site extends Pimple implements SiteInterface {
 
     // The URI of the site.
     $this['hostname'] = function($c) {
-      return strtolower($c['site.name'] . '.' . $c['system hostname']);
+      return strtolower($c['name'] . '.' . $c['system hostname']);
     };
 
     // TODO: This is retarderated:
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
-      return $c['server']->getWebroot() . '/' . $c['site.name'];
+      return $c['server']->getWebroot() . '/' . $c['name'];
     };
 
     // Some systems place the Drupal webroot in a subdirectory.
@@ -462,7 +462,7 @@ class Site extends Pimple implements SiteInterface {
     }
 
     // Load the site variables.
-    $this['site.name'] = $siteInfo->name;
+    $this['name'] = $siteInfo->name;
 
     $fetch_config = array();
     if (isset($siteInfo->vcs_url)) {
@@ -493,8 +493,8 @@ class Site extends Pimple implements SiteInterface {
     // Setup the site specific db credentails.
     // TODO: Add support for this in siteInfo.
     // TODO: Add support for remote db servers.
-    $this['database.username'] = drush_get_option('database-user',  function($c) { return $c['site.name']; });
-    $this['database.database'] = drush_get_option('database', function($c) { return $c['site.name']; });
+    $this['database.username'] = drush_get_option('database-user',  function($c) { return $c['name']; });
+    $this['database.database'] = drush_get_option('database', function($c) { return $c['name']; });
 
     // TODO: Where should this go, it doesn't touch site info:
     $this['database.hostname'] = 'localhost';

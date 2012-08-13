@@ -164,7 +164,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
   $site['version'] = $version;
   $site['code fetcher class'] = 'Fetcher\CodeFetcher\Download';
-  $site['site.name'] = $site_name;
+  $site['name'] = $site_name;
 
   try {
     drush_fetcher_ensure_site($site);
@@ -174,9 +174,9 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'root' => $site['site.code_directory'],
       'account-name' => 'admin',
       'account-pass' => 'pass',
-      'site-name' => $site['site.name'],
+      'site-name' => $site['name'],
     );
-    drush_invoke_process('@' . $site['site.name'] . '.local', 'site-install', $commandline_args, $commandline_options);
+    drush_invoke_process('@' . $site['name'] . '.local', 'site-install', $commandline_args, $commandline_options);
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
@@ -202,7 +202,7 @@ function drush_fetcher_get($site_name = FALSE) {
   // Instantiate the site object.
   $site = drush_fetcher_get_site($site_info);
   if ($local_name = drush_get_option('local-name', FALSE)) {
-    $site['site.name'] = $local_name;
+    $site['name'] = $local_name;
   }
   drush_fetcher_ensure_site($site);
   
@@ -266,7 +266,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 
     // Create a drush alias for this site.
     $site->ensureDrushAlias();
-    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['site.name'], '@path' => $site->getDrushAliasPath())), 'success');
+    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['name'], '@path' => $site->getDrushAliasPath())), 'success');
 
     // Write a file with the site information so that we can track down
     // which site this is even if it has been placed in an unexpected location

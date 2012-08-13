@@ -44,7 +44,7 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function siteEnabled() {
-    return is_link('/etc/apache2/sites-enabled/' . $this->container['site.name']);
+    return is_link('/etc/apache2/sites-enabled/' . $this->container['name']);
   }
 
   /**
@@ -57,7 +57,7 @@ class Apache2 {
     $vhostPath = $this->getVhostPath();
     if (!is_file($vhostPath)) {
       $vars = array(
-        'site_name' => $container['site.name'],
+        'site_name' => $container['name'],
         'hostname' => $container['hostname'],
         'site_folder' => $container['site.working_directory'],
       );
@@ -72,7 +72,7 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function getVhostPath() {
-    return '/etc/apache2/sites-available/' . $this->container['site.name'];
+    return '/etc/apache2/sites-available/' . $this->container['name'];
   }
 
   /**
@@ -94,10 +94,10 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function ensureSiteEnabled() {
-    $command = 'a2ensite ' . $this->container['site.name'];
+    $command = 'a2ensite ' . $this->container['name'];
     drush_log('Executing `' . $command . '`.');
     if (!drush_shell_exec($command)) {
-      throw new \Fetcher\FetcherException(dt('The site @site could not be enabled.'), array('@site' => $this->container['site.name']));
+      throw new \Fetcher\FetcherException(dt('The site @site could not be enabled.'), array('@site' => $this->container['name']));
     }
   }
 
@@ -107,10 +107,10 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function ensureSiteDisabled() {
-    $command = 'a2dissite ' . $this->container['site.name'];
+    $command = 'a2dissite ' . $this->container['name'];
     drush_log('Executing `' . $command . '`.');
     if (!drush_shell_exec($command)) {
-      throw new \Fetcher\FetcherException(dt('The site @site could not be disabled.', array('@site' => $this->container['site.name'])));
+      throw new \Fetcher\FetcherException(dt('The site @site could not be disabled.', array('@site' => $this->container['name'])));
     }
   }
 

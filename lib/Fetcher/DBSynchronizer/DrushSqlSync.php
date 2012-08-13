@@ -23,8 +23,8 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $commandline_args = array(
       // TODO: Support multisite?
       // TODO: Get this dynamically.
-      '@' . $this->container['site.name'] . '.dev',
-      '@' . $this->container['site.name'] . '.local',
+      '@' . $this->container['name'] . '.dev',
+      '@' . $this->container['name'] . '.local',
     );
     if ($this->container['verbose']) {
       $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $commandline_options);
