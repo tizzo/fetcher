@@ -404,7 +404,7 @@ class Site extends Pimple implements SiteInterface {
 
     // Some systems place the Drupal webroot in a subdirectory.
     // This option configures the name of the subdirectory (some use htdocs).
-    $this['webroot subdirectory'] = 'webroot';
+    $this['webroot subdirectory'] = '';
 
     // The directory inside the working directory to place the drupal code.
     // Note the Drupal root may be in a subdirectory, see 'webroot subdirectory'.
