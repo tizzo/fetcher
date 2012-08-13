@@ -1,0 +1,47 @@
+# Available keys #
+
+All objects are lazy loaded and then a single object is reused after instantiation unless otherwise specified.  Genearally the class used is specified by another key with the pattern '[object key] class'.
+
+  - 'client.authentication' - 
+  - 'client.authentication class' - 
+
+  - 'code fetcher' - The instantiated code fetcher object.
+  - 'code fetcher class' - The class used to fetch the code for the site.  This may download a fresh copy from Drupal or fetch the site using version control.
+  - 'code fetcher.config' - An array, often containing a "branch" key.
+  - 'database' - The database handler object used to perform database operations.
+  - 'database.admin.hostname' - The hostname used to perform administrative mysql tasks.
+  - 'database.admin.password' - The password for the administrative user.
+  - 'database.admin.port' - The database port (if applicable) used for administrative SQL tasks.
+  - 'database.admin.user' - The username used to perform administrative mysql tasks. This user needs to have permissions to create and drop users and datbases and to grant permissions.
+  - 'database class' - The class used when the database handler is instantiated in the 'database' key.
+  - 'database.database' - The database (if applicable) that this site is installed in. Defaults to the value of 'site.name'.
+  - 'database.hostname' - The hostname of the database on which Drupal is or will be installed.
+  - 'database.port' - The port of the database on which Drupal is or will be installed.
+  - 'database synchronizer' - The handler used to syncronize our database.
+  - 'database synchronizer class' - The class used to when the 'database synchronizer' is instantiated.
+  - 'database.username' - The username Drupal will use to connect to the database.
+  - 'git binary' - 
+  - 'hostname' - 
+  - 'log' - A closure used to do internal logging allowing drush logs to be extended or rerouted. Must implement the same interface as `drush_log`.
+  - 'log function' - A function matching the drush_log signature used by the default 'log' implementation to do logging.  Defaults to `drush_log`.
+  - 'process' - A factory for Symfony\Process objects. Used to perform system calls.
+  - 'random' - A closure that generates pseudo random data.  Defaults to a copy of the Drupal 7 drupal_random_bytes implementation.
+  - 'remote.url' - 
+  - 'server' - 
+  - 'server.basewebroot' - 
+  - 'server class' - 
+  - 'server.user' - 
+  - 'settings_file.path' - 
+  - 'simulate' - 
+  - 'site' - The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
+  - 'site.code_directory' - 
+  - 'site.info' - 
+  - 'site.name' - 
+  - 'site.working_directory' - The working directory for this site.  This folder will contain the public and private files, the webroot symlink, and any folders containg code, etc.
+  - 'symlinks' - An array of symlinks to create keyed by the link with the source of the real file or directory.
+  - 'system' - The handler object for loading data from or making changes to the system.
+  - 'system class' - The class used for the system object.
+  - 'system hostname' - The hostname of the system the site is installed on.
+  - 'verbose' - Whether to perform verbose logging.  Generally triggered by drush's global verbose option.
+  - 'version' - The version of Drupal this site is on specified as an integer.
+  - 'webroot subdirectory' - If there is a path within the code directory (usually for version control) that contains the actual webroot, this setting specifies that path.
