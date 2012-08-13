@@ -35,5 +35,5 @@ $site->registerBuildHook('after', function($site) {
 // instead of a closure. The regsitered command will be run as if
 // executed at the terminalto.  If the terminal command exits with
 // a non-zero status an exception will be thrown.
-$site->registerBuildHook('after', 'echo "foo"');
+$site->registerBuildHook('after', 'echo "foo"', 'sites/all/themes/foo');
 
