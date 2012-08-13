@@ -36,7 +36,7 @@ All objects are lazy loaded and then a single object is reused after instantiati
   - 'site' - The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
   - 'site.code_directory' - 
   - 'site.info' - 
-  - 'site.name' - 
+  - 'site.name' - The site's machine name.
   - 'site.working_directory' - The working directory for this site.  This folder will contain the public and private files, the webroot symlink, and any folders containg code, etc.
   - 'symlinks' - An array of symlinks to create keyed by the link with the source of the real file or directory.
   - 'system' - The handler object for loading data from or making changes to the system.
