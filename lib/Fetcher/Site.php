@@ -128,17 +128,17 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
-      $this['code fetcher']->setup();
+      $this['code_fetcher']->setup();
     }
     else {
       // If the code fetcher supports updating already fetched code, update the code.
-      if (in_array('Fetcher\CodeFetcher\SetupInterface', class_implements($this['code fetcher']))) {
-        $this['code fetcher']->update();
+      if (in_array('Fetcher\CodeFetcher\UpdateInterface', class_implements($this['code_fetcher']))) {
+        $this['code_fetcher']->update();
       }
     }
     // If our webroot is in a configured subdirectory, use that for the root.
-    if (is_dir($this['site.code_directory'] . '/' . $this['webroot subdirectory'])) {
-      $this['site.code_directory'] = $this['site.code_directory'] . '/' . $this['webroot subdirectory'];
+    if (is_dir($this['site.code_directory'] . '/' . $this['webroot_subdirectory'])) {
+      $this['site.code_directory'] = $this['site.code_directory'] . '/' . $this['webroot_subdirectory'];
     }
     else {
       $this['site.code_directory'] = $this['site.code_directory'];
@@ -236,7 +236,7 @@ class Site extends Pimple implements SiteInterface {
     if (!empty($this->buildHooks[$operation])) {
       $startingDir = getcwd();
       foreach ($this->buildHooks as $hook) {
-        chdir($c['site.code_directory']);
+        chdir($this['site.code_directory']);
         if (!empty($hook['directory'])) {
           chdir($hook['directory']);
         }
@@ -377,19 +377,19 @@ class Site extends Pimple implements SiteInterface {
       return $c['random'](); 
     });
     $this['database.driver'] = $this->share(function($c) {
-      return $this['database class']::getDriver();
+      return $c['database class']::getDriver();
     });
     $this['database.port'] = 3306;
 
 
 
     // Set our default VCS to Git.
-    $this['code fetcher class'] = '\Fetcher\CodeFetcher\VCS\Git';
-    $this['code fetcher.config'] = array();
+    $this['code_fetcher.class'] = '\Fetcher\CodeFetcher\VCS\Git';
+    $this['code_fetcher.config'] = array();
 
     // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
-    $this['code fetcher'] = $this->share(function($c) {
-      $vcs = new $c['code fetcher class']($c);
+    $this['code_fetcher'] = $this->share(function($c) {
+      $vcs = new $c['code_fetcher.class']($c);
       return $vcs;
     });
 
@@ -426,10 +426,10 @@ class Site extends Pimple implements SiteInterface {
 
     // Some systems place the Drupal webroot in a subdirectory.
     // This option configures the name of the subdirectory (some use htdocs).
-    $this['webroot subdirectory'] = '';
+    $this['webroot_subdirectory'] = 'webroot';
 
     // The directory inside the working directory to place the drupal code.
-    // Note the Drupal root may be in a subdirectory, see 'webroot subdirectory'.
+    // Note the Drupal root may be in a subdirectory, see 'webroot_subdirectory'.
     $this['site.code_directory'] = function($c) {
       return $c['site.working_directory'] . '/' . 'code';
     };
