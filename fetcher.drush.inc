@@ -365,6 +365,12 @@ function drush_fetcher_get_site($site_info = array()) {
   return $site;
 }
 
+/**
+ * Merge configuration in to build the configuration.
+ *
+ * Defaults exist for all values but can be overridden by keys set in a drushrc
+ * file, and those are overridden by a site's specific settings.
+ */
 function drush_fetcher_assemble_site_info(Array $site_info) {
   // Merge in drushrc settings.
   $fetcher_config = drush_get_option('fetcher', array());

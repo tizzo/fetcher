@@ -290,6 +290,7 @@ class Site extends Pimple implements SiteInterface {
       }
       return $item;
     };
+    // TODO: Intelligently dump our keys to this file.
     $siteInfo = $this['site.info'];
     $string = Yaml::dump($recursiveCaster($siteInfo), 5);
     $this['system']->writeFile($this['site.working_directory'] . '/site_info.yaml', $string);
