@@ -143,7 +143,9 @@ function drush_fetcher_info($site_name = NULL) {
     return;
   }
   $site_info = drush_fetcher_get_site_info($site_name);
-  $site_info = drush_fetcher_assemble_site_info($site_info);
+  if (!empty($site_info)) {
+    $site_info = drush_fetcher_assemble_site_info($site_info);
+  }
   if ($site_info) {
     drush_print_r($site_info);
   }
