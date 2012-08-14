@@ -277,22 +277,15 @@ class Site extends Pimple implements SiteInterface {
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
-    $conf = $this;
-    // Simple Closure to recursively cast object to arrays.
-    $recursiveCaster = function($item) use (&$recursiveCaster) {
-      if (is_object($item)) {
-        $item = (array) $item;
-      }
-      foreach ($item as $name => $value) {
-        if (is_object($value)) {
-          $item[$name] = $recursiveCaster($value);
-        }
-      }
-      return $item;
-    };
     // TODO: Intelligently dump our keys to this file.
-    $siteInfo = $this['site.info'];
-    $string = Yaml::dump($recursiveCaster($siteInfo), 5);
+    $conf = array();
+    foreach ($this->keys() as $key) {
+      $value = $this[$key];
+      if (!is_object($value) || get_class($value) == 'stdClass') {
+        $conf[$key] = $value;
+      }
+    }
+    $string = Yaml::dump($conf, 5, 2);
     $this['system']->writeFile($this['site.working_directory'] . '/site_info.yaml', $string);
   }
 
