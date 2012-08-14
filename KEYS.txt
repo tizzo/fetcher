@@ -20,6 +20,8 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'database synchronizer' - The handler used to syncronize our database.
   - 'database synchronizer class' - The class used to when the 'database synchronizer' is instantiated.
   - 'database.username' - The username Drupal will use to connect to the database.
+  - 'environments' - An array of environments.
+  - 'environment' - The environment currently selected by this site object.
   - 'git binary' - 
   - 'hostname' - 
   - 'log' - A closure used to do internal logging allowing drush logs to be extended or rerouted. Must implement the same interface as `drush_log`.
