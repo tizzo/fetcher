@@ -27,7 +27,7 @@ class Site extends Pimple implements SiteInterface {
       $this['database']->createDatabase();
     }
     if (!$this['database']->userExists()) {
-      $name = $this['site.info']->name;
+      $name = $this['name'];
       $this['database']->createUser();
       $this['database']->grantAccessToUser();
     }
@@ -176,7 +176,7 @@ class Site extends Pimple implements SiteInterface {
    * Calculate the drush alias path.
    */
   public function getDrushAliasPath() {
-    return $this['system']->getUserHomeFolder() . '/.drush/' . $this['site.info']->name . '.aliases.drushrc.php';
+    return $this['system']->getUserHomeFolder() . '/.drush/' . $this['name'] . '.aliases.drushrc.php';
   }
 
   /**
@@ -185,7 +185,6 @@ class Site extends Pimple implements SiteInterface {
   public function remove() {
     $this['system']->ensureDeleted($this['site.working_directory']);
     $this['system']->ensureDeleted($this->getDrushAliasPath());
-    //$this['system']->removeSite($this['site.info']->name);
     if ($this['database']->exists()) {
       $this['database']->removeDatabase();
     }
