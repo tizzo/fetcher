@@ -90,10 +90,8 @@ class Site extends Pimple implements SiteInterface {
 
     // Ensure we have our files folders.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server']->getWebUser());
-    if (isset($this['site.info']->{'private files'})) {
-      $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
-    }
-
+    // TODO: Should we have an option for whether to create private files or not?
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
   }
 
   /**
