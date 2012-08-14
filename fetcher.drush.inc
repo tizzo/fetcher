@@ -143,6 +143,7 @@ function drush_fetcher_info($site_name = NULL) {
     return;
   }
   $site_info = drush_fetcher_get_site_info($site_name);
+  $site_info = drush_fetcher_assemble_site_info($site_info);
   if ($site_info) {
     drush_print_r($site_info);
   }
@@ -158,8 +159,8 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   }
 
   // Build a new site object.
-  $site_info = new stdClass;
-  $site_info->name = $site_name;
+  $site_info = array();
+  $site_info['name'] = $site_name;
   $site = drush_fetcher_get_site($site_info);
 
   $site['version'] = $version;
@@ -333,8 +334,8 @@ function drush_fetcher_delete($site_name) {
     return;
   }
   try {
-    $site_info = new stdClass;
-    $site_info->name = $site_name;
+    $site_info = array();
+    $site_info['name'] = $site_name;
     $site = drush_fetcher_get_site($site_info);
     $site->remove();
     drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
@@ -357,21 +358,61 @@ function drush_fetcher_release() {
 /**
  * Factory function for instatiating a site object.
  */
-function drush_fetcher_get_site($site_info = NULL) {
+function drush_fetcher_get_site($site_info = array()) {
   $class = drush_get_option('fetcher-site-class', '\Fetcher\Site');
-  $site = new $class();
-  $site->configureWithSiteInfo($site_info);
+  $info = drush_fetcher_assemble_site_info($site_info);
+  $site = new $class($info);
+  return $site;
+}
+
+function drush_fetcher_assemble_site_info(Array $site_info) {
+  // Merge in drushrc settings.
   $fetcher_config = drush_get_option('fetcher', array());
-  // Merge in global configuration.
-  foreach ($fetcher_config as $name => $value) {
-    if (!empty($site[$name]) && is_array($site[$name]) && is_array($value)) {
-      $site[$name] = array_merge($site[$name], $value);
+  $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
+  if (!empty($site_info)) {
+    if (!empty($site_info['environments'])) {
+      if (count($site_info['environments']) == 1) {
+        $environment = array_pop(array_keys($site_info['environments']));
+      }
+      else {
+        // TODO: This probably shouldn't happen here, it should happen when the
+        // site is prompted (or something).
+        $args = array('@envs' => implode(', ', $site_info['environments']));
+        $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
+        if (!isset($environments[$environment])) {
+          drush_log(dt('Invalid environment selected.'), 'error');
+          exit;
+        }
+      }
+      $site_info['environment'] = $environment;
+      $site_info = _drush_fetcher_merge_configuration($site_info, $site_info['environments'][$environment]);
     }
-    else {
-      $site[$name] = $value;
+    if (!empty($site_info['fetcher'])) {
+      $site_info = array_merge($site_info, $site_info['fetcher']);
+      unset($site_info['fetcher']);
+    }
+    if (!empty($site_info['environments'])) {
     }
   }
-  return $site;
+  $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
+  $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
+  return $site_info;
+}
+
+/**
+ *
+ */
+function _drush_fetcher_merge_configuration($site_info, $config) {
+  // Merge in global configuration.
+  foreach ($config as $name => $value) {
+    if (!empty($site_info[$name]) && is_array($site_info[$name]) && is_array($value)) {
+      $site_info[$name] = array_merge($site_info[$name], $value);
+    }
+    else {
+      $site_info[$name] = $value;
+    }
+  }
+  return $site_info;
 }
 
 /**

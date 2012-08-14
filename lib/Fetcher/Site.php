@@ -14,9 +14,12 @@ class Site extends Pimple implements SiteInterface {
    * Constructor function to allow dependency injection.
    *
    */
-  public function __construct() {
+  public function __construct($siteInfo = NULL) {
     // Populate defaults.
     $this->setDefaults();
+    if (!empty($siteInfo)) {
+      $this->configureWithSiteInfo($siteInfo);
+    }
   }
 
   /**
@@ -43,7 +46,7 @@ class Site extends Pimple implements SiteInterface {
     if (!is_file($drushFilePath)) {
       $content = '';
       $content = "<?php" . PHP_EOL;
-      $environments = (array) $this['site.info']->environments;
+      $environments = (array) $this['environments'];
       $environments['local'] = array(
         'uri' => $this['hostname'],
         // TODO: We use this in other places so this should be an element in our container config.
@@ -475,30 +478,23 @@ class Site extends Pimple implements SiteInterface {
    *   The information returned from `\drush_fetcher_get_site_info()`.
    * TODO: Deprecate this in favor of a constructor the receives an alias.
    */
-  public function configureWithSiteInfo($siteInfo) {
-    if (isset($site_info->vcs)) {
-      $this['code fetcher'] = $this->share(function() {
-        drush_fetcher_get_handler('code fetcher', $site_info->vcs);
+  public function configureWithSiteInfo(Array $siteInfo) {
+
+    if (isset($site_info['vcs'])) {
+      $this['code_fetcher'] = $this->share(function() {
+        // TODO: Refactor the get_handler stuff.
+        drush_fetcher_get_handler('code_fetcher', $site_info['vcs']);
       });
     }
 
-    // Load the site variables.
-    $this['name'] = $siteInfo->name;
-
-    $fetch_config = array();
-    if (isset($siteInfo->vcs_url)) {
-      $fetch_config['url'] = trim($siteInfo->vcs_url);
-    }
-
-    // Load the environment variables.
-    // TODO: Make this configurable
-    $this['remote.url'] = trim($siteInfo->environments->dev->server->hostname);
-
-    if (isset($siteInfo->environments->dev->fetcher->branch)) {
-      $fetch_config['branch'] = trim($siteInfo->environments->dev->fetcher->branch);
-    }
-    else {
-      $fetch_config['branch'] = 'master';
+    // Merge in configuration.
+    foreach ($siteInfo as $key => $value) {
+      if (is_string($value)) {
+        $this[$key] = trim($value);
+      }
+      else {
+        $this[$key] = $value;
+      }
     }
 
     return $this;
