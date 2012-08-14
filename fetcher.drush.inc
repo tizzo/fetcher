@@ -172,12 +172,12 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
     // Install the site
     $commandline_args = array();
     $commandline_options = array(
-      'root' => $site['site.code_directory'],
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
     );
-    drush_invoke_process('@' . $site['name'] . '.local', 'site-install', $commandline_args, $commandline_options);
+    drush_invoke_process($site['site.code_directory'] . '#default', 'site-install', $commandline_args, $commandline_options);
+    drush_log(dt('Admin user created with username `admin` and password `pass`.'));
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
@@ -206,12 +206,12 @@ function drush_fetcher_get($site_name = FALSE) {
     $site['name'] = $local_name;
   }
   drush_fetcher_ensure_site($site);
-  
+
   // If requested, sync the database.
   if (drush_get_option('sql-sync')) {
     drush_log(dt('Attempting to sync database from remote...', 'ok'));
     $site->syncDatabase();
-    drush_log(dt('The database was properly synchronized.', 'success'));
+    drush_log(dt('The database was properly synchronized.'), 'success');
   }
 
   /*
