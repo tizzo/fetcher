@@ -8,6 +8,12 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
 
   public function __construct(\Pimple $site) {
     $this->site = $site;
+    // If we do not have a default branch, set it to master.
+    $config = $site['code_fetcher.config'];
+    if (!isset($config['branch'])) {
+      $config['branch'] = 'master';
+    }
+    $site['code_fetcher.config'] = $config;
   }
 
   public function setup() {
