@@ -361,6 +361,28 @@ class Site extends Pimple implements SiteInterface {
       return new $c['database class']($c);
     });
 
+    // Setup the administrative db credentials ().
+    $this['database.admin.user'] = FALSE;
+    $this['database.admin.password'] = FALSE;
+    $this['database.admin.hostname'] = 'localhost';
+    $this['database.admin.port'] = '';
+
+
+    $this['database.username'] = function($c) { return $c['name']; };
+    $this['database.database'] = function($c) { return $c['name']; };
+
+    // TODO: For gotten sites maybe we load this from drush or the site info file?
+    $this['database.hostname'] = 'localhost';
+    $this['database.password'] = $this->share(function($c) {
+      return $c['random'](); 
+    });
+    $this['database.driver'] = $this->share(function($c) {
+      return $this['database class']::getDriver();
+    });
+    $this['database.port'] = 3306;
+
+
+
     // Set our default VCS to Git.
     $this['code fetcher class'] = '\Fetcher\CodeFetcher\VCS\Git';
     $this['code fetcher.config'] = array();
@@ -479,35 +501,7 @@ class Site extends Pimple implements SiteInterface {
     else {
       $fetch_config['branch'] = 'master';
     }
-    $this['code fetcher.config'] = $fetch_config;
 
-    // Setup the administrative db credentials ().
-    $this['database.admin.user'] = drush_get_option('fetcher-db-username', FALSE);
-    $this['database.admin.password'] = drush_get_option('fetcher-db-username', FALSE);
-    $this['database.admin.hostname'] = drush_get_option('fetcher-db-username', 'localhost');
-    $this['database.admin.port'] = drush_get_option('fetcher-db-username', '');
-
-    // TODO: If we're dealing with an already "gotten" site, we need to load the db_spec via drush
-    // rather than reading context options.
-    // TODO: When implementing the above, decide which should take precedence.
-    // Setup the site specific db credentails.
-    // TODO: Add support for this in siteInfo.
-    // TODO: Add support for remote db servers.
-    $this['database.username'] = drush_get_option('database-user',  function($c) { return $c['name']; });
-    $this['database.database'] = drush_get_option('database', function($c) { return $c['name']; });
-
-    // TODO: Where should this go, it doesn't touch site info:
-    $this['database.hostname'] = 'localhost';
-    $this['database.password'] = drush_get_option('database-password', $this['random']());
-    $this['database.driver'] = $this['database class']::getDriver();
-    $this['database.port'] = drush_get_option('database-port', 3306);
-
-    $this['version'] = $siteInfo->environments->dev->fetcher->version;
-
-    $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
-    $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
-
-    $this['site.info'] = $siteInfo;
     return $this;
   }
 

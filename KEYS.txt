@@ -2,6 +2,8 @@
 
 All objects are lazy loaded and then a single object is reused after instantiation unless otherwise specified.  Genearally the class used is specified by another key with the pattern '[object key] class'.
 
+TODO: Find a good way to expose database options as command line arguments where appropriate.
+
 ## Fetcher Array Access keys ##
   - 'code_fetcher' - The instantiated code fetcher object.
   - 'code_fetcher.class' - The class used to fetch the code for the site.  This may download a fresh copy from Drupal or fetch the site using version control.
