@@ -211,7 +211,7 @@ function drush_fetcher_get($site_name = FALSE) {
 
   // If requested, sync the database.
   if (drush_get_option('sql-sync')) {
-    drush_log(dt('Attempting to sync database from remote...', 'ok'));
+    drush_log(dt('Attempting to sync database from remote...'), 'ok');
     $site->syncDatabase();
     drush_log(dt('The database was properly synchronized.'), 'success');
   }
