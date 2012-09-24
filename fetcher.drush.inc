@@ -385,9 +385,9 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
       else {
         // TODO: This probably shouldn't happen here, it should happen when the
         // site is prompted (or something).
-        $args = array('@envs' => implode(', ', $site_info['environments']));
+        $args = array('@envs' => implode(', ', array_keys($site_info['environments'])));
         $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
-        if (!isset($environments[$environment])) {
+        if (!isset($site_info['environments'][trim($environment)])) {
           drush_log(dt('Invalid environment selected.'), 'error');
           exit;
         }
