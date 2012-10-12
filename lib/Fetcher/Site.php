@@ -388,10 +388,12 @@ class Site extends Pimple implements SiteInterface {
     });
     $this['database.port'] = 3306;
 
+    $this['code_fetcher.vcs_mapping'] = array(
+      'git' => 'Fetcher\CodeFetcher\VCS\Git',
+    );
 
-
-    // Set our default VCS to Git.
-    $this['code_fetcher.class'] = '\Fetcher\CodeFetcher\VCS\Git';
+    // Set our default code fetcher class to drush download.
+    $this['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
     $this['code_fetcher.config'] = array();
 
     // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
@@ -493,11 +495,8 @@ class Site extends Pimple implements SiteInterface {
    */
   public function configureWithSiteInfo(Array $siteInfo) {
 
-    if (isset($site_info['vcs'])) {
-      $this['code_fetcher'] = $this->share(function() {
-        // TODO: Refactor the get_handler stuff.
-        drush_fetcher_get_handler('code_fetcher', $site_info['vcs']);
-      });
+    if (isset($siteInfo['vcs'])) {
+      $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$site_info['vcs']];
     }
 
     // Merge in configuration.
@@ -540,7 +539,7 @@ class Site extends Pimple implements SiteInterface {
       else if (is_numeric($value)) {
         $string .= "$value," . PHP_EOL;
       }
-      elseif (is_string($value)) {
+      else if (is_string($value)) {
         $string .= "'" . str_replace("'", "\'", $value) . "'," . PHP_EOL;
       }
       else if (is_null($value)) {
