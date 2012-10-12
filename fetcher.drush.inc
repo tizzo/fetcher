@@ -615,7 +615,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
       $site_name = drush_fetcher_prompt_for_site_name();
     }
 
-    // Otherwise load the site from the Fetcher web service based on the site
+    // Otherwise load the site from the Fetcher info fetcher based on the site
     // name.
     if ($site_name && !$site_info) {
       $site_info = drush_fetcher_get_site_info($site_name);
