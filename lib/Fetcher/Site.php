@@ -522,8 +522,8 @@ class Site extends Pimple implements SiteInterface {
       elseif (is_string($value)) {
         $string .= "'" . str_replace("'", "\'", $value) . "'," . PHP_EOL;
       }
-      else {
-        $string .= serialize($value);
+      else if (is_null($value)) {
+        $string .= 'NULL,' . PHP_EOL;
       }
     }
     $string .= "$indent)";
