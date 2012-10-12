@@ -290,7 +290,6 @@ class Site extends Pimple implements SiteInterface {
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists() {
-    // TODO: Intelligently dump our keys to this file.
     $conf = array();
     foreach ($this->keys() as $key) {
       $value = $this[$key];
@@ -307,8 +306,7 @@ class Site extends Pimple implements SiteInterface {
    */
   static public function parseSiteInfo($string) {
     $info = Yaml::parse($string);
-    $info = (object) $info;
-    // TODO: We should prolly turn this into an array in the importer.
+    $info = $info;
     return $info;
   }
 
