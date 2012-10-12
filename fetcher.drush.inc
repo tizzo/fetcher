@@ -525,11 +525,10 @@ function fetcher_autoload($class) {
  * Implements hook_fetcher_search_paths().
  */
 function fetcher_fetcher_search_paths() {
-  // TODO: use a proper method for discovering the base path to the cmd file
   $command = drush_get_command();
   return array(
     // Classes in base Fetcher install.
-    $command['path'] . '/lib/',
+    __DIR__ . '/lib/',
   );
 }
 
