@@ -135,7 +135,12 @@ function drush_fetcher_list($name = '', $page = 0) {
     }
   }
   catch (Exception $e) {
-    drush_log($e->getMessage() . ' on line ' . $e->getLine() . ' of ' . $e->getFile() . '.', 'error');
+    $args = array(
+      '@error' => $e->getMessage(),
+      '@line' => $e->getLine(),
+      '@file' => $e->getFile()
+    );
+    drush_log(dt('@error on line @line of @file.', $args), 'error');
   }
 }
 
