@@ -46,7 +46,12 @@ class Site extends Pimple implements SiteInterface {
     if (!is_file($drushFilePath)) {
       $content = '';
       $content = "<?php" . PHP_EOL;
-      $environments = (array) $this['environments'];
+      if (isset($this['environments'])) {
+        $environments = (array) $this['environments'];
+      }
+      else {
+        $environments = array();
+      }
       $environments['local'] = array(
         'uri' => $this['hostname'],
         // TODO: We use this in other places so this should be an element in our container config.
