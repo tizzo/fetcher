@@ -282,7 +282,8 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     // TODO: Fill in hosntame.
     drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
 
-    // If there is an fetcher.make.php file, load it to allow build hooks to be registered.
+    // If there is an fetcher.make.php file, load it to allow build hooks to be
+    // registered.
     if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
       require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
     }
@@ -437,12 +438,14 @@ function drush_fetcher_prompt_for_site_name() {
 }
 
 /**
- * This came from an @drewish request, he wanted to be able to execute just *part* of a getSite.
+ * This came from an @drewish request, he wanted to be able to execute just
+ * *part* of a getSite.
  *
- * This is a build system and the idea is to register the common actions that can be performed
- * so that they can be run individually.
+ * This is a build system and the idea is to register the common actions that
+ * can be performed so that they can be run individually.
  *
- * TODO: Do we need a dependency system? Can't get the code without a working directory.
+ * TODO: Do we need a dependency system? Can't get the code without a working
+ * directory.
  */
 function drush_fetcher_subcommand() {
   // Just planning the available subcommands.
@@ -518,7 +521,8 @@ function fetcher_fetcher_search_paths() {
  *   The name of the file as it appears in the `/assets` directory or a fully .
  * @param $vars
  *   An array of variables for the asset, each will be available in the scope
- *   of the asset template with a variable name of the key and a value of the value.
+ *   of the asset template with a variable name of the key and a value of the
+ *   value.
  */
 function drush_fetcher_get_asset($asset_name, array $vars = array()) {
   if (!is_file($asset)) {
@@ -572,8 +576,8 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
   $site_info = FALSE;
 
   try {
-    // If we have a drush alias starting with `@` then we look up the local alias
-    // and try to get the site info from the parent folder of the webroot
+    // If we have a drush alias starting with `@` then we look up the local
+    // alias and try to get the site info from the parent folder of the webroot
     // indicated by the alias root.
     if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
       // We may have multiple environments but if we wrote the aliases then the
