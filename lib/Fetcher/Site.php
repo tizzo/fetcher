@@ -136,7 +136,8 @@ class Site extends Pimple implements SiteInterface {
       $this['code_fetcher']->setup();
     }
     else {
-      // If the code fetcher supports updating already fetched code, update the code.
+      // If the code fetcher supports updating already fetched code, update the
+      // code.
       if (in_array('Fetcher\CodeFetcher\UpdateInterface', class_implements($this['code_fetcher']))) {
         $this['code_fetcher']->update();
       }
@@ -417,7 +418,7 @@ class Site extends Pimple implements SiteInterface {
       return strtolower($c['name'] . '.' . $c['system hostname']);
     };
 
-    // TODO: This is retarderated:
+    // TODO: This is not the best way to do this:
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
       return $c['server']->getWebroot() . '/' . $c['name'];
@@ -473,7 +474,7 @@ class Site extends Pimple implements SiteInterface {
    *
    * @param $siteInfo
    *   The information returned from `\drush_fetcher_get_site_info()`.
-   * TODO: Deprecate this in favor of a constructor the receives an alias.
+   * TODO: Deprecate this in favor of a constructor that receives an alias.
    */
   public function configureWithSiteInfo(Array $siteInfo) {
 
