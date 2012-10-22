@@ -216,6 +216,13 @@ function drush_fetcher_get($site_name = FALSE) {
     drush_log(dt('The database was properly synchronized.'), 'success');
   }
 
+  // If requested, sync the files.
+  if (drush_get_option('file-sync')) {
+    drush_log(dt('Attempting to sync files from remote...'), 'ok');
+    $site->syncFiles();
+    drush_log(dt('The database was properly synchronized.'), 'success');
+  }
+
   /*
   if (drush_get_option('sync-public-files')) {
     $commandline_args = array(
@@ -403,8 +410,8 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
     if (!empty($site_info['environments'])) {
     }
   }
-  $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
-  $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
+  $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
+  $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
   return $site_info;
 }
 
