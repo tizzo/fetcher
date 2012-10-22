@@ -403,8 +403,8 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
     if (!empty($site_info['environments'])) {
     }
   }
-  $this['simulate'] = drush_get_context('DRUSH_SIMULATE');
-  $this['verbose'] = drush_get_context('DRUSH_VERBOSE');
+  $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
+  $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
   return $site_info;
 }
 
