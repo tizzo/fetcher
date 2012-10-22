@@ -180,6 +180,13 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Synchronize the files with a remote environment.
+   */
+  public function syncFiles() {
+    return $this['file synchronizer']->syncFiles();
+  }
+
+  /**
    * Calculate the drush alias path.
    */
   public function getDrushAliasPath() {
@@ -319,7 +326,7 @@ class Site extends Pimple implements SiteInterface {
     };
 
     $this['process'] = $this->protect(function() {
-      $reflection = new \ReflectionClass('Symfony\Component\Process\Process'); 
+      $reflection = new \ReflectionClass('Symfony\Component\Process\Process');
       $process = $reflection->newInstanceArgs(func_get_args());
       return $process;
     });
@@ -374,7 +381,7 @@ class Site extends Pimple implements SiteInterface {
     // TODO: For gotten sites maybe we load this from drush or the site info file?
     $this['database.hostname'] = 'localhost';
     $this['database.password'] = $this->share(function($c) {
-      return $c['random'](); 
+      return $c['random']();
     });
     $this['database.driver'] = $this->share(function($c) {
       return $c['database class']::getDriver();
@@ -398,6 +405,14 @@ class Site extends Pimple implements SiteInterface {
 
     $this['database synchronizer'] = $this->share(function($c) {
       return new $c['database synchronizer class']($c);
+    });
+
+    // For most cases, SSH/RSync is file for file synchronizing. We'll find the
+    // path to the files via drush.
+    $this['file synchronizer class'] = 'Fetcher\FileSynchronizer\SSHFileSync';
+
+    $this['file synchronizer'] = $this->share(function($c) {
+      return new $c['file synchronizer class']($c);
     });
 
     // Usually set by the drush option.
