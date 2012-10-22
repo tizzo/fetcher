@@ -27,7 +27,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
       '@' . $this->container['name'] . '.local',
     );
     if ($this->container['verbose']) {
-      $command = 'drush sql-sync ' . implode(' ', $commandline_args) . ' ' . implode(' ', $commandline_options);
+      $command = sprintf('drush sql-sync %s %s', implode(' ', $commandline_args), implode(' ', $commandline_options));
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
     if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
