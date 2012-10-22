@@ -219,22 +219,14 @@ function drush_fetcher_get($site_name = FALSE) {
   // If requested, sync the files.
   if (drush_get_option('file-sync')) {
     drush_log(dt('Attempting to sync files from remote...'), 'ok');
-    $site->syncFiles();
-    drush_log(dt('The database was properly synchronized.'), 'success');
+    $synced = $site->syncFiles();
+    if ($synced) {
+      drush_log(dt('The files were properly synchronized.'), 'success');
+    }
+    else {
+      drush_log(dt('File sync failed. This commonly occurs when you do not have a database for your site. Try running again with --sql-sync'), 'error');
+    }
   }
-
-  /*
-  if (drush_get_option('sync-public-files')) {
-    $commandline_args = array(
-      // TODO: Build these dynamically!
-      'webadmin@bart.zivtech.com/var/www/roadside/webroot:%files',
-      '/var/www/roadside/webroot:%files',
-    );
-    // TODO: The sorts of logging above!
-    drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
-  }
-  */
-
 }
 
 /**
