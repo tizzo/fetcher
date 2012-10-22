@@ -407,9 +407,9 @@ class Site extends Pimple implements SiteInterface {
       return new $c['database synchronizer class']($c);
     });
 
-    // For most cases, SSH/RSync is file for file synchronizing. We'll find the
+    // For most cases, RSync is file for file synchronizing. We'll find the
     // path to the files via drush.
-    $this['file synchronizer class'] = 'Fetcher\FileSynchronizer\SSHFileSync';
+    $this['file synchronizer class'] = 'Fetcher\FileSynchronizer\RsyncFileSync';
 
     $this['file synchronizer'] = $this->share(function($c) {
       return new $c['file synchronizer class']($c);

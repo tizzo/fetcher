@@ -3,7 +3,7 @@
 namespace Fetcher\FileSynchronizer;
 use Symfony\Component\Process\Process;
 
-class SSHFileSync implements FileSynchronizerInterface {
+class RsyncFileSync implements FileSynchronizerInterface {
 
   protected $site = NULL;
 
