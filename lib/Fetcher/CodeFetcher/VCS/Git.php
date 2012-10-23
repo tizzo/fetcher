@@ -13,6 +13,9 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     if (!isset($config['branch'])) {
       $config['branch'] = 'master';
     }
+    if (!isset($site['git binary'])) {
+      $site['git binary'] = 'git';
+    }
     $site['code_fetcher.config'] = $config;
   }
 
@@ -28,7 +31,8 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
       $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
     }
     // Pull in the latest code.
-    $this->executeGitCommand('pull --work-tree=%s --git-dir=%s');
+    $this->executeGitCommand('--work-tree=%s fetch', $site['site.code_directory'] . '/.git');
+    $this->executeGitCommand('--work-tree=%s --git-dir=%s rebase %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
     // If we have submodules update them.
     if (is_file($this->codeDirectory . '/.gitmodules')) {
       $oldWD = getcwd();
@@ -50,13 +54,7 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     $args = func_get_args();
     $site = $this->site;
 
-    // By default, allow git to be located automatically within the include path.
-    $gitBinary = 'git';
-    // If an alternate binary path is specified, use it.
-    if (isset($site['git binary'])) {
-      $gitBinary = $site['git binary'];
-    }
-    $args[0] = $gitBinary . ' ' . $args[0];
+    $args[0] = $site['git binary'] . ' ' . $args[0];
     $command = call_user_func_array('sprintf', $args);
     $site['log']('Executing `' . $command . '`.');
 
