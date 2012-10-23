@@ -31,12 +31,12 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
       $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
     }
     // Pull in the latest code.
-    $this->executeGitCommand('--work-tree=%s fetch', $site['site.code_directory'] . '/.git');
-    $this->executeGitCommand('--work-tree=%s --git-dir=%s rebase %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
+    $this->executeGitCommand('--git-dir=%s fetch', $site['site.code_directory'] . '/.git');
+    $this->executeGitCommand('--work-tree=%s --git-dir=%s rebase', $site['site.code_directory'], $site['site.code_directory'] . '/.git');
     // If we have submodules update them.
-    if (is_file($this->codeDirectory . '/.gitmodules')) {
+    if (is_file($site['site.code_directory'] . '/.gitmodules')) {
       $oldWD = getcwd();
-      chdir($this->codeDirectory);
+      chdir($site['site.code_directory']);
       $this->executeGitCommand('submodule sync');
       $this->executeGitCommand('submodule update --init --recursive');
       chdir($oldWD);
