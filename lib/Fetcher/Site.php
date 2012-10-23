@@ -182,8 +182,8 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Synchronize the files with a remote environment.
    */
-  public function syncFiles() {
-    return $this['file synchronizer']->syncFiles();
+  public function syncFiles($type) {
+    return $this['file synchronizer']->syncFiles($type);
   }
 
   /**

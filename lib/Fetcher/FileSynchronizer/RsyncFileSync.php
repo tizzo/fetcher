@@ -26,7 +26,17 @@ class RsyncFileSync implements FileSynchronizerInterface {
     return $full_path;
   }
 
-  public function syncFiles() {
+  public function syncFiles($type = 'both') {
+    // Set flags for what files to sync.
+    $sync_public = TRUE;
+    $sync_private = TRUE;
+    if ($type == 'public') {
+      $sync_private = FALSE;
+    }
+    if ($type == 'private') {
+      $sync_public = FALSE;
+    }
+
     $synced = FALSE;
     $site = $this->site;
     $commandline_options = array('backend');
@@ -57,7 +67,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
     $local_private_files = !empty($local_status_result['object']['Private file directory path']) ? $local_status_result['object']['Private file directory path'] : '';
     $local_rsync_path = $this->generateSyncPath($local_root_path, $local_public_files);
 
-    if (!empty($remote_public_files) && !empty($local_public_files)) {
+    if (!empty($remote_public_files) && !empty($local_public_files) && $sync_public) {
       // This should create an rsync command to run via process. It should look
       // something like 'rsync -r user@some.server:/path/to/files /path/to/files'
       $command = sprintf('%s -r %s@%s:%s %s',
@@ -95,7 +105,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
     }
 
     // Handle the private files if they exist.
-    if (!empty($remote_private_files) && !empty($local_private_files)) {
+    if (!empty($remote_private_files) && !empty($local_private_files) && $sync_private) {
       $local_rsync_path = $this->generateSyncPath($local_root_path, $local_public_files);
       $remote_rsync_path = $this->generateSyncPath($remote_root_path, $remote_public_files);
 
