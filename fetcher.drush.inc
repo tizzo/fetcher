@@ -57,7 +57,11 @@ function fetcher_drush_command() {
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       // TODO: This should probably use a configurable "file-fetcher" option
       // rather than speciying local or remote.
-      'file-sync' => 'Whether to syncronize the public files with the selected remote environment.',
+      'file-sync' => array(
+        'description' => 'Whether to syncronize the public files with the selected remote environment. This accepts options but defaults to both.',
+        'value' => 'optional',
+        'example-value' => 'private',
+      ),
       'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
     ),
   );
@@ -216,18 +220,37 @@ function drush_fetcher_get($site_name = FALSE) {
     drush_log(dt('The database was properly synchronized.'), 'success');
   }
 
-  /*
-  if (drush_get_option('sync-public-files')) {
-    $commandline_args = array(
-      // TODO: Build these dynamically!
-      'webadmin@bart.zivtech.com/var/www/roadside/webroot:%files',
-      '/var/www/roadside/webroot:%files',
-    );
-    // TODO: The sorts of logging above!
-    drush_invoke_process('@self', 'sql-sync', $commandline_args, $commandline_options) ? drush_print('true') : drush_print('false');
+  // If requested, sync the files.
+  if (drush_get_option('file-sync')) {
+    $files = drush_get_option('file-sync', FALSE);
+    // Allow users to choose only public or only private files. Default to both.
+    if ($files === TRUE) {
+      $files = 'both';
+    }
+    else if ($files != 'public' && $files != 'private' && $files != 'both') {
+      drush_log(dt('Invalid file sync flag. Files were NOT synced. Use \'public\' or \'private\'.'), 'error');
+      return FALSE;
+    }
+    drush_log(dt('Attempting to sync files from remote...'), 'ok');
+    if ($files == 'public' || $files == 'private') {
+      drush_log(dt("Detected file flag. Syncing only the $files files."), 'ok');
+    }
+    $synced = $site->syncFiles($files);
+    switch ($synced) {
+      case 3:
+        drush_log(dt('The files were properly synchronized.'), 'success');
+        break;
+      case 2:
+        drush_log(dt('The private files were properly synchronized but no public files were synchronized.'), 'success');
+        break;
+      case 1:
+        drush_log(dt('The public files were properly synchronized but no private files were synchronized.'), 'success');
+        break;
+      case 0:
+      default:
+        drush_log(dt('File sync failed. This commonly occurs when you do not have a database for your site. Try running again with --sql-sync'), 'error');
+    }
   }
-  */
-
 }
 
 /**
