@@ -236,11 +236,19 @@ function drush_fetcher_get($site_name = FALSE) {
       drush_log(dt("Detected file flag. Syncing only the $files files."), 'ok');
     }
     $synced = $site->syncFiles($files);
-    if ($synced) {
-      drush_log(dt('The files were properly synchronized.'), 'success');
-    }
-    else {
-      drush_log(dt('File sync failed. This commonly occurs when you do not have a database for your site. Try running again with --sql-sync'), 'error');
+    switch ($synced) {
+      case 3:
+        drush_log(dt('The files were properly synchronized.'), 'success');
+        break;
+      case 2:
+        drush_log(dt('The private files were properly synchronized but no public files were synchronized.'), 'success');
+        break;
+      case 1:
+        drush_log(dt('The public files were properly synchronized but no private files were synchronized.'), 'success');
+        break;
+      case 0:
+      default:
+        drush_log(dt('File sync failed. This commonly occurs when you do not have a database for your site. Try running again with --sql-sync'), 'error');
     }
   }
 }
