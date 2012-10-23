@@ -15,7 +15,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
   }
 
   private function generateSyncPath($root, $files) {
-    if (strpos('/', $files) === 0) {
+    if (strpos($files, '/') === 0) {
       // If the files dir is absolute make it the full path...
       $full_path = $files . '/.';
     }
