@@ -43,14 +43,14 @@ class RsyncFileSync implements FileSynchronizerInterface {
       'Private file directory path',
       'Drupal root',
     );
-    drush_log(dt('Remote file path information:'), 'ok');
+    $site['log'](dt('Remote file path information:'), 'ok');
     $remote_status_result = drush_invoke_process('@' . $site['name'] . '.' . $site['environment'], 'status', $args, $commandline_options);
     $remote_root_path = $remote_status_result['object']['Drupal root'];
     $remote_public_files = $remote_status_result['object']['File directory path'];
     $remote_private_files = !empty($remote_status_result['object']['Private file directory path']) ? $remote_status_result['object']['Private file directory path'] : '';
     $remote_rsync_path = $this->generateSyncPath($remote_root_path, $remote_public_files);
 
-    drush_log(dt('Local file path information:'), 'ok');
+    $site['log'](dt('Local file path information:'), 'ok');
     $local_status_result = drush_invoke_process('@' . $site['name'] . '.local', 'status', $args, $commandline_options);
     $local_root_path = $local_status_result['object']['Drupal root'];
     $local_public_files = $local_status_result['object']['File directory path'];
@@ -69,7 +69,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
       );
 
       if ($site['verbose']) {
-        drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
+        $site['log'](dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
       }
 
       $process = $site['process']($command);
@@ -91,7 +91,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
         throw new \Exception('Public file synchronization failed');
       }
       $synced = TRUE;
-      drush_log($process->getOutput(), 'ok');
+      $site['log']($process->getOutput(), 'ok');
     }
 
     // Handle the private files if they exist.
@@ -99,7 +99,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
       $local_rsync_path = $this->generateSyncPath($local_root_path, $local_public_files);
       $remote_rsync_path = $this->generateSyncPath($remote_root_path, $remote_public_files);
 
-      drush_log(dt('Found private files directory -- attempting sync:'), 'ok');
+      $site['log'](dt('Found private files directory -- attempting sync:'), 'ok');
       $command = sprintf('%s -r %s@%s:%s %s',
         $site['rsync-binary'],
         $site['remote-user'],
@@ -109,16 +109,17 @@ class RsyncFileSync implements FileSynchronizerInterface {
       );
 
       if ($site['verbose']) {
-        drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
+        $site['log'](dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
       }
 
       $process = $site['process']($command);
       $process->setTimeout(null);
       $process->run();
       if (!$process->isSuccessful()) {
-        throw new \Exception('Public file synchronization failed');
+        $args = array('!eol' => PHP_EOL, '@error' => $process->getErrorOutput());
+        throw new \Exception(dt('Public file synchronization failed: !eol @error', $args));
       }
-      drush_log($process->getOutput(), 'ok');
+      $site['log']($process->getOutput(), 'ok');
     }
     return $synced;
   }
