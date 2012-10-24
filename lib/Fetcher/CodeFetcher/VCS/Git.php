@@ -28,18 +28,14 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     $site = $this->site;
     // If we have a branch set, ensure that we're on it.
     if (isset($site['code_fetcher.config']['branch'])) {
-      $this->executeGitCommand('--work-tree=%s --git-dir=%s checkout %s', $site['site.code_directory'], $site['site.code_directory'] . '/.git', $site['code_fetcher.config']['branch']);
+      $this->executeGitCommand('checkout %s', $site['code_fetcher.config']['branch']);
     }
     // Pull in the latest code.
-    $this->executeGitCommand('--git-dir=%s fetch', $site['site.code_directory'] . '/.git');
-    $this->executeGitCommand('--work-tree=%s --git-dir=%s rebase', $site['site.code_directory'], $site['site.code_directory'] . '/.git');
+    $this->executeGitCommand('pull');
     // If we have submodules update them.
     if (is_file($site['site.code_directory'] . '/.gitmodules')) {
-      $oldWD = getcwd();
-      chdir($site['site.code_directory']);
       $this->executeGitCommand('submodule sync');
       $this->executeGitCommand('submodule update --init --recursive');
-      chdir($oldWD);
     }
   }
 
@@ -67,6 +63,7 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     ini_set('max_execution_time', 0);
 
     $process = $site['process']($command);
+    $process->setWorkingDirectory($site['site.code_directory']);
     if (!$site['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);
