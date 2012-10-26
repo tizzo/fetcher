@@ -332,7 +332,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 }
 
 /**
- * Issue a request against Fetcher to retrieve a site's information by name.
+ * Use the configured info fetcher to retrieve a site's information by name.
  */
 function drush_fetcher_get_site_info($site_name) {
   try {
