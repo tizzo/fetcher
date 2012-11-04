@@ -505,7 +505,7 @@ class Site extends Pimple implements SiteInterface {
   public function configureWithSiteInfo(Array $siteInfo) {
 
     if (isset($siteInfo['vcs'])) {
-      $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$site_info['vcs']];
+      $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$siteInfo['vcs']];
     }
 
     // Merge in configuration.
