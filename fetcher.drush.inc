@@ -265,7 +265,7 @@ function drush_fetcher_get($site_name = FALSE) {
 }
 
 /**
- *
+ * Ensure that object is in place as it is configured.
  */
 function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
   // Note that the Fetcher library generally throws exceptions with helpful
@@ -388,7 +388,7 @@ function drush_fetcher_release() {
   // Create settings.php and files symlinks.
   // Put the site in offline mode.
   // Update the webroot symlink.
-  // Run update.php
+  // Optionally run update.php
   // Take the site out of offline mode.
 }
 
