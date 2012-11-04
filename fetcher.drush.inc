@@ -40,6 +40,9 @@ function fetcher_drush_command() {
     'arguments' => array(
       'search' => 'The name of a site to list information for.',
     ),
+    'options' => array(
+      'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
+    ),
   );
 
   // Environment items are the items that inherit the environment options.
@@ -55,14 +58,13 @@ function fetcher_drush_command() {
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
-      // TODO: This should probably use a configurable "file-fetcher" option
-      // rather than speciying local or remote.
       'file-sync' => array(
-        'description' => 'Whether to syncronize the public files with the selected remote environment. This accepts options but defaults to both.',
+        'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
         'value' => 'optional',
         'example-value' => 'private',
       ),
       'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
+      'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
     ),
   );
 
@@ -338,7 +340,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 /**
  * Use the configured info fetcher to retrieve a site's information by name.
  */
-function drush_fetcher_get_site_info($site_name) {
+function drush_fetcher_fetch_site_info($site_name) {
   try {
     $result = drush_fetcher_get_info_fetcher()->getInfo($site_name);
     return $result;
@@ -421,7 +423,7 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
         $args = array('@envs' => implode(', ', array_keys($site_info['environments'])));
         $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
         if (!isset($site_info['environments'][trim($environment)])) {
-          drush_log(dt('Invalid environment selected.'), 'error');
+          drush_set_error('FETCHER_ERROR', dt('Invalid environment selected.'), 'error');
           exit;
         }
       }
@@ -605,40 +607,40 @@ function drush_fetcher_find_site_by_directory($directory) {
 function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FALSE) {
 
   $site_info = FALSE;
-
   try {
     // If we have a drush alias starting with `@` then we look up the local
-    // alias and try to get the site info from the parent folder of the webroot
-    // indicated by the alias root.
+    // alias and try to get the site info from the siteInfo file.
     if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
       // We may have multiple environments but if we wrote the aliases then the
       // first one is the local one.
       $spec = array_shift($specs);
       $site_info = drush_fetcher_find_site_by_directory($spec['root']);
+      if (is_array($site_info)) {
+        $site_name = $site_info['name'];
+      }
     }
 
     // If a site was not selected, we may be loading the site information from
-    // the site info file in the current working directory, have a look.
-    $path = getcwd();
-    if (!$site_name && !($site_info = drush_fetcher_find_site_by_directory($path))) {
+    // the site info file in the current working directory.
+    if (!$site_name && !($site_info = drush_fetcher_find_site_by_directory(getcwd()))) {
       $site_name = drush_fetcher_prompt_for_site_name();
     }
 
-    // Otherwise load the site from the Fetcher info fetcher based on the site
-    // name.
-    if ($site_name && !$site_info) {
-      $site_info = drush_fetcher_get_site_info($site_name);
+    // Otherwise load the site from the info fetcher based on the site name.
+    if (($site_name && !$site_info) || drush_get_option('fetch-info')) {
+      $site_info = drush_fetcher_fetch_site_info($site_name);
     }
-
-    if ($site_info === FALSE) {
+    if ($site_info) {
+      $site_info = drush_fetcher_assemble_site_info($site_info);
+      return $site_info;
+    }
+    else {
       drush_log(dt('This site information could not be loaded.'), 'error');
-      return;
+      return FALSE;
     }
-
-    return $site_info;
   }
   catch (Exception $e) {
-    drush_log(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())), 'error');
+    drush_set_error(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())));
   }
 }
 
