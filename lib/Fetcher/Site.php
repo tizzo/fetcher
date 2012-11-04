@@ -7,12 +7,11 @@ use Symfony\Component\Process\Process;
 
 class Site extends Pimple implements SiteInterface {
 
-  // An multi-dimensional array of build hooks.
+  // A multi-dimensional array of build hooks.
   protected $buildHooks = array();
 
   /**
-   * Constructor function to allow dependency injection.
-   *
+   * Constructor function to populate the dependency injection container.
    */
   public function __construct($siteInfo = NULL) {
     // Populate defaults.
@@ -23,7 +22,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Ensure the database exists, the user exists and the user can connect.
+   * Ensure the database exists, the user exists, and the user can connect.
    */
   public function ensureDatabase() {
     if (!$this['database']->exists()) {
