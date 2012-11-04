@@ -148,12 +148,16 @@ function drush_fetcher_list($name = '', $page = 0) {
  * Print out information about a single site.
  */
 function drush_fetcher_info($site_name = NULL) {
-  if (is_null($site_name) && !$site_name != drush_fetcher_prompt_for_site_name()) {
-    return;
-  }
-  $site_info = drush_fetcher_get_site_info($site_name);
-  if (!empty($site_info)) {
-    $site_info = drush_fetcher_assemble_site_info($site_info);
+  $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
+  if (!$site_info) {
+    if ($site_name = drush_fetcher_prompt_for_site_name()) {
+      drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
+    }
+    else {
+      drush_log(dt('Site information could not be found', 'error'));
+      drush_set_error('FETCHER_INFO_FAILURE', dt('Site information could not be found'));
+      return;
+    }
   }
   if ($site_info) {
     drush_print_r($site_info);
