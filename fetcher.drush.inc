@@ -434,8 +434,6 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
       $site_info = array_merge($site_info, $site_info['fetcher']);
       unset($site_info['fetcher']);
     }
-    if (!empty($site_info['environments'])) {
-    }
   }
   $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
   $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
