@@ -413,7 +413,7 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
   $fetcher_config = drush_get_option('fetcher', array());
   $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
   if (!empty($site_info)) {
-    if (!empty($site_info['environments'])) {
+    if (!empty($site_info['environments']) && empty($site_info['environment'])) {
       if (count($site_info['environments']) == 1) {
         $environment = array_pop(array_keys($site_info['environments']));
       }
