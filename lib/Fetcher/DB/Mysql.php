@@ -14,8 +14,13 @@ class Mysql {
 
   private $site = FALSE;
 
-  public function __construct(\Pimple $site) {
+  public function __construct(\Fetcher\SiteInterface $site) {
     $this->site = $site;
+    // Setup the administrative db credentials ().
+    $site->setDefaultConfigration('database.admin.user', NULL);
+    $site->setDefaultConfigration('database.admin.password', NULL);
+    $site->setDefaultConfigration('database.admin.hostname', 'localhost');
+    $site->setDefaultConfigration('database.admin.port', NULL);
   }
 
   /**

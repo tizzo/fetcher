@@ -377,13 +377,7 @@ class Site extends Pimple implements SiteInterface {
       return new $c['database class']($c);
     });
 
-    // Setup the administrative db credentials ().
-    $this['database.admin.user'] = FALSE;
-    $this['database.admin.password'] = FALSE;
-    $this['database.admin.hostname'] = 'localhost';
-    $this['database.admin.port'] = '';
-
-
+    
     $this['database.username'] = function($c) { return $c['name']; };
     $this['database.database'] = function($c) { return $c['name']; };
 
