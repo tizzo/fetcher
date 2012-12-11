@@ -16,11 +16,24 @@ class Mysql {
 
   public function __construct(\Fetcher\SiteInterface $site) {
     $this->site = $site;
+
+    $passwordGenerator = $site->share(
+      function($c) {
+        return $c['random']();
+      }
+    );
+
     // Setup the administrative db credentials ().
-    $site->setDefaultConfigration('database.admin.user', NULL);
-    $site->setDefaultConfigration('database.admin.password', NULL);
+    $site->setDefaultConfigration('database.admin.user.name', NULL);
+    $site->setDefaultConfigration('database.admin.user.password', NULL);
     $site->setDefaultConfigration('database.admin.hostname', 'localhost');
     $site->setDefaultConfigration('database.admin.port', NULL);
+    $site->setDefaultConfigration('database.database', function($c) { return $c['name']; });
+    $site->setDefaultConfigration('database.hostname', 'localhost');
+    $site->setDefaultConfigration('database.user.password', $passwordGenerator);
+    $site->setDefaultConfigration('database.user.name', function($c) { return $c['name']; });
+    $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['hostname']; });
+    $site->setDefaultConfigration('database.port', 3306);
   }
 
   /**
@@ -53,7 +66,7 @@ class Mysql {
    */
   public function userExists() {
     $conf = $this->site;
-    $process = $this->executeQuery(sprintf("SELECT user FROM mysql.user WHERE User='%s' AND Host='%s'", $conf['database.username'], $conf['database.hostname']), FALSE);
+    $process = $this->executeQuery(sprintf("SELECT user FROM mysql.user WHERE User='%s' AND Host='%s'", $conf['database.user.name'], $conf['database.user.hostname']), FALSE);
     if (!$process->isSuccessful()) {
       throw new \Fetcher\Exception\FetcherException('MySQL command failed.');
     }
@@ -70,13 +83,13 @@ class Mysql {
    */
   public function createUser() {
     $conf = $this->site;
-    $command = sprintf('create user "%s"@"%s" identified by "%s"', $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
+    $command = sprintf('create user "%s"@"%s" identified by "%s"', $conf['database.user.name'], $conf['database.user.hostname'], $conf['database.user.password']);
     $this->executeQuery($command, FALSE);
   }
-  
+
   public function grantAccessToUser() {
     $conf = $this->site;
-    $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.username'], $conf['database.hostname'], $conf['database.password']);
+    $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.user.name'], $conf['database.user.hostname']);
     $this->executeQuery($command, FALSE);
     $this->executeQuery('flush privileges', FALSE);
   }
@@ -97,7 +110,7 @@ class Mysql {
    */
   public function removeUser() {
     $conf = $this->site;
-    $command = sprintf('drop user "%s"@"%s"', $conf['database.username'], $conf['database.hostname']);
+    $command = sprintf('drop user "%s"@"%s"', $conf['database.user.name'], $conf['database.user.hostname']);
     $this->executeQuery($command, FALSE);
   }
 
@@ -114,16 +127,16 @@ class Mysql {
       $base_command .= ' --database=' . escapeshellarg($site['database.database']);
     }
 
-    if ($site['database.admin.user']) {
-      $base_command .= ' --user=' . escapeshellarg($site['database.admin.user']);
+    if (!is_null($site['database.admin.user.name'])) {
+      $base_command .= ' --user=' . escapeshellarg($site['database.admin.user.name']);
     }
-    if ($site['database.admin.password']) {
-      $base_command .= ' --password=' . escapeshellarg($site['database.admin.password']);
+    if (!is_null($site['database.admin.user.password'])) {
+      $base_command .= ' --password=' . escapeshellarg($site['database.admin.user.password']);
     }
-    if ($site['database.admin.hostname']) {
+    if (!is_null($site['database.admin.hostname'])) {
       $base_command .= ' --host=' . escapeshellarg($site['database.admin.hostname']);
     }
-    if ($site['database.admin.port']) {
+    if (!is_null($site['database.admin.port'])) {
       $base_command .= ' --port=' . escapeshellarg($site['database.admin.port']);
     }
 

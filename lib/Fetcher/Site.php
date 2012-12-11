@@ -111,8 +111,8 @@ class Site extends Pimple implements SiteInterface {
       $vars =  array(
         'database' => $conf['database.database'],
         'hostname' => $conf['database.hostname'],
-        'username' => $conf['database.username'],
-        'password' => $conf['database.password'],
+        'username' => $conf['database.user.name'],
+        'password' => $conf['database.user.password'],
         'driver' => $conf['database.driver'],
       );
       // TODO: Get the settings.php for the appropriate version.
@@ -377,19 +377,9 @@ class Site extends Pimple implements SiteInterface {
       return new $c['database class']($c);
     });
 
-    
-    $this['database.username'] = function($c) { return $c['name']; };
-    $this['database.database'] = function($c) { return $c['name']; };
-
-    // TODO: For gotten sites maybe we load this from drush or the site info file?
-    $this['database.hostname'] = 'localhost';
-    $this['database.password'] = $this->share(function($c) {
-      return $c['random']();
-    });
     $this['database.driver'] = $this->share(function($c) {
       return $c['database class']::getDriver();
     });
-    $this['database.port'] = 3306;
 
     $this['code_fetcher.vcs_mapping'] = array(
       'git' => 'Fetcher\CodeFetcher\VCS\Git',
