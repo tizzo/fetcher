@@ -10,16 +10,18 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'code_fetcher.config' - An array, often containing a "branch" key.
   - 'database' - The database handler object used to perform database operations.
   - 'database.admin.hostname' - The hostname used to perform administrative mysql tasks.
-  - 'database.admin.password' - The password for the administrative user.
   - 'database.admin.port' - The database port (if applicable) used for administrative SQL tasks.
-  - 'database.admin.user' - The username used to perform administrative mysql tasks. This user needs to have permissions to create and drop users and datbases and to grant permissions.
+  - 'database.admin.user.name' - The username used to perform administrative mysql tasks. This user needs to have permissions to create and drop users and datbases and to grant permissions.
+  - 'database.admin.user.password' - The password for the administrative user.
   - 'database class' - The class used when the database handler is instantiated in the 'database' key.
   - 'database.database' - The database (if applicable) that this site is installed in. Defaults to the value of 'name'.
   - 'database.hostname' - The hostname of the database on which Drupal is or will be installed.
   - 'database.port' - The port of the database on which Drupal is or will be installed.
   - 'database synchronizer' - The handler used to syncronize our database.
   - 'database synchronizer class' - The class used to when the 'database synchronizer' is instantiated.
-  - 'database.username' - The username Drupal will use to connect to the database.
+  - 'database.user.hostname' - The hostname Drupal will be connecting from when connecting to the database (on the server the user is `'username'@'hostname'`).
+  - 'database.user.name' - The username Drupal will use to connect to the database.
+  - 'database.user.password' - The password Drupal will use to connect to the database.
   - 'environments' - An array of environments.
   - 'environment' - The environment currently selected by this site object.
   - 'git binary' - 
