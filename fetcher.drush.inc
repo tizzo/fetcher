@@ -294,6 +294,10 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     $site->ensureCode();
     drush_log(dt('The code is in place.'), 'success');
 
+    // Ensure we have a database and user.
+    $site->ensureDatabase();
+    drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
+
     // Create the settings.php file.
     $site->ensureSettingsFileExists();
     drush_log(dt('The settings.php file is in place.'), 'success');
@@ -301,10 +305,6 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     // Create necessary symlinks.
     $site->ensureSymLinks();
     drush_log(dt('All symlinks exist and point to the correct path.'), 'success');
-
-    // Ensure we have a database and user.
-    $site->ensureDatabase();
-    drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
 
     // Create a drush alias for this site.
     $site->ensureDrushAlias();
