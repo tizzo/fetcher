@@ -137,13 +137,17 @@ function drush_fetcher_list($name = '', $page = 0) {
     }
   }
   catch (Exception $e) {
-    $args = array(
-      '@error' => $e->getMessage(),
-      '@line' => $e->getLine(),
-      '@file' => $e->getFile()
-    );
-    drush_log(dt('@error on line @line of @file.', $args), 'error');
+    drush_fetcher_log_exception_information($e);
   }
+}
+
+function drush_fetcher_log_exception_information(Exception $e) {
+  $args = array(
+    '@error' => $e->getMessage(),
+    '@line' => $e->getLine(),
+    '@file' => $e->getFile()
+  );
+  drush_log(dt('@error on line @line of @file.', $args), 'error');
 }
 
 /**
@@ -198,6 +202,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
+    drush_fetcher_log_exception_information($e);
     drush_log(dt('Something failed in site creation, consider running `drush fetcher-delete @site_name.', array('@site_name', $site_name)), 'error');
   }
 }
@@ -333,6 +338,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
+    drush_fetcher_log_exception_information($e);
     drush_log('Something went wrong along the way, try running with `--verbose` to find the problem.', 'error');
   }
 }
@@ -346,6 +352,7 @@ function drush_fetcher_fetch_site_info($site_name) {
     return $result;
   }
   catch (Exception $e) {
+    drush_fetcher_log_exception_information($e);
     drush_log(dt('Site info loading failed - @message', array('@message' => $e->getMessage())), 'error');
   }
 }
@@ -378,6 +385,7 @@ function drush_fetcher_delete($site_name) {
     drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
   }
   catch (Exception $e) {
+    drush_fetcher_log_exception_information($e);
     drush_log($e->getMessage(), 'error');
   }
 }
@@ -638,6 +646,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
     }
   }
   catch (Exception $e) {
+    drush_fetcher_log_exception_information($e);
     drush_set_error(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())));
   }
 }
