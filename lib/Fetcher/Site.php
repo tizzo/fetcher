@@ -558,4 +558,19 @@ class Site extends Pimple implements SiteInterface {
     $string .= "$indent)";
     return $string;
   }
+
+
+  /**
+   * Sets the default for a key if it is not already set.
+   *
+   * @param $key
+   *   A string representing the configuration key.
+   * @param $value
+   *   The default value to set if the key does not already have configuration.
+   */
+  public function setDefaultConfigration($key, $value) {
+    if (!isset($this[$key])) {
+      $this[$key] = $value;
+    }
+  }
 }
