@@ -79,7 +79,7 @@ class Mysql {
   }
 
   /**
-   *
+   * Create a database user.
    */
   public function createUser() {
     $conf = $this->site;
@@ -87,6 +87,9 @@ class Mysql {
     $this->executeQuery($command, FALSE);
   }
 
+  /**
+   * Grant access for the database to the site database user.
+   */
   public function grantAccessToUser() {
     $conf = $this->site;
     $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.user.name'], $conf['database.user.hostname']);
