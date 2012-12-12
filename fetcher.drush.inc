@@ -459,7 +459,9 @@ function drush_fetcher_extract_keys_from_context() {
       $fetcher_settings[] = $value['fetcher'];
     }
   };
-  $fetcher_settings = call_user_func_array('array_merge', $fetcher_settings);
+  if (!empty($fetcher_settings)) {
+    $fetcher_settings = call_user_func_array('array_merge', $fetcher_settings);
+  }
   return $fetcher_settings;
 }
 
