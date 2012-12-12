@@ -418,7 +418,7 @@ function drush_fetcher_get_site($site_info = array()) {
  */
 function drush_fetcher_assemble_site_info(Array $site_info) {
   // Merge in drushrc settings.
-  $fetcher_config = drush_get_option('fetcher', array());
+  $fetcher_config = drush_fetcher_extract_keys_from_context();
   $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
   if (!empty($site_info)) {
     if (!empty($site_info['environments']) && empty($site_info['environment'])) {
@@ -446,6 +446,21 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
   $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
   $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
   return $site_info;
+}
+
+/**
+ * Combine all settings inside the fetcher namespace.
+ */
+function drush_fetcher_extract_keys_from_context() {
+  $context = array_reverse(drush_get_context());
+  $fetcher_settings = array();
+  foreach ($context as $key => $value) {
+    if (isset($value['fetcher']) && is_array($value['fetcher'])) {
+      $fetcher_settings[] = $value['fetcher'];
+    }
+  };
+  $fetcher_settings = call_user_func_array('array_merge', $fetcher_settings);
+  return $fetcher_settings;
 }
 
 /**
@@ -677,7 +692,7 @@ function drush_fetcher_load_site_info_from_file($path) {
  *  The default to use if no value is specified.
  */
 function fetcher_drush_get_option($option, $default = NULL) {
-  $options = drush_get_option('fetcher');
+  $options = drush_fetcher_extract_keys_from_context();
   if (isset($options[$option])) {
     $return = $options[$option];
   }
