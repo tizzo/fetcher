@@ -27,3 +27,5 @@ $databases = array (
     ),
   ),
 );
+
+$conf['fetcher_environment'] = '<?php print $environment_local; ?>';

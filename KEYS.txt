@@ -23,7 +23,8 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'database.user.name' - The username Drupal will use to connect to the database.
   - 'database.user.password' - The password Drupal will use to connect to the database.
   - 'environments' - An array of environments.
-  - 'environment' - The environment currently selected by this site object.
+  - 'environment.remote' - The remote environment currently selected for synchronization operations.
+  - 'environment.local' - The environment that this instance of the site is running in or where it is being installed (defaults to `local` for local development).
   - 'git binary' - 
   - 'hostname' - 
   - 'log' - A closure used to do internal logging allowing drush logs to be extended or rerouted. Must implement the same interface as `drush_log`.

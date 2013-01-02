@@ -83,7 +83,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
     }
     $commandline_args = array(
       // TODO: Support multisite?
-      sprintf('@%s.%s:%s', $site['name'], $site['environment'], '%files'),
+      sprintf('@%s.%s:%s', $site['name'], $site['environment.remote'], '%files'),
       sprintf('@%s.local:%s', $site['name'], '%files'),
     );
     $args = array(
@@ -92,7 +92,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
       'Drupal root',
     );
     $site['log'](dt('Remote file path information:'), 'ok');
-    $remote_status_result = drush_invoke_process('@' . $site['name'] . '.' . $site['environment'], 'status', $args, $commandline_options);
+    $remote_status_result = drush_invoke_process('@' . $site['name'] . '.' . $site['environment.remote'], 'status', $args, $commandline_options);
     $remote_root_path = $remote_status_result['object']['Drupal root'];
     $remote_public_files = $remote_status_result['object']['File directory path'];
     $remote_private_files = !empty($remote_status_result['object']['Private file directory path']) ? $remote_status_result['object']['Private file directory path'] : '';

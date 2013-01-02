@@ -105,6 +105,7 @@ class Site extends Pimple implements SiteInterface {
     // TODO: Support multisite?
     // TODO: This is ugly, what we're doing with this container here...
     $settingsFilePath = $this['site.code_directory'] . '/sites/default/settings.php';
+    // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
       $conf = $this;
       $vars = array();
@@ -114,6 +115,7 @@ class Site extends Pimple implements SiteInterface {
         'username' => $conf['database.user.name'],
         'password' => $conf['database.user.password'],
         'driver' => $conf['database.driver'],
+        'environment-local' => $conf['environment.local'],
       );
       // TODO: Get the settings.php for the appropriate version.
       $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);

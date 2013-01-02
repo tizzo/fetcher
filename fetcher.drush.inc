@@ -51,7 +51,7 @@ function fetcher_drush_command() {
     'aliases' => array('feg'),
     'arguments' => array(
       'site' => 'The name of a site to install on this server.',
-      'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
+      'environment.remote' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
     ),
     'options' => array(
       'branch' => 'The branch of the repository to checkout',
@@ -65,6 +65,7 @@ function fetcher_drush_command() {
       ),
       'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
       'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
+      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     ),
   );
 
@@ -78,6 +79,7 @@ function fetcher_drush_command() {
     'options' => array(
       'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
       'host-name' => NULL,
+      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     ),
   );
 
@@ -91,6 +93,7 @@ function fetcher_drush_command() {
     'options' => array(
       'backup' => 'Flag to determine whether to create a backup.',
       'backup-dir' => 'Path to create a SQL dump.',
+      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     ),
   );
 
@@ -421,7 +424,8 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
   $fetcher_config = drush_fetcher_extract_keys_from_context();
   $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
   if (!empty($site_info)) {
-    if (!empty($site_info['environments']) && empty($site_info['environment'])) {
+    $site_info['environment.local'] = drush_get_option('environment-local', 'local');
+    if (!empty($site_info['environments']) && empty($site_info['environment.remote'])) {
       if (count($site_info['environments']) == 1) {
         $environment = array_pop(array_keys($site_info['environments']));
       }
@@ -435,7 +439,7 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
           exit;
         }
       }
-      $site_info['environment'] = $environment;
+      $site_info['environment.remote'] = $environment;
       $site_info = _drush_fetcher_merge_configuration($site_info, $site_info['environments'][$environment]);
     }
     if (!empty($site_info['fetcher'])) {

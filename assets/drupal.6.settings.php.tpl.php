@@ -14,3 +14,4 @@ ini_set('url_rewriter.tags',        '');
 
 $db_url = 'mysqli://<?php print $username; ?>:<?php print $password; ?>@<?php print $hostname; ?>/<?php print $database; ?>';
 
+$conf['fetcher_environment'] = '<?php print $environment_local; ?>';
