@@ -472,7 +472,6 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
   if (!empty($site_info['name']) || !empty($site_info['site.info path'])) {
     $temp_site = drush_fetcher_get_site($site_info, FALSE);
     if (is_file($temp_site['site.info path'])) {
-      drush_log('should find path: ' . $temp_site['site.info path'], 'error');
       $config = drush_fetcher_load_site_info_from_file($temp_site['site.info path']);
       $site_info = _drush_fetcher_merge_configuration($site_info, drush_fetcher_load_site_info_from_file($temp_site['site.info path']));
     }
