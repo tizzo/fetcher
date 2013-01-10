@@ -7,7 +7,7 @@ class RsyncFileSync implements FileSynchronizerInterface {
 
   protected $site = NULL;
 
-  public function __construct(Pimple $site) {
+  public function __construct(\Fetcher\Site $site) {
     $this->site = $site;
     if (!isset($site['rsync-binary'])) {
       $site['rsync-binary'] = 'rsync';

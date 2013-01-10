@@ -5,10 +5,10 @@ use Symfony\Component\Process\Process;
 
 class DrushSqlSync implements DBSynchronizerInterface {
 
-  protected $container = NULL;
+  protected $site = NULL;
 
-  public function __construct(Pimple $container) {
-    $this->container = $container;
+  public function __construct(\Fetcher\Site $site) {
+    $this->site = $site;
   }
 
   public function syncDB() {
