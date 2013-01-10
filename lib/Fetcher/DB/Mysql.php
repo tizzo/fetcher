@@ -34,7 +34,7 @@ class Mysql {
     $site->setDefaultConfigration('database.hostname', 'localhost');
     $site->setDefaultConfigration('database.user.password', $passwordGenerator);
     $site->setDefaultConfigration('database.user.name', function($c) { return $c['name']; });
-    $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['hostname']; });
+    $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['system hostname']; });
     $site->setDefaultConfigration('database.port', 3306);
     $site->setDefaultConfigration('mysql.binary', 'mysql');
   }
