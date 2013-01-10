@@ -42,6 +42,7 @@ function fetcher_drush_command() {
     ),
     'options' => array(
       'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
+      'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
     ),
   );
 
@@ -433,7 +434,13 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
         // TODO: This probably shouldn't happen here, it should happen when the
         // site is prompted (or something).
         $args = array('@envs' => implode(', ', array_keys($site_info['environments'])));
-        $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
+        // If environment is set as a CLI option, use it.
+        if (drush_get_option('environment')) {
+          $environment = drush_get_option('environment');
+        }
+        else {
+          $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
+        }
         if (!isset($site_info['environments'][trim($environment)])) {
           drush_set_error('FETCHER_ERROR', dt('Invalid environment selected.'), 'error');
           exit;
