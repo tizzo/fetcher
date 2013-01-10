@@ -54,6 +54,14 @@ class Mysql {
   }
 
   /**
+   * Test to see whether the user can connect to the database.
+   */
+  public function canConnect() {
+    $config = $this->getQueryConfig(FALSE);
+    return $this->executeQuery("SELECT 1;", TRUE, $config)->isSuccessful();
+  }
+
+  /**
    * Create the database.
    */
   public function createDatabase() {

@@ -25,13 +25,15 @@ class Site extends Pimple implements SiteInterface {
    * Ensure the database exists, the user exists, and the user can connect.
    */
   public function ensureDatabase() {
-    if (!$this['database']->exists()) {
-      $this['database']->createDatabase();
-    }
-    if (!$this['database']->userExists()) {
-      $name = $this['name'];
-      $this['database']->createUser();
-      $this['database']->grantAccessToUser();
+    if (!$this['database']->canConnect()) {
+      if (!$this['database']->exists()) {
+        $this['database']->createDatabase();
+      }
+      if (!$this['database']->userExists()) {
+        $name = $this['name'];
+        $this['database']->createUser();
+        $this['database']->grantAccessToUser();
+      }
     }
   }
 
