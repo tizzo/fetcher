@@ -17,16 +17,16 @@ class DrushSqlSync implements DBSynchronizerInterface {
       '--no-ordered-dump',
       '--yes',
     );
-    if ($this->container['verbose']) {
+    if ($this->site['verbose']) {
       $commandline_options[] = '--verbose';
     }
     $commandline_args = array(
       // TODO: Support multisite?
       // TODO: Get this dynamically.
-      '@' . $this->container['name'] . '.' . $this->container['environment.remote'],
-      '@' . $this->container['name'] . '.local',
+      '@' . $this->site['name'] . '.' . $this->site['environment.remote'],
+      '@' . $this->site['name'] . '.local',
     );
-    if ($this->container['verbose']) {
+    if ($this->site['verbose']) {
       $command = sprintf('drush sql-sync %s %s', implode(' ', $commandline_args), implode(' ', $commandline_options));
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
