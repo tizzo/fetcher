@@ -301,7 +301,7 @@ class Site extends Pimple implements SiteInterface {
       }
     }
     $string = Yaml::dump($conf, 5, 2);
-    $this['system']->writeFile($this['site.working_directory'] . '/site_info.yaml', $string);
+    $this['system']->writeFile($this['site.info path'], $string);
   }
 
   /**
@@ -447,6 +447,8 @@ class Site extends Pimple implements SiteInterface {
     $this['site.code_directory'] = function($c) {
       return $c['site.working_directory'] . '/' . 'code';
     };
+
+    $this->setDefaultConfigration('site.info path', function($site) { return $site['site.working_directory'] . '/site_info.yaml'; });
 
     /**
      * Generate a random string.

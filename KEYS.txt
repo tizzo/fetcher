@@ -40,6 +40,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'site' - The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
   - 'site.code_directory' - 
   - 'site.info' - 
+  - 'site.info path' - The path to the yaml file path. Defaults to `[working_directory]/site_info.yaml`.
   - 'name' - The site's machine name.
   - 'site.working_directory' - The working directory for this site.  This folder will contain the public and private files, the webroot symlink, and any folders containg code, etc.
   - 'symlinks' - An array of symlinks to create keyed by the link with the source of the real file or directory.
