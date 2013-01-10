@@ -124,7 +124,7 @@ class Site extends Pimple implements SiteInterface {
         'username' => $conf['database.user.name'],
         'password' => $conf['database.user.password'],
         'driver' => $conf['database.driver'],
-        'environment-local' => $conf['environment.local'],
+        'environment_local' => $conf['environment.local'],
       );
       // TODO: Get the settings.php for the appropriate version.
       $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
@@ -472,6 +472,8 @@ class Site extends Pimple implements SiteInterface {
         return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
       }
     );
+
+    $this['environment.local'] = 'local';
 
   }
 

@@ -640,9 +640,7 @@ function fetcher_fetcher_search_paths() {
  *   value.
  */
 function drush_fetcher_get_asset($asset_name, array $vars = array()) {
-  if (!is_file($asset)) {
-    $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
-  }
+  $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
   if (is_file($path)) {
     foreach ($vars as $name => $value) {
       $$name = $value;
