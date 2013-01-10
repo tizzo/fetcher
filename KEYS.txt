@@ -37,8 +37,9 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'server.user' - 
   - 'settings_file.path' - 
   - 'simulate' - 
-  - 'site' - The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
-  - 'site.code_directory' - 
+  - 'site' - The site (name of the folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
+  - 'site.directory' = The absolute path to the site folder (defaults to `[site.code_directory]/sites/[site]`).
+  - 'site.code_directory' - The folder containing Drupal's settings.php.
   - 'site.info' - 
   - 'site.info path' - The path to the yaml file path. Defaults to `[working_directory]/site_info.yaml`.
   - 'name' - The site's machine name.

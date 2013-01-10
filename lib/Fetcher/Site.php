@@ -101,12 +101,19 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Ensure the site folder exists.
+   */
+  public function ensureSiteFolder() {
+    $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server']->getWebUser());
+  }
+
+  /**
    * Checks to see whether settings.php exists and creates it if it does not.
    */
   public function ensureSettingsFileExists() {
     // TODO: Support multisite?
     // TODO: This is ugly, what we're doing with this container here...
-    $settingsFilePath = $this['site.code_directory'] . '/sites/default/settings.php';
+    $settingsFilePath = $this['site.directory'] . '/settings.php';
     // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
       $conf = $this;
@@ -123,7 +130,7 @@ class Site extends Pimple implements SiteInterface {
       $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
 
       // If we have a site-settings.php file for this site, add it here.
-      if (is_file($this['site.code_directory'] . '/sites/default/site-settings.php')) {
+      if (is_file($this['site.directory'] . '/site-settings.php')) {
         $content .= PHP_EOL . "require_once('site-settings.php');" . PHP_EOL;
       }
       $this['system']->writeFile($settingsFilePath, $content);
@@ -333,7 +340,7 @@ class Site extends Pimple implements SiteInterface {
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
-        $c['site.working_directory'] . '/public_files' => $c['site.code_directory'] . '/sites/default/files',
+        $c['site.working_directory'] . '/public_files' => $c['site.directory'] . '/files',
         $c['site.code_directory'] => $c['site.working_directory'] . '/webroot',
       );
     };
@@ -436,6 +443,12 @@ class Site extends Pimple implements SiteInterface {
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
       return $c['server']->getWebroot() . '/' . $c['name'];
+    };
+
+    $this['site'] = 'default';
+
+    $this['site.directory'] = function($c) {
+      return $c['site.code_directory'] . '/sites/' . $c['site'];
     };
 
     // Some systems place the Drupal webroot in a subdirectory.

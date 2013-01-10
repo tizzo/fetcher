@@ -23,6 +23,7 @@ function fetcher_drush_command() {
   $environment_options = array(
     'database-admin-user-name' => 'The database username to use for administration commands.',
     'database-admin-user-password' => 'The database password to use for administration commands.',
+    'site' => 'The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.',
   );
 
   $items['fetcher-list'] = array(
@@ -303,6 +304,9 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     $site->ensureDatabase();
     drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
 
+    // Ensure the site's folder is in place.
+    $site->ensureSiteFolder();
+
     // Create the settings.php file.
     $site->ensureSettingsFileExists();
     drush_log(dt('The settings.php file is in place.'), 'success');
@@ -490,6 +494,8 @@ function drush_fetcher_get_config_from_options($site_info) {
   $keys = array(
     'database.admin.user.name',
     'database.admin.user.password',
+    'hostname',
+    'site',
   );
   foreach ($keys as $key) {
     $option = str_replace('.', '-', $key);
