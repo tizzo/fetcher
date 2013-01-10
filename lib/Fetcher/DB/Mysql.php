@@ -26,7 +26,6 @@ class Mysql {
     // Setup the administrative db credentials ().
     $site->setDefaultConfigration('database.admin.user.name', NULL);
     $site->setDefaultConfigration('database.admin.user.password', NULL);
-    $site->setDefaultConfigration('database.admin.hostname', 'localhost');
     $site->setDefaultConfigration('database.admin.port', NULL);
     $site->setDefaultConfigration('database.database', function($c) { return $c['name']; });
     $site->setDefaultConfigration('database.hostname', 'localhost');
@@ -118,29 +117,63 @@ class Mysql {
   }
 
   /**
+   * Extracts the configuration for a database query from a site object.
+   *
+   * @param $admin
+   *   (bool) Indicates whether to build the admin rather than regular config.
+   * @param $site
+   *   (\Fetcher\Site) A Fetcher Site object to extract configuration from.
+   */
+  private function getQueryConfig($admin = FALSE, $site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
+    }
+    if ($admin) {
+      $admin = '.admin';
+    }
+    $config = array();
+    $config['database.database'] = $site['database.database'];
+    $keys = array(
+      'user' => "database{$admin}.user.name",
+      'password' => "database{$admin}.user.password",
+      'port' => 'database.port',
+      'hostname' => 'database.hostname',
+    );
+    foreach ($keys as $key => $value) {
+      if (!is_null($site[$value])) {
+        $config[$key] = $site[$value];
+      }
+    }
+    return $config;
+  }
+
+  /**
    * Execute a MySQL query at the command line.
    */
-  protected function executeQuery($command, $setDatabase = TRUE) {
-    // TODO: Allow the mysql path to be specified?
-    $base_command = 'mysql';
+  protected function executeQuery($command, $setDatabase = TRUE, $config = NULL) {
+
+    if (is_null($config)) {
+      $config = $this->getQueryConfig(TRUE);
+    }
 
     $site = $this->site;
+    $base_command = $site['mysql.binary'];
 
     if ($setDatabase) {
-      $base_command .= ' --database=' . escapeshellarg($site['database.database']);
+      $base_command .= ' --database=' . escapeshellarg($config['database.database']);
     }
 
-    if (!is_null($site['database.admin.user.name'])) {
-      $base_command .= ' --user=' . escapeshellarg($site['database.admin.user.name']);
+    if (!is_null($config['user'])) {
+      $base_command .= ' --user=' . escapeshellarg($config['user']);
     }
-    if (!is_null($site['database.admin.user.password'])) {
-      $base_command .= ' --password=' . escapeshellarg($site['database.admin.user.password']);
+    if (!is_null($config['password'])) {
+      $base_command .= ' --password=' . escapeshellarg($config['password']);
     }
-    if (!is_null($site['database.admin.hostname'])) {
-      $base_command .= ' --host=' . escapeshellarg($site['database.admin.hostname']);
+    if (!is_null($config['hostname'])) {
+      $base_command .= ' --host=' . escapeshellarg($config['hostname']);
     }
-    if (!is_null($site['database.admin.port'])) {
-      $base_command .= ' --port=' . escapeshellarg($site['database.admin.port']);
+    if (!is_null($config['port'])) {
+      $base_command .= ' --port=' . escapeshellarg($config['port']);
     }
 
     $command = $base_command . ' -e ' . escapeshellarg($command);
