@@ -16,6 +16,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $commandline_options = array(
       '--no-ordered-dump',
       '--yes',
+      '--uri=' . $this->site['hostname'],
     );
     if ($this->site['verbose']) {
       $commandline_options[] = '--verbose';
