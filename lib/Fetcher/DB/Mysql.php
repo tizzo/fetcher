@@ -106,6 +106,9 @@ class Mysql {
     $command = sprintf('grant all on %s.* to "%s"@"%s"', $conf['database.database'], $conf['database.user.name'], $conf['database.user.hostname']);
     $this->executeQuery($command, FALSE);
     $this->executeQuery('flush privileges', FALSE);
+    if (!$this->canConnect()) {
+      throw new Exception('The existing MySQL user could not access the existing MySQL database after GRANT query was run.');
+    }
   }
 
   /**
@@ -113,6 +116,7 @@ class Mysql {
    */
   public function removeDatabase() {
     $database = $this->site['database.database'];
+    $this->site['log'](dt('Deleting database %database', $database));
     $result = $this->executeQuery('drop database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
       throw new \Fetcher\Exception\FetcherException(sprintf('The database %s could not be dropped.', $database));
