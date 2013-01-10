@@ -32,7 +32,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
     if (!drush_invoke_process($commandline_args[1], 'sql-sync', $commandline_args, $commandline_options)) {
-      throw new \Fetcher\Exception\FetcherException('Database syncronization FAILED!');
+      throw new \Exception('Database syncronization FAILED!');
     }
   }
 }
