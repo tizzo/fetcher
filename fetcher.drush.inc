@@ -21,8 +21,8 @@ function fetcher_drush_command() {
 
   // Options necessary for interacting with sites on this server.
   $environment_options = array(
-    'fetcher-sql-user' => 'The database username to use for administration commands.',
-    'fetcher-sql-password' => 'The database password to use for administration commands.',
+    'database-admin-user-name' => 'The database username to use for administration commands.',
+    'database-admin-user-password' => 'The database password to use for administration commands.',
   );
 
   $items['fetcher-list'] = array(
@@ -228,6 +228,7 @@ function drush_fetcher_get($site_name = FALSE) {
   }
   // Instantiate the site object.
   $site = drush_fetcher_get_site($site_info);
+  // TODO: Do this with drush_fetcher_get_config_from_options()?
   if ($local_name = drush_get_option('local-name', FALSE)) {
     $site['name'] = $local_name;
   }
@@ -476,8 +477,28 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
       $site_info = _drush_fetcher_merge_configuration($site_info, drush_fetcher_load_site_info_from_file($temp_site['site.info path']));
     }
   }
+  $site_info = drush_fetcher_get_config_from_options($site_info);
   $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
   $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
+  return $site_info;
+}
+
+/**
+ *
+ * TODO: Make this somehow pluggable/extensible.
+ */
+function drush_fetcher_get_config_from_options($site_info) {
+  $keys = array(
+    'database.admin.user.name',
+    'database.admin.user.password',
+  );
+  foreach ($keys as $key) {
+    $option = str_replace('.', '-', $key);
+    $option = str_replace(' ', '-', $option);
+    if (drush_get_option($option)) {
+      $site_info[$key] = drush_get_option($option);
+    }
+  }
   return $site_info;
 }
 
