@@ -2,6 +2,9 @@
 
 namespace Fetcher\DB;
 
+/**
+ * The class manages our MySQL databases and users.
+ */
 class Mysql {
 
   private $username = FALSE;
