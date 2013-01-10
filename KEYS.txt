@@ -27,6 +27,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'hostname' - 
   - 'log' - A closure used to do internal logging allowing drush logs to be extended or rerouted. Must implement the same interface as `drush_log`.
   - 'log function' - A function matching the drush_log signature used by the default 'log' implementation to do logging.  Defaults to `drush_log`.
+  - 'mysql.binary' - The binary to use to run MySQL.  Defaults to `mysql` which must be in the inlcude path but an alternative may be set.
   - 'process' - A factory for Symfony\Process objects. Used to perform system calls.
   - 'random' - A closure that generates pseudo random data.  Defaults to a copy of the Drupal 7 drupal_random_bytes implementation.
   - 'remote.url' - 
