@@ -406,10 +406,21 @@ function drush_fetcher_release() {
 
 /**
  * Factory function for instatiating a site object.
+ *
+ * @param $site_info
+ *   An array of site information to start with.
+ * @param $assemble_info
+ *   Whether to load configuration from drush context and
+ *   site info files to be merged in.
  */
-function drush_fetcher_get_site($site_info = array()) {
+function drush_fetcher_get_site($site_info = array(), $assemble_info = TRUE) {
   $class = drush_get_option('fetcher-site-class', '\Fetcher\Site');
-  $info = drush_fetcher_assemble_site_info($site_info);
+  if ($assemble_info) {
+    $info = drush_fetcher_assemble_site_info($site_info);
+  }
+  else {
+    $info = $site_info;
+  }
   $site = new $class($info);
   return $site;
 }
@@ -419,6 +430,8 @@ function drush_fetcher_get_site($site_info = array()) {
  *
  * Defaults exist for all values but can be overridden by keys set in a drushrc
  * file, and those are overridden by a site's specific settings.
+ *
+ * TODO: This is getting unmaintainable, consider a refactor.
  */
 function drush_fetcher_assemble_site_info(Array $site_info) {
   // Merge in drushrc settings.
@@ -452,6 +465,15 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
     if (!empty($site_info['fetcher'])) {
       $site_info = array_merge($site_info, $site_info['fetcher']);
       unset($site_info['fetcher']);
+    }
+  }
+  // Merge in site_info.yaml
+  if (!empty($site_info['name']) || !empty($site_info['site.info path'])) {
+    $temp_site = drush_fetcher_get_site($site_info, FALSE);
+    if (is_file($temp_site['site.info path'])) {
+      drush_log('should find path: ' . $temp_site['site.info path'], 'error');
+      $config = drush_fetcher_load_site_info_from_file($temp_site['site.info path']);
+      $site_info = _drush_fetcher_merge_configuration($site_info, drush_fetcher_load_site_info_from_file($temp_site['site.info path']));
     }
   }
   $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');

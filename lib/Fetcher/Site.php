@@ -448,7 +448,10 @@ class Site extends Pimple implements SiteInterface {
       return $c['site.working_directory'] . '/' . 'code';
     };
 
-    $this->setDefaultConfigration('site.info path', function($site) { return $site['site.working_directory'] . '/site_info.yaml'; });
+    // Set the path where the site info yaml file should be placed.
+    $this['site.info path'] = function($c) {
+      return $c['site.working_directory'] . '/site_info.yaml';
+    };
 
     /**
      * Generate a random string.
