@@ -34,7 +34,12 @@ class Mysql {
     $site->setDefaultConfigration('database.hostname', 'localhost');
     $site->setDefaultConfigration('database.user.password', $passwordGenerator);
     $site->setDefaultConfigration('database.user.name', function($c) { return $c['name']; });
-    $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['system hostname']; });
+    if ($site['database.hostname'] == 'localhost') {
+      $site->setDefaultConfigration('database.user.hostname', 'localhost');
+    }
+    else {
+      $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['system hostname']; });
+    }
     $site->setDefaultConfigration('database.port', 3306);
     $site->setDefaultConfigration('mysql.binary', 'mysql');
   }
@@ -107,7 +112,7 @@ class Mysql {
     $this->executeQuery($command, FALSE);
     $this->executeQuery('flush privileges', FALSE);
     if (!$this->canConnect()) {
-      throw new Exception('The existing MySQL user could not access the existing MySQL database after GRANT query was run.');
+      throw new \Fetcher\Exception\FetcherException('The existing MySQL user could not access the existing MySQL database after GRANT query was run.');
     }
   }
 
