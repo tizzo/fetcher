@@ -94,17 +94,18 @@ class Site extends Pimple implements SiteInterface {
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/mail.log');
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/watchdog.log');
 
+    // Ensure the server handler has been instantiated.
+    $this['server'];
     // Ensure we have our files folders.
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server']->getWebUser());
-    // TODO: Should we have an option for whether to create private files or not?
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user']);
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server.user']);
   }
 
   /**
    * Ensure the site folder exists.
    */
   public function ensureSiteFolder() {
-    $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server']->getWebUser());
+    $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server.user']);
   }
 
   /**
@@ -442,7 +443,9 @@ class Site extends Pimple implements SiteInterface {
     // TODO: This is not the best way to do this:
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
-      return $c['server']->getWebroot() . '/' . $c['name'];
+      // Ensure the server class has been instantiated.
+      $c['server'];
+      return $c['server.webroot'] . '/' . $c['name'];
     };
 
     $this['site'] = 'default';
