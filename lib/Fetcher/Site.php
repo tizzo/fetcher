@@ -55,8 +55,7 @@ class Site extends Pimple implements SiteInterface {
       }
       $environments['local'] = array(
         'uri' => $this['hostname'],
-        // TODO: We use this in other places so this should be an element in our container config.
-        'root' => $this['site.working_directory'] . '/webroot',
+        'root' => $this['site.webroot'],
       );
       foreach ($environments as $name =>  $environment) {
         $environment = (array) $environment;
@@ -342,7 +341,7 @@ class Site extends Pimple implements SiteInterface {
     $this['symlinks'] = function ($c) {
       return array(
         $c['site.working_directory'] . '/public_files' => $c['site.directory'] . '/files',
-        $c['site.code_directory'] => $c['site.working_directory'] . '/webroot',
+        $c['site.code_directory'] => $c['site.webroot'],
       );
     };
 
@@ -449,6 +448,10 @@ class Site extends Pimple implements SiteInterface {
     };
 
     $this['site'] = 'default';
+
+    $this['site.webroot'] = function($c) {
+      return $c['site.working_directory'] . '/webroot';
+    };
 
     $this['site.directory'] = function($c) {
       return $c['site.code_directory'] . '/sites/' . $c['site'];
