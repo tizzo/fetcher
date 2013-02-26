@@ -233,7 +233,9 @@ function drush_fetcher_get($site_name = FALSE) {
   if ($local_name = drush_get_option('local-name', FALSE)) {
     $site['name'] = $local_name;
   }
-  drush_fetcher_ensure_site($site);
+  if (!drush_fetcher_ensure_site($site)) {
+    return FALSE;
+  }
 
   // If requested, sync the database.
   if (drush_get_option('sql-sync')) {
@@ -344,11 +346,12 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
     }
 
     drush_log('Your site has been setup!', 'success');
+    return TRUE;
   }
   catch (Exception $e) {
-    drush_log($e->getMessage(), 'error');
     drush_fetcher_log_exception_information($e);
     drush_log('Something went wrong along the way, try running with `--verbose` to find the problem.', 'error');
+    return FALSE;
   }
 }
 
