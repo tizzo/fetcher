@@ -435,7 +435,12 @@ class Site extends Pimple implements SiteInterface {
     };
 
     // The URI of the site.
+    // TODO: We have standardized on drush alias keys where possible, this is deprecated.
     $this['hostname'] = function($c) {
+      return $c['uri'];
+    };
+    // The URI of the site.
+    $this['uri'] = function($c) {
       return strtolower($c['name'] . '.' . $c['system hostname']);
     };
 
