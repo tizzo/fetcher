@@ -573,7 +573,9 @@ function drush_fetcher_extract_keys_from_context() {
 }
 
 /**
+ * This function merges configuration allowing the second parameter to override the first.
  *
+ * It will perform a recursive merge exactly one level deep.
  */
 function _drush_fetcher_merge_configuration($site_info, $config) {
   // Merge in global configuration.
