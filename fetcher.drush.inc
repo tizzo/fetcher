@@ -490,6 +490,51 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
 }
 
 /**
+ * Get an array of fetcher sites for all environments on a host.
+ *
+ * This will return only sites that appear on a server with a given hostname
+ * and of for those sites only environments that are on that host.
+ *
+ * @param $server_hostname
+ *   The hostname of the sites to filter for, must be an exact match.
+ */
+function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
+  $site = drush_fetcher_get_site();
+  if (is_null($server_hostname)) {
+    $server_hostname = $site['system']->getHostname();
+  }
+  $options = array(
+    'detail' => 'true',
+    'server-hostname' => $server_hostname,
+  );
+  $site_info_list = drush_fetcher_get_info_fetcher()
+    ->listSites('', 0, $options);
+  $arrayify = function ($object) use (&$arrayify) {
+    if (is_object($object)) {
+      foreach ($object as &$item) {
+        if (is_object($item)) {
+          $item = $arrayify($item);
+        }
+      }
+    }
+    return (array) $object;
+  };
+  $sites = array();
+  foreach ($site_info_list as $site_info) {
+    $site_info = $arrayify($site_info);
+    foreach ($site_info['environments'] as $name => $environment) {
+      $local_site_info = array_merge($site_info, $environment);
+      $site = drush_fetcher_get_site($local_site_info);
+      $site['environment.local'] = $name;
+      $sites[] = $site;
+    }
+  }
+  return $sites;
+}
+
+
+
+/**
  *
  * TODO: Make this somehow pluggable/extensible.
  */
