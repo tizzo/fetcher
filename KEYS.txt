@@ -39,7 +39,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'simulate' - Whether to simulate opersations (should make no changes to the server).
   - 'site' - The site (name of the folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
   - 'site.directory' = The absolute path to the site folder (defaults to `[site.code_directory]/sites/[site]`).
-  - 'site.code_directory' - The folder containing Drupal's settings.php.
+  - 'site.code_directory' - The folder containing Drupal's index.php.
   - 'site.info path' - The path to the yaml file path. Defaults to `[working_directory]/site_info.yaml`.
   - 'site.webroot' - The path to the webroot of the site as configured by apache. Generally a symlink.
   - 'site.working_directory' - The working directory for this site.  This folder will contain the public and private files, the webroot symlink, and any folders containg code, etc.

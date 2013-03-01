@@ -526,6 +526,7 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
       $local_site_info = array_merge($site_info, $environment);
       $site = drush_fetcher_get_site($local_site_info);
       $site['environment.local'] = $name;
+      $site['site.webroot'] = $environment['root'];
       $sites[] = $site;
     }
   }
