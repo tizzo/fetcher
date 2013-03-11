@@ -221,11 +221,15 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
  *
  * TODO: Document installation instructions.
  */
-function drush_fetcher_get($site_name = FALSE) {
+function drush_fetcher_get($site_name = FALSE, $remote_environment = FALSE) {
 
   if (!$site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name)) {
     drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
     return FALSE;
+  }
+  // If a remote environment was set, use it here.
+  if ($remote_environment) {
+    $site_info['environment.remote'] = $remote_environment;
   }
   // Instantiate the site object.
   $site = drush_fetcher_get_site($site_info);
@@ -446,7 +450,12 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
   $fetcher_config = drush_fetcher_extract_keys_from_context();
   $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
   if (!empty($site_info)) {
-    $site_info['environment.local'] = drush_get_option('environment-local', 'local');
+    if (!empty($site_info['environment.remote'])) {
+      $environment = $site_info['environment.remote'];
+    }
+    if (drush_get_option('environment-local', FALSE)) {
+      $site_info['environment.local'] = drush_get_option('environment-local', 'local');
+    }
     if (!empty($site_info['environments']) && empty($site_info['environment.remote'])) {
       if (count($site_info['environments']) == 1) {
         $environment = array_pop(array_keys($site_info['environments']));
@@ -455,11 +464,7 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
         // TODO: This probably shouldn't happen here, it should happen when the
         // site is prompted (or something).
         $args = array('@envs' => implode(', ', array_keys($site_info['environments'])));
-        // If environment is set as a CLI option, use it.
-        if (drush_get_option('environment')) {
-          $environment = drush_get_option('environment');
-        }
-        else {
+        if (empty($environment)) {
           $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
         }
         if (!isset($site_info['environments'][trim($environment)])) {
@@ -468,6 +473,7 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
         }
       }
       $site_info['environment.remote'] = $environment;
+      // TODO: This should probably be a method on the site object.
       $site_info = _drush_fetcher_merge_configuration($site_info, $site_info['environments'][$environment]);
     }
     if (!empty($site_info['fetcher'])) {
@@ -524,8 +530,12 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     $site_info = $arrayify($site_info);
     foreach ($site_info['environments'] as $name => $environment) {
       $local_site_info = array_merge($site_info, $environment);
+      // We do this twice because otherwise we will be prompted below.
+      $local_site_info['environment.local'] = $name;
+      $local_site_info['environment.remote'] = $name;
       $site = drush_fetcher_get_site($local_site_info);
       $site['environment.local'] = $name;
+      $site['environment.remote'] = $name;
       $site['site.webroot'] = $environment['root'];
       $sites[] = $site;
     }
