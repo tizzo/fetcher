@@ -526,18 +526,20 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     return (array) $object;
   };
   $sites = array();
-  foreach ($site_info_list as $site_info) {
-    $site_info = $arrayify($site_info);
-    foreach ($site_info['environments'] as $name => $environment) {
-      $local_site_info = array_merge($site_info, $environment);
-      // We do this twice because otherwise we will be prompted below.
-      $local_site_info['environment.local'] = $name;
-      $local_site_info['environment.remote'] = $name;
-      $site = drush_fetcher_get_site($local_site_info);
-      $site['environment.local'] = $name;
-      $site['environment.remote'] = $name;
-      $site['site.webroot'] = $environment['root'];
-      $sites[] = $site;
+  if (!empty($site_info_list)) {
+    foreach ($site_info_list as $site_info) {
+      $site_info = $arrayify($site_info);
+      foreach ($site_info['environments'] as $name => $environment) {
+        $local_site_info = array_merge($site_info, $environment);
+        // We do this twice because otherwise we will be prompted below.
+        $local_site_info['environment.local'] = $name;
+        $local_site_info['environment.remote'] = $name;
+        $site = drush_fetcher_get_site($local_site_info);
+        $site['environment.local'] = $name;
+        $site['environment.remote'] = $name;
+        $site['site.webroot'] = $environment['root'];
+        $sites[] = $site;
+      }
     }
   }
   return $sites;
