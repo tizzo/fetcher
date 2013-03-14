@@ -22,7 +22,7 @@ class DrushAlias  implements InfoFetcherInterface {
         if (!empty($list[$info['name']])) {
           $info = ((array) $list[$info['name']] + $info);
         }
-        $list[$info['name']] = $info;
+        $list[$info['name']] = (object) $info;
       }
     }
     return $list;
