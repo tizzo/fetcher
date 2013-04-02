@@ -23,26 +23,25 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'environments' - An array of environments.
   - 'environment.remote' - The remote environment currently selected for synchronization operations.
   - 'environment.local' - The environment that this instance of the site is running in or where it is being installed (defaults to `local` for local development).
-  - 'git binary' - 
-  - 'hostname' - 
+  - 'git binary' - The binary to use to execute git commands.
+  - 'hostname' - The hostname of this site, i.e. the url used to load this site.
   - 'log' - A closure used to do internal logging allowing drush logs to be extended or rerouted. Must implement the same interface as `drush_log`.
   - 'log function' - A function matching the drush_log signature used by the default 'log' implementation to do logging.  Defaults to `drush_log`.
   - 'mysql.binary' - The binary to use to run MySQL.  Defaults to `mysql` which must be in the inlcude path but an alternative may be set.
+  - 'name' - The site's machine name.
   - 'process' - A factory for Symfony\Process objects. Used to perform system calls.
   - 'random' - A closure that generates pseudo random data.  Defaults to a copy of the Drupal 7 drupal_random_bytes implementation.
-  - 'remote.url' - 
-  - 'server' - 
-  - 'server.basewebroot' - 
-  - 'server class' - 
-  - 'server.user' - 
-  - 'settings_file.path' - 
-  - 'simulate' - 
+  - 'server' - The server handler object for interfacing with the application server that runs Drupal (likely Apache or nginx).
+  - 'server.webroot' - The folder that should contain the working directory of any fetcher working directories on an app server.
+  - 'server class' - The handler class for server operations.
+  - 'server.user' - The user that the webserver runs as (e.g. `apache2` runs as `www-data` on Ubuntu).
+  - 'settings_file.path' - The path to the site's settings.php file.
+  - 'simulate' - Whether to simulate opersations (should make no changes to the server).
   - 'site' - The site (name of the folder withing the `sites` folder) on which we are acting.  Defaults to `default`.
   - 'site.directory' = The absolute path to the site folder (defaults to `[site.code_directory]/sites/[site]`).
-  - 'site.code_directory' - The folder containing Drupal's settings.php.
-  - 'site.info' - 
+  - 'site.code_directory' - The folder containing Drupal's index.php.
   - 'site.info path' - The path to the yaml file path. Defaults to `[working_directory]/site_info.yaml`.
-  - 'name' - The site's machine name.
+  - 'site.webroot' - The path to the webroot of the site as configured by apache. Generally a symlink.
   - 'site.working_directory' - The working directory for this site.  This folder will contain the public and private files, the webroot symlink, and any folders containg code, etc.
   - 'symlinks' - An array of symlinks to create keyed by the link with the source of the real file or directory.
   - 'system' - The handler object for loading data from or making changes to the system.

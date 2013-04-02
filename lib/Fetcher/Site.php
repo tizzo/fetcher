@@ -55,8 +55,7 @@ class Site extends Pimple implements SiteInterface {
       }
       $environments['local'] = array(
         'uri' => $this['hostname'],
-        // TODO: We use this in other places so this should be an element in our container config.
-        'root' => $this['site.working_directory'] . '/webroot',
+        'root' => $this['site.webroot'],
       );
       foreach ($environments as $name =>  $environment) {
         $environment = (array) $environment;
@@ -94,17 +93,18 @@ class Site extends Pimple implements SiteInterface {
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/mail.log');
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/watchdog.log');
 
+    // Ensure the server handler has been instantiated.
+    $this['server'];
     // Ensure we have our files folders.
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server']->getWebUser());
-    // TODO: Should we have an option for whether to create private files or not?
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server']->getWebUser());
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user']);
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server.user']);
   }
 
   /**
    * Ensure the site folder exists.
    */
   public function ensureSiteFolder() {
-    $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server']->getWebUser());
+    $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server.user']);
   }
 
   /**
@@ -341,7 +341,7 @@ class Site extends Pimple implements SiteInterface {
     $this['symlinks'] = function ($c) {
       return array(
         $c['site.working_directory'] . '/public_files' => $c['site.directory'] . '/files',
-        $c['site.code_directory'] => $c['site.working_directory'] . '/webroot',
+        $c['site.code_directory'] => $c['site.webroot'],
       );
     };
 
@@ -435,17 +435,28 @@ class Site extends Pimple implements SiteInterface {
     };
 
     // The URI of the site.
+    // TODO: We have standardized on drush alias keys where possible, this is deprecated.
     $this['hostname'] = function($c) {
+      return $c['uri'];
+    };
+    // The URI of the site.
+    $this['uri'] = function($c) {
       return strtolower($c['name'] . '.' . $c['system hostname']);
     };
 
     // TODO: This is not the best way to do this:
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
-      return $c['server']->getWebroot() . '/' . $c['name'];
+      // Ensure the server class has been instantiated.
+      $c['server'];
+      return $c['server.webroot'] . '/' . $c['name'];
     };
 
     $this['site'] = 'default';
+
+    $this['site.webroot'] = function($c) {
+      return $c['site.working_directory'] . '/webroot';
+    };
 
     $this['site.directory'] = function($c) {
       return $c['site.code_directory'] . '/sites/' . $c['site'];

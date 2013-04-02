@@ -10,7 +10,7 @@ class DrushAlias  implements InfoFetcherInterface {
    *
    * List all sites specidied in the drush aliases.
    */
-  public function listSites($name = '', $page = 0) {
+  public function listSites($name = '', $page = 0, $options = array()) {
     // TODO: Add name searching.
     $aliases = _drush_sitealias_find_and_load_all_aliases();
     $sites = array();
