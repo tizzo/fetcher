@@ -54,14 +54,6 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     $command = call_user_func_array('sprintf', $args);
     $site['log']('Executing `' . $command . '`.');
 
-    // Attempt to ramp up the memory limit and execution time
-    // to ensure big or slow chekcouts are not interrupted, storing
-    // the current values so they may be restored.
-    $timeLimit = ini_get('memory_limit');
-    ini_set('memory_limit', 0);
-    $memoryLimit = ini_get('max_execution_time');
-    ini_set('max_execution_time', 0);
-
     $process = $site['process']($command);
     $process->setWorkingDirectory($site['site.code_directory']);
     if (!$site['simulate']) {
@@ -75,10 +67,6 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
         }
       });
     }
-
-    // Restore the memory limit and execution time.
-    ini_set('memory_limit', $timeLimit);
-    ini_set('max_execution_time', $memoryLimit);
 
     if (!$process->isSuccessful()) {
       throw new \Exception('Executing Git command failed: `' . $command . '`.  Git responded with: ' . $process->getErrorOutput() . ' ' . $process->getOutput());
