@@ -30,7 +30,6 @@ class Site extends Pimple implements SiteInterface {
         $this['database']->createDatabase();
       }
       if (!$this['database']->userExists()) {
-        $name = $this['name'];
         $this['database']->createUser();
         $this['database']->grantAccessToUser();
       }

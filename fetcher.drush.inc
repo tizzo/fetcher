@@ -146,6 +146,9 @@ function drush_fetcher_list($name = '', $page = 0) {
   }
 }
 
+/**
+ * Logs information in a standard way from an Exception that occured.
+ */
 function drush_fetcher_log_exception_information(Exception $e) {
   $args = array(
     '@error' => $e->getMessage(),
