@@ -37,7 +37,7 @@ class Apache2Centos {
         'hostname' => $site['hostname'],
         'site_folder' => $site['site.working_directory'],
       );
-      $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
+      $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost.centos', $vars);
       $site['system']->writeFile($vhostPath, $content);
     }
   }
