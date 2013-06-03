@@ -136,7 +136,7 @@ function drush_fetcher_list($name = '', $page = 0) {
         'Name',
       );
       foreach($result as $name => $info) {
-        $rows[] = array($info->title, $name);
+        $rows[] = array($info['title'], $name);
       }
       drush_print_table($rows, TRUE);
     }
