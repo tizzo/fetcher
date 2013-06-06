@@ -15,8 +15,8 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'database.database' - The database (if applicable) that this site is installed in. Defaults to the value of 'name'.
   - 'database.hostname' - The hostname of the database on which Drupal is or will be installed.
   - 'database.port' - The port of the database on which Drupal is or will be installed.
-  - 'database synchronizer' - The handler used to syncronize our database.
-  - 'database synchronizer class' - The class used to when the 'database synchronizer' is instantiated.
+  - 'database_synchronizer' - The handler used to syncronize our database.
+  - 'database_synchronizer.class' - The class used to when the 'database synchronizer' is instantiated.
   - 'database.user.hostname' - The hostname Drupal will be connecting from when connecting to the database (on the server the user is `'username'@'hostname'`).
   - 'database.user.name' - The username Drupal will use to connect to the database.
   - 'database.user.password' - The password Drupal will use to connect to the database.

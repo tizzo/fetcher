@@ -185,7 +185,7 @@ class Site extends Pimple implements SiteInterface {
    * Synchronize the database with a remote environment.
    */
   public function syncDatabase() {
-    return $this['database synchronizer']->syncDB();
+    return $this['database_synchronizer']->syncDB();
   }
 
   /**
@@ -406,10 +406,10 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // For most cases, the Drush sql-sync command can be used for synchronizing.
-    $this['database synchronizer class'] = 'Fetcher\DBSynchronizer\DrushSqlSync';
+    $this['database_synchronizer.class'] = 'Fetcher\DBSynchronizer\DrushSqlSync';
 
-    $this['database synchronizer'] = $this->share(function($c) {
-      return new $c['database synchronizer class']($c);
+    $this['database_synchronizer'] = $this->share(function($c) {
+      return new $c['database_synchronizer.class']($c);
     });
 
     // For most cases, RSync is file for file synchronizing. We'll find the
