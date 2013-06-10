@@ -12,6 +12,35 @@ class Apache2 {
     $site->setDefaultConfigration('server.vhost_enabled_folder', '/etc/apache2/sites-enabled');
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
     $this->site = $site;
+    $this->site = $site;
+  }
+
+  /**
+   * Implements \Fetcher\Server\ServerInterface::registerSettings().
+   *
+   * TODO: I think this is a good idea...
+   */
+  static public function registerSettings(\Fetcher\Site $site) {
+    $site->setDefaultConfigration('server.user', 'www-data');
+    $site->setDefaultConfigration('server.basewebroot', '/var/www');
+  }
+
+  /**
+   * Get the user under which this server runs.
+   *
+   * TODO: This can vary based on the system.
+   */
+  public function getWebUser() {
+    return 'www-data';
+  }
+
+  /**
+   * Get the parent folder where web files should be located.
+   *
+   * TODO: This can vary based on the system.
+   */
+  public function getWebRoot() {
+    return '/var/www';
   }
 
   /**
