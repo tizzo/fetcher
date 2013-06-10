@@ -1,6 +1,7 @@
 <?php
 
 namespace Fetcher;
+
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
 use Symfony\Component\Process\Process;
@@ -8,6 +9,7 @@ use Symfony\Component\Process\Process;
 class Site extends Pimple implements SiteInterface {
 
   // A multi-dimensional array of build hooks.
+  // TODO: buildhooks should be a class of task.
   protected $buildHooks = array();
 
   // An array of callable tasks keyed by name.
@@ -581,24 +583,49 @@ class Site extends Pimple implements SiteInterface {
    *     The callable should take a Fetcher\Site object as its parameter.
    * @param $options
    *   An array of options which may contain the following keys:
-   *    description: A description of the operation the task will perform.
-   *    success_message: A message to display if the task was succsesfull.
+   *    description: A description of the operation the task will perform. Without a description tasks are
+   *      left out of the fetcher-task drush listing.
    *    starting_message: A message to display when the task is beginning.
    *      Useful for alerting users long running tasks are in progress.
+   *    starting_message_arguments: An array of tokens to substitute in the starting message.
+   *    starting_message_arguments_callback: A callable that receives the site object as the only paramter and
+   *      returns the array generally specified in starting_message_arguments.
+   *    success_message: A message to display if the task was succsesfull.
+   *    success_message_arguments: An array of tokens to substitute in the success message.
+   *    success_message_arguments_callback: A callable that receives the site object as the only paramter and
+   *      returns the array generally specified in success_message_arguments.
    */
   public function registerTask($name, $task, $options = array()) {
     if (!is_callable($task) && !is_array($task)) {
-      throw new \Exception('Invalid task definition. Tasks must be callables or an array of tasks.');
     }
     $this->tasks[$name] = $options;
-    $this->tasks[$name]['callable'] = $callable;
+    if (is_callable($task)) {
+      $this->tasks[$name]['callable'] = $task;
+    }
+    else if (is_array($task)) {
+      $this->tasks[$name]['stack'] = $task;
+    }
+    else {
+      throw new \Exception('Invalid task definition. Tasks must be callables or an array of tasks.');
+    }
   }
 
+  /**
+   * Returns the internal datastrcuture representing all registered tasks.
+   *
+   * TODO: Should we be a bit smarter and less naked?
+   */
   public function getTasks() {
     return $this->tasks;
   }
 
+  /**
+   * Returnis the internal datastructure for a single task by name.
+   */
   public function getTask($task) {
+    if (empty($this->tasks[$name])) {
+      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+    }
     return $this->tasks[$task];
   }
 
@@ -609,78 +636,149 @@ class Site extends Pimple implements SiteInterface {
     *   The name of the registered task (or task set) to run.
     */
   public function runTask($name) {
-    if (!isset($this->tasks[$name])) {
-      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
-    }
-    $task = $this->tasks[$name];
+    $task = $this->getTask($name);
     if (isset($task['starting_message'])) {
-      $this['log']($task['starting_message'], 'ok');
+      $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
+      if (!empty($task['starting_message_arguments_callback'])) {
+        $arguments = call_user_func($task['starting_message_arguments_callback'], $this);
+      }
+      $this['log'](dt($task['starting_message'], $arguments), 'ok');
     }
     // If the task is an array run each task listed in its keys.
-    if (is_array($task)) {
-      foreach ($task as $subtask) {
+    if (!empty($task['stack'])) {
+      foreach ($task['stack'] as $subtask) {
         $this->runTask($subtask);
       }
     }
     else {
-      call_user_func($task, $this);
+      call_user_func($task['callable'], $this);
     }
     if (isset($task['success_message'])) {
-      $this['log']($task['success_message'], 'ok');
+      $arguments = !empty($task['success_message_arguments']) ? $task['success_message_arguments'] : array();
+      if (!empty($task['success_message_arguments_callback'])) {
+        $arguments = call_user_func($task['success_message_arguments_callback'], $this);
+      }
+      $this['log'](dt($task['success_message'], $arguments), 'success');
     }
   }
 
+  public function insertBeforeSubtask($task, $subtask, $taskToAdd) {
+  }
 
+  public function insertAfterSubtask() {
+  }
+
+  /**
+   * Registers the default tasks that ship as methods on 
+   */
   public function registerDefaultTasks() {
 
-    // Make sure that the project direcotry is properly configured.
+    $options = array(
+      'description' => 'Ensure that a site is properly configured to run on this server.',
+      'success_message' => 'The site appears to be correctly configured at @hostname',
+      'success_message_arguments_callback' => function($site) {
+        return array('@hostname' => $site['hostname']);
+      },
+    );
+    $tasks = array(
+      'ensure_working_directory',
+      'ensure_code',
+      'ensure_database_connection',
+      'ensure_settings_file',
+      'ensure_symlinks',
+      'ensure_drush_alias',
+      'ensure_server_host_enabled',
+    );
+    $this->registerTask('ensure_site', $tasks, $options);
+
+    $options = array(
+      'description' => 'Completely remove this site and destroy all data associated with it on the server.',
+      'success_message' => 'This site has been completely removed.',
+    );
+    $this->registerTask('remove_site', array($this, 'remove'), $options);
+
     $options = array(
       'description' => 'Setup the working directory by creating folders, files, and symlinks.',
       'success_message' => 'The working directory is properly setup.',
     );
     $this->registerTask('ensure_working_directory', array($this, 'ensureWorkingDirectory'), $options);
 
-    // Checkout the site in the appropriate location.
     $options = array(
       'description' => 'Fetch the site\'s code from the appropriate place.',
       'starting_message' => 'Fetching code...',
-      'success_message' => 'The code is in place.'
+      'success_message' => 'The code is in place.',
     );
     $this->registerTask('ensure_code', array($this, 'ensureCode'), $options);
     
-    /*
-    // Checkout the site in the appropriate location.
-    drush_log(dt('Fetching code...'), 'ok');
-    $site->ensureCode();
-    drush_log(dt('The code is in place.'), 'success');
-
-    // Ensure we have a database and user.
-    $site->ensureDatabase();
-    drush_log(dt('The database exists and the site user has successfully conntected to it.'), 'success');
+    $options = array(
+      'description' => 'Ensure the drupal database and database user exist creating the requisite grants if necessary.',
+      'success_message' => 'The database exists and the site user has successfully conntected to it.',
+    );
+    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
 
     // Ensure the site's folder is in place.
-    $site->ensureSiteFolder();
+    $this->registerTask('ensure_site_folder', array($this, 'ensureSiteFolder'));
 
-    // Create the settings.php file.
-    $site->ensureSettingsFileExists();
-    drush_log(dt('The settings.php file is in place.'), 'success');
+    $options = array(
+      'description' => 'Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.',
+      'success_message' => 'The database exists and the site user has successfully conntected to it.',
+    );
+    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
+
+    $options = array(
+      'description' => 'Ensure the settings.php file is in place (and dynamically generate it if it is not).',
+      'success_message' => 'The settings.php file is in place.',
+    );
+    $this->registerTask('ensure_settings_file', array($this, 'ensureSettingsFileExists'), $options);
 
     // Create necessary symlinks.
-    $site->ensureSymLinks();
-    drush_log(dt('All symlinks exist and point to the correct path.'), 'success');
 
-    // Create a drush alias for this site.
-    $site->ensureDrushAlias();
-    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['name'], '@path' => $site->getDrushAliasPath())), 'success');
+    $options = array(
+      'description' => 'Ensure any configured symlinks have been created and point at the correct path.',
+      'success_message' => 'All symlinks exist and point to the correct path.',
+    );
+    $this->registerTask('ensure_symlinks', array($this, 'ensureSymLinks'), $options);
 
-    // Write a file with the site information so that we can track down
-    // which site this is even if it has been placed in an unexpected location.
-    $site->ensureSiteInfoFileExists();
-    drush_log(dt('The site info file for this site exists.'), 'success');
+    $options = array(
+      'description' => 'Create a drush alias for this site.',
+      'success_message' => 'The alias @!alias.local exists and resides in the file @path',
+      'success_message_arguments_callback' => function($site) {
+        return array(
+          '!alias' => $this['name'],
+          '@path' => $this->getDrushAliasPath(),
+        );
+      },
+    );
+    $this->registerTask('ensure_drush_alias', array($this, 'ensureDrushAlias'), $options);
 
-    // Add the vhost  to the server.
-    $site->ensureSiteEnabled();
-    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
-    */
-   }
+    $options = array(
+      'description' => 'Ensure that the configuration for this site has been captured in the site_info file for the site..',
+      'success_message' => 'The site info file for this site has been created.',
+    );
+    $this->registerTask('ensure_drush_alias', array($this, 'ensureSiteInfoFileExists'), $options);
+
+    $options = array(
+      'description' => 'Ensure that the server is configured with the appropriate virtualhost or equivalent.',
+      'success_message' => 'The site is enabled and is running at @hostname',
+      'success_message_arguments_callback' => function($site) {
+        return array('@hostname' => $site['hostname']);
+      },
+    );
+    $this->registerTask('ensure_server_host_enabled', array($this, 'ensureSiteEnabled'), $options);
+
+
+    $options = array(
+      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
+      'start_message' => 'Attempting to sync database from remote...',
+      'success_message' => 'The database was properly synchronized.',
+    );
+    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
+
+    $task = function ($site) {
+      if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
+        require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
+      }
+    };
+    $this->registerTask('include_fetcher_make', $task);
+  }
 }
