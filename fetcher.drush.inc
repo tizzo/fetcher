@@ -311,45 +311,6 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
       drush_log(dt('Before build hooks completed.'), 'success');
     }
 
-    // Make sure that the project direcotry is properly configured.
-    $site->ensureWorkingDirectory();
-    drush_log(dt('The working directory is properly setup.'), 'success');
-
-    // Checkout the site in the appropriate location.
-    drush_log(dt('Fetching code...'), 'ok');
-    $site->ensureCode();
-    drush_log(dt('The code is in place.'), 'success');
-
-    // Ensure we have a database and user.
-    $site->ensureDatabase();
-    drush_log(dt('The database exists and the site user has successfully conntected to it.'), 'success');
-
-    // Ensure the site's folder is in place.
-    $site->ensureSiteFolder();
-
-    // Create the settings.php file.
-    $site->ensureSettingsFileExists();
-    drush_log(dt('The settings.php file is in place.'), 'success');
-
-    // Create necessary symlinks.
-    $site->ensureSymLinks();
-    drush_log(dt('All symlinks exist and point to the correct path.'), 'success');
-
-    // Create a drush alias for this site.
-    $site->ensureDrushAlias();
-    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['name'], '@path' => $site->getDrushAliasPath())), 'success');
-
-    // Write a file with the site information so that we can track down
-    // which site this is even if it has been placed in an unexpected location
-    // came from later.
-    $site->ensureSiteInfoFileExists();
-    drush_log(dt('The site info file for this site exists.'), 'success');
-
-    // Add the site to the server.
-    $site->ensureSiteEnabled();
-    // TODO: Fill in hosntame.
-    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
-
     // If there is an fetcher.make.php file, load it to allow build hooks to be
     // registered.
     if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
@@ -411,7 +372,7 @@ function drush_fetcher_delete($site_name) {
     $site_info = array();
     $site_info['name'] = $site_name;
     $site = drush_fetcher_get_site($site_info);
-    $site->remove();
+    $site->runTask('remove_site');
     drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
   }
   catch (Exception $e) {
@@ -427,7 +388,10 @@ function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
   $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
   $site = drush_fetcher_get_site($site_info);
   if (is_null($task_name)) {
-    return drush_fetcher_list_tasks($site);
+    drush_fetcher_list_tasks($site);
+  }
+  else {
+    $site->runTask($task_name);
   }
 }
 
@@ -666,27 +630,6 @@ function drush_fetcher_prompt_for_site_name() {
 }
 
 /**
- * This came from an @drewish request, he wanted to be able to execute just
- * *part* of a getSite.
- *
- * This is a build system and the idea is to register the common actions that
- * can be performed so that they can be run individually.
- *
- * TODO: Do we need a dependency system? Can't get the code without a working
- * directory.
- */
-function drush_fetcher_subcommand() {
-  // Just planning the available subcommands.
-  $subcommands = array(
-    'setup-working-directory' => '',
-    'get-code' => '',
-    'create-database' => '',
-    'sync-database' => '',
-    'sync-files' => '',
-  );
-}
-
-/**
  * Implements hook_drush_init().
  *
  * Register our autoloader.
@@ -794,7 +737,7 @@ function drush_fetcher_find_site_by_directory($directory) {
  * @param $site_name
  *   An optional param representing a site name or drush alias to the site.
  * @return
- *   A stdClass object containing site information.
+ *   An array object containing site information.
  */
 function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FALSE) {
 
