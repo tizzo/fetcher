@@ -311,7 +311,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 
     // Ensure we have a database and user.
     $site->ensureDatabase();
-    drush_log(dt('Your database exists and the site user has successfully conntected to it.'), 'success');
+    drush_log(dt('The database exists and the site user has successfully conntected to it.'), 'success');
 
     // Ensure the site's folder is in place.
     $site->ensureSiteFolder();
