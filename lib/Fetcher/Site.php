@@ -10,6 +10,9 @@ class Site extends Pimple implements SiteInterface {
   // A multi-dimensional array of build hooks.
   protected $buildHooks = array();
 
+  // An array of callable tasks keyed by name.
+  protected $tasks = array();
+
   /**
    * Constructor function to populate the dependency injection container.
    */
@@ -566,4 +569,38 @@ class Site extends Pimple implements SiteInterface {
       $this[$key] = $value;
     }
   }
+
+  /**
+   * Register a task that can be performed on the site.
+   *
+   * @param $name
+   *   A variable safe machine name for the task.
+   * @param $callable
+   *   Either a callable to perform the task or an array of task names for a task stack.
+   *
+   *   The callable should take a Fetcher\Site object as its parameter.
+   */
+   public function registerTask($name, $callable) {
+     $this->tasks[$name] = $callable;
+   }
+
+   /**
+    * Run a task by name.
+    *
+    * @param $name
+    *   The name of the registered task (or task set) to run.
+    */
+   public function runTask($name) {
+     if (!isset($this->tasks[$name])) {
+       $task = $this->tasks[$name];
+       if (is_array($task)) {
+         foreach ($task as $subtask) {
+           $this->runTask($subtask);
+         }
+       }
+       else {
+         call_user_func($task, $this);
+       }
+     }
+   }
 }
