@@ -109,6 +109,17 @@ function fetcher_drush_command() {
     ),
   );
 
+  $environment_items['fetcher-task'] = array(
+    'description' => 'Remove an Fetcher managed site from this server entirely.',
+    'aliases' => array('fet'),
+    'arguments' => array(
+      'task' => 'The task to perform.',
+      'site' => 'The name of the site to perform the task on (defaults to the fetcher site where the command is run).',
+    ),
+    'options' => array(
+    ),
+  );
+
   // Add environment specific options relevant to the server
   // on which fetcher is being run for the appropriate commands.
   foreach ($environment_items as $name => $item) {
@@ -407,6 +418,35 @@ function drush_fetcher_delete($site_name) {
     drush_fetcher_log_exception_information($e);
     drush_log($e->getMessage(), 'error');
   }
+}
+
+/**
+ * List and run tasks available on a fetcher site.
+ */
+function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
+  $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
+  $site = drush_fetcher_get_site($site_info);
+  if (is_null($task_name)) {
+    return drush_fetcher_list_tasks($site);
+  }
+}
+
+function drush_fetcher_list_tasks($site) {
+  if (!$site) {
+    return drush_log('No site was found', 'error');
+  }
+  $rows = array();
+  $rows[] = array(
+    'Name',
+    'Description',
+  );
+  $tasks = $site->getTasks();
+  foreach ($tasks as $name => $task) {
+    if (!empty($task['description'])) {
+      $rows[] = array($name, $task['description']);
+    }
+  }
+  drush_print_table($rows, TRUE);
 }
 
 function drush_fetcher_release() {

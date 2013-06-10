@@ -19,6 +19,7 @@ class Site extends Pimple implements SiteInterface {
   public function __construct($siteInfo = NULL) {
     // Populate defaults.
     $this->setDefaults();
+    $this->registerDefaultTasks();
     if (!empty($siteInfo)) {
       $this->configureWithSiteInfo($siteInfo);
     }
@@ -575,14 +576,31 @@ class Site extends Pimple implements SiteInterface {
    *
    * @param $name
    *   A variable safe machine name for the task.
-   * @param $callable
+   * @param $task
    *   Either a callable to perform the task or an array of task names for a task stack.
-   *
-   *   The callable should take a Fetcher\Site object as its parameter.
+   *     The callable should take a Fetcher\Site object as its parameter.
+   * @param $options
+   *   An array of options which may contain the following keys:
+   *    description: A description of the operation the task will perform.
+   *    success_message: A message to display if the task was succsesfull.
+   *    starting_message: A message to display when the task is beginning.
+   *      Useful for alerting users long running tasks are in progress.
    */
-   public function registerTask($name, $callable) {
-     $this->tasks[$name] = $callable;
-   }
+  public function registerTask($name, $task, $options = array()) {
+    if (!is_callable($task) && !is_array($task)) {
+      throw new \Exception('Invalid task definition. Tasks must be callables or an array of tasks.');
+    }
+    $this->tasks[$name] = $options;
+    $this->tasks[$name]['callable'] = $callable;
+  }
+
+  public function getTasks() {
+    return $this->tasks;
+  }
+
+  public function getTask($task) {
+    return $this->tasks[$task];
+  }
 
    /**
     * Run a task by name.
@@ -590,17 +608,79 @@ class Site extends Pimple implements SiteInterface {
     * @param $name
     *   The name of the registered task (or task set) to run.
     */
-   public function runTask($name) {
-     if (!isset($this->tasks[$name])) {
-       $task = $this->tasks[$name];
-       if (is_array($task)) {
-         foreach ($task as $subtask) {
-           $this->runTask($subtask);
-         }
-       }
-       else {
-         call_user_func($task, $this);
-       }
-     }
+  public function runTask($name) {
+    if (!isset($this->tasks[$name])) {
+      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+    }
+    $task = $this->tasks[$name];
+    if (isset($task['starting_message'])) {
+      $this['log']($task['starting_message'], 'ok');
+    }
+    // If the task is an array run each task listed in its keys.
+    if (is_array($task)) {
+      foreach ($task as $subtask) {
+        $this->runTask($subtask);
+      }
+    }
+    else {
+      call_user_func($task, $this);
+    }
+    if (isset($task['success_message'])) {
+      $this['log']($task['success_message'], 'ok');
+    }
+  }
+
+
+  public function registerDefaultTasks() {
+
+    // Make sure that the project direcotry is properly configured.
+    $options = array(
+      'description' => 'Setup the working directory by creating folders, files, and symlinks.',
+      'success_message' => 'The working directory is properly setup.',
+    );
+    $this->registerTask('ensure_working_directory', array($this, 'ensureWorkingDirectory'), $options);
+
+    // Checkout the site in the appropriate location.
+    $options = array(
+      'description' => 'Fetch the site\'s code from the appropriate place.',
+      'starting_message' => 'Fetching code...',
+      'success_message' => 'The code is in place.'
+    );
+    $this->registerTask('ensure_code', array($this, 'ensureCode'), $options);
+    
+    /*
+    // Checkout the site in the appropriate location.
+    drush_log(dt('Fetching code...'), 'ok');
+    $site->ensureCode();
+    drush_log(dt('The code is in place.'), 'success');
+
+    // Ensure we have a database and user.
+    $site->ensureDatabase();
+    drush_log(dt('The database exists and the site user has successfully conntected to it.'), 'success');
+
+    // Ensure the site's folder is in place.
+    $site->ensureSiteFolder();
+
+    // Create the settings.php file.
+    $site->ensureSettingsFileExists();
+    drush_log(dt('The settings.php file is in place.'), 'success');
+
+    // Create necessary symlinks.
+    $site->ensureSymLinks();
+    drush_log(dt('All symlinks exist and point to the correct path.'), 'success');
+
+    // Create a drush alias for this site.
+    $site->ensureDrushAlias();
+    drush_log(dt('The alias @!alias.local exists and resides in the file @path', array('!alias' => $site['name'], '@path' => $site->getDrushAliasPath())), 'success');
+
+    // Write a file with the site information so that we can track down
+    // which site this is even if it has been placed in an unexpected location.
+    $site->ensureSiteInfoFileExists();
+    drush_log(dt('The site info file for this site exists.'), 'success');
+
+    // Add the vhost  to the server.
+    $site->ensureSiteEnabled();
+    drush_log(dt('The site is enabled and is running at @hostname', array('@hostname' => $site['hostname'])), 'success');
+    */
    }
 }
