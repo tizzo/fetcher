@@ -491,6 +491,10 @@ class Site extends Pimple implements SiteInterface {
 
     $this['environment.local'] = 'local';
 
+    $this['build_hook_file.path'] = function($c) {
+      return $c['site.code_directory'] . '/sites/default/fetcher.make.php';
+    };
+
   }
 
   /**
@@ -594,6 +598,7 @@ class Site extends Pimple implements SiteInterface {
    *    success_message_arguments: An array of tokens to substitute in the success message.
    *    success_message_arguments_callback: A callable that receives the site object as the only paramter and
    *      returns the array generally specified in success_message_arguments.
+   *    arguments: If this callable does not receive the site object as the sole parameter provide the arguments.
    */
   public function registerTask($name, $task, $options = array()) {
     if (!is_callable($task) && !is_array($task)) {
@@ -623,7 +628,7 @@ class Site extends Pimple implements SiteInterface {
    * Returnis the internal datastructure for a single task by name.
    */
   public function getTask($task) {
-    if (empty($this->tasks[$name])) {
+    if (empty($this->tasks[$task])) {
       throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
     }
     return $this->tasks[$task];
