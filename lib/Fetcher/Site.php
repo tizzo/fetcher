@@ -625,7 +625,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Returnis the internal datastructure for a single task by name.
+   * Returns the internal datastructure for a single task by name.
    */
   public function getTask($task) {
     if (empty($this->tasks[$task])) {
@@ -633,6 +633,22 @@ class Site extends Pimple implements SiteInterface {
     }
     return $this->tasks[$task];
   }
+
+  /**
+   * Accepts the bare data internal data structure as returned by getTask.
+   *
+   * This is provided primarily for messing with exisitng defined tasks (or task stacks).
+   *
+   * @param $name
+   *   The name of the task.
+   * @param $task
+   *   An array representing the task.
+   */
+  public function setTask($name, $task) {
+    $this->tasks[$name] = $task;
+  }
+
+
 
    /**
     * Run a task by name.
