@@ -311,6 +311,8 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
       drush_log(dt('Before build hooks completed.'), 'success');
     }
 
+    $site->runTask('ensure_site');
+
     // If there is an fetcher.make.php file, load it to allow build hooks to be
     // registered.
     if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
