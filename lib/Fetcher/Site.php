@@ -640,6 +640,7 @@ class Site extends Pimple implements SiteInterface {
     if (isset($task['starting_message'])) {
       $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
       if (!empty($task['starting_message_arguments_callback'])) {
+        // By default tasks recieve the site object as the only parameter but an array of arguments can be specified.
         $arguments = call_user_func($task['starting_message_arguments_callback'], $this);
       }
       $this['log'](dt($task['starting_message'], $arguments), 'ok');
@@ -651,7 +652,8 @@ class Site extends Pimple implements SiteInterface {
       }
     }
     else {
-      call_user_func($task['callable'], $this);
+      $arguments = !empty($task['arguments']) ? $task['arguments'] : array($this);
+      call_user_func_array($task['callable'], $arguments);
     }
     if (isset($task['success_message'])) {
       $arguments = !empty($task['success_message_arguments']) ? $task['success_message_arguments'] : array();
@@ -675,12 +677,10 @@ class Site extends Pimple implements SiteInterface {
 
     $options = array(
       'description' => 'Ensure that a site is properly configured to run on this server.',
-      'success_message' => 'The site appears to be correctly configured at @hostname',
-      'success_message_arguments_callback' => function($site) {
-        return array('@hostname' => $site['hostname']);
-      },
+      'success_message' => 'Your site has been setup!',
     );
     $tasks = array(
+      'before_build_hooks',
       'ensure_working_directory',
       'ensure_code',
       'ensure_database_connection',
@@ -688,6 +688,8 @@ class Site extends Pimple implements SiteInterface {
       'ensure_symlinks',
       'ensure_drush_alias',
       'ensure_server_host_enabled',
+      'load_make_file',
+      'after_build_hooks',
     );
     $this->registerTask('ensure_site', $tasks, $options);
 
@@ -780,5 +782,37 @@ class Site extends Pimple implements SiteInterface {
       }
     };
     $this->registerTask('include_fetcher_make', $task);
+
+    $options = array(
+      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
+      'start_message' => 'Attempting to sync database from remote...',
+      'success_message' => 'The database was properly synchronized.',
+    );
+    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
+
+
+    // If there is an fetcher.make.php file, load it to allow build hooks to be
+    // registered.
+    $makeLoader = function($site) {
+      if (is_file($site['build_hook_file.path'])) {
+        require($site['build_hook_file.path']);
+      }
+    };
+    $this->registerTask('load_make_file', $makeLoader);
+
+    $options = array(
+      'start_message' => 'Running before build hooks...',
+      'success_message' => 'Before build hooks completed.',
+      'arguments' => array('before'),
+    );
+    $this->registerTask('before_build_hooks', array($this, 'runOperationBuildHooks'), $options);
+
+    $options = array(
+      'start_message' => 'Running after build hooks...',
+      'success_message' => 'After build hooks completed.',
+      'arguments' => array('after'),
+    );
+    $this->registerTask('after_build_hooks', array($this, 'runOperationBuildHooks'), $options);
+
   }
 }

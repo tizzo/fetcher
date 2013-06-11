@@ -304,30 +304,8 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
   // in one big try/catch.
   try {
 
-    // Run "before" build hooks.
-    if (count($site->getOperationBuildHooks('before'))) {
-      drush_log(dt('Running before build hooks...'), 'ok');
-      $site->runOperationBuildHooks('before');
-      drush_log(dt('Before build hooks completed.'), 'success');
-    }
-
     $site->runTask('ensure_site');
 
-    // If there is an fetcher.make.php file, load it to allow build hooks to be
-    // registered.
-    if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
-      require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
-    }
-
-    // Run "after" build hooks.
-    if (count($site->getOperationBuildHooks('after'))) {
-      drush_log(dt('Running after build hooks...'), 'ok');
-      $site->runOperationBuildHooks('after');
-      drush_log(dt('After build hooks completed.'), 'success');
-    }
-
-    drush_log('Your site has been setup!', 'success');
-    return TRUE;
   }
   catch (Exception $e) {
     drush_fetcher_log_exception_information($e);
