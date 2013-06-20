@@ -216,7 +216,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-pass' => 'pass',
       'site-name' => $site['name'],
     );
-    drush_invoke_process($site['site.code_directory'] . '#default', 'site-install', $commandline_args, $commandline_options);
+    drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
     drush_log(dt('Admin user created with username `admin` and password `pass`.'));
   }
   catch (Exception $e) {
