@@ -724,7 +724,14 @@ class Site extends Pimple implements SiteInterface {
       'description' => 'Completely remove this site and destroy all data associated with it on the server.',
       'success_message' => 'This site has been completely removed.',
     );
-    $this->registerTask('remove_site', array($this, 'remove'), $options);
+    $stack = array(
+      'remove_site_site_method',
+    );
+    $this->registerTask('remove_site', $stack, $options);
+
+    // Private method for calling remove on this site.
+    // TODO: Break this into subtasks.
+    $this->registerTask('remove_site_site_method', array($this, 'remove'));
 
     $options = array(
       'description' => 'Setup the working directory by creating folders, files, and symlinks.',
