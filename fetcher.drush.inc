@@ -421,6 +421,7 @@ function drush_fetcher_get_site($site_info = array(), $assemble_info = TRUE) {
     $info = $site_info;
   }
   $site = new $class($info);
+  drush_command_invoke_all('fetcher_site_alter', $site);
   return $site;
 }
 
