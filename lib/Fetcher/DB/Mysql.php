@@ -121,7 +121,7 @@ class Mysql {
    */
   public function removeDatabase() {
     $database = $this->site['database.database'];
-    $this->site['log'](dt('Deleting database %database', $database));
+    $this->site['log'](dt('Deleting database %database', array('%database' => $database)));
     $result = $this->executeQuery('drop database ' . $database, FALSE)->isSuccessful();
     if (!$result) {
       throw new \Fetcher\Exception\FetcherException(sprintf('The database %s could not be dropped.', $database));
