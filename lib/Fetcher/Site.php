@@ -629,7 +629,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function getTask($task) {
     if (empty($this->tasks[$task])) {
-      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+      return FALSE;
     }
     return $this->tasks[$task];
   }
@@ -658,6 +658,9 @@ class Site extends Pimple implements SiteInterface {
     */
   public function runTask($name) {
     $task = $this->getTask($name);
+    if ($task === FALSE) {
+      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+    }
     if (isset($task['starting_message'])) {
       $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
       if (!empty($task['starting_message_arguments_callback'])) {
