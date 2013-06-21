@@ -303,9 +303,8 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
   // error messages if anything goes wrong anywhere, so we wrap all our work
   // in one big try/catch.
   try {
-
     $site->runTask('ensure_site');
-
+    return TRUE;
   }
   catch (Exception $e) {
     drush_fetcher_log_exception_information($e);
