@@ -805,7 +805,7 @@ class Site extends Pimple implements SiteInterface {
 
     $options = array(
       'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'start_message' => 'Attempting to sync database from remote...',
+      'starting_message' => 'Attempting to sync database from remote...',
       'success_message' => 'The database was properly synchronized.',
     );
     $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
@@ -819,7 +819,7 @@ class Site extends Pimple implements SiteInterface {
 
     $options = array(
       'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'start_message' => 'Attempting to sync database from remote...',
+      'starting_message' => 'Attempting to sync database from remote...',
       'success_message' => 'The database was properly synchronized.',
     );
     $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
@@ -835,14 +835,14 @@ class Site extends Pimple implements SiteInterface {
     $this->registerTask('load_make_file', $makeLoader);
 
     $options = array(
-      'start_message' => 'Running before build hooks...',
+      'starting_message' => 'Running before build hooks...',
       'success_message' => 'Before build hooks completed.',
       'arguments' => array('before'),
     );
     $this->registerTask('before_build_hooks', array($this, 'runOperationBuildHooks'), $options);
 
     $options = array(
-      'start_message' => 'Running after build hooks...',
+      'starting_message' => 'Running after build hooks...',
       'success_message' => 'After build hooks completed.',
       'arguments' => array('after'),
     );
