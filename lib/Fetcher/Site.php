@@ -39,6 +39,9 @@ class Site extends Pimple implements SiteInterface {
         $this['database']->createUser();
         $this['database']->grantAccessToUser();
       }
+      else {
+        $this['database']->grantAccessToUser();
+      }
     }
   }
 
