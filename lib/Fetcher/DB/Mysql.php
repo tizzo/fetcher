@@ -184,16 +184,16 @@ class Mysql {
       $base_command .= ' --database=' . escapeshellarg($config['database.database']);
     }
 
-    if (!is_null($config['user'])) {
+    if (!empty($config['user'])) {
       $base_command .= ' --user=' . escapeshellarg($config['user']);
     }
-    if (!is_null($config['password'])) {
+    if (!empty($config['password'])) {
       $base_command .= ' --password=' . escapeshellarg($config['password']);
     }
-    if (!is_null($config['hostname'])) {
+    if (!empty($config['hostname'])) {
       $base_command .= ' --host=' . escapeshellarg($config['hostname']);
     }
-    if (!is_null($config['port'])) {
+    if (!empty($config['port'])) {
       $base_command .= ' --port=' . escapeshellarg($config['port']);
     }
 
