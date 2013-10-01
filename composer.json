@@ -1,0 +1,14 @@
+{
+    "name": "tizzo/fetcher",
+    "description": "A drush extension for creating and syncronizing Drupal environments.",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Howard Tyson",
+            "email": "howard@howardtyson.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    }
+}
