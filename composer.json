@@ -8,7 +8,7 @@
             "email": "howard@howardtyson.com"
         }
     ],
-    "require-dev": {
-        "phpunit/phpunit": "3.7.*"
+    "require": {
+        "phpunit/phpunit": "*"
     }
 }

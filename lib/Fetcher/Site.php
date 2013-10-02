@@ -791,7 +791,7 @@ class Site extends Pimple implements SiteInterface {
       'description' => 'Ensure that the configuration for this site has been captured in the site_info file for the site..',
       'success_message' => 'The site info file for this site has been created.',
     );
-    $this->registerTask('ensure_drush_alias', array($this, 'ensureSiteInfoFileExists'), $options);
+    $this->registerTask('ensure_site_info', array($this, 'ensureSiteInfoFileExists'), $options);
 
     $options = array(
       'description' => 'Ensure that the server is configured with the appropriate virtualhost or equivalent.',
