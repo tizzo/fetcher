@@ -780,8 +780,8 @@ class Site extends Pimple implements SiteInterface {
       'success_message' => 'The alias @!alias.local exists and resides in the file @path',
       'success_message_arguments_callback' => function($site) {
         return array(
-          '!alias' => $this['name'],
-          '@path' => $this->getDrushAliasPath(),
+          '!alias' => $site['name'],
+          '@path' => $site->getDrushAliasPath(),
         );
       },
     );
