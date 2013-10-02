@@ -9,6 +9,9 @@
         }
     ],
     "require": {
-        "phpunit/phpunit": "*"
+        "pimple/pimple": "1.1.*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
     }
 }
