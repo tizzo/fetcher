@@ -101,11 +101,6 @@ interface SiteInterface {
   static public function parseSiteInfo($string);
 
   /**
-   * Load the site_info array from the YAML file.
-   */
-  static public function parseSiteInfo($string);
-
-  /**
    * Populate this object with defaults.
    */
   public function setDefaults();
@@ -127,6 +122,6 @@ interface SiteInterface {
    * @param $config
    *   An array of configuration to apply to the site.
    */
-  public function configure(Array $config);
+  //abstract public function configure(Array $config);
 
 }
