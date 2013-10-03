@@ -119,13 +119,12 @@ class Site extends Pimple implements SiteInterface {
    * Checks to see whether settings.php exists and creates it if it does not.
    */
   public function ensureSettingsFileExists() {
-    // TODO: Support multisite?
-    // TODO: This is ugly, what we're doing with this container here...
     $settingsFilePath = $this['site.directory'] . '/settings.php';
     // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
       $conf = $this;
       $vars = array();
+      // TODO: This is ugly, what we're doing with this container here...
       $vars =  array(
         'database' => $conf['database.database'],
         'hostname' => $conf['database.hostname'],
@@ -206,6 +205,7 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Calculate the drush alias path.
+   * TODO: This should move into a config key!
    */
   public function getDrushAliasPath() {
     return $this['system']->getUserHomeFolder() . '/.drush/' . $this['name'] . '.aliases.drushrc.php';
@@ -227,12 +227,13 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Register a build hook that can be run before or after a site build.
    *
    * @param $operation
-   *   The operation upon wh
-   *    'initial' - 
-   *    'before' - 
-   *    'after' - 
+   *   The operation upon which this hook will fire.
+   *    'initial' - TODO: Document this.
+   *    'before' - TODO: Document this.
+   *    'after' - TODO: Document this.
    * @param $action
    *   This can be either a string to be executed at the command line or a
    *   Closure that accepts the site object as an argument.
@@ -252,7 +253,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   *
+   * Get the list of build hooks for this operation.
    */
   public function getOperationBuildHooks($operation) {
     if (!empty($this->buildHooks[$operation])) {
@@ -501,6 +502,15 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Apply an array of conifguration to this site object.
+   * 
+   * @param $config
+   *   An array of configuration to apply to the site.
+   */
+  public function configure(Array $config) {
+  }
+
+  /**
    * Configure the service container with site information loaded from a class
    * implementing Fetcher\InfoFetcherInterface.
    *
@@ -510,6 +520,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function configureWithSiteInfo(Array $siteInfo) {
 
+    // TODO: The code_fetcher.class should just be a function that looks up the real class using the vcs mapping and vcs keys.
     if (isset($siteInfo['vcs'])) {
       $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$siteInfo['vcs']];
     }
@@ -536,6 +547,8 @@ class Site extends Pimple implements SiteInterface {
    *  The string to add to this array to.
    * @param (int) $indentLevel
    *  The level of indentation this should be run at.
+   *
+   * TOOD: Move this into another component
    */
   public function arrayExport(Array $data, &$string, $indentLevel) {
     $i = 0;
