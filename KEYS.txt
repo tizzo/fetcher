@@ -21,6 +21,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'database.user.hostname' - The hostname Drupal will be connecting from when connecting to the database (on the server the user is `'username'@'hostname'`).
   - 'database.user.name' - The username Drupal will use to connect to the database.
   - 'database.user.password' - The password Drupal will use to connect to the database.
+  - 'drush_alias.path' - The path of the drush alias file for this site.
   - 'environments' - An array of environments.
   - 'environment.remote' - The remote environment currently selected for synchronization operations.
   - 'environment.local' - The environment that this instance of the site is running in or where it is being installed (defaults to `local` for local development).

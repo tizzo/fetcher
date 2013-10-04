@@ -51,7 +51,7 @@ class Site extends Pimple implements SiteInterface {
   public function ensureDrushAlias() {
     $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
     $this['system']->ensureFolderExists($drushPath);
-    $drushFilePath = $this->getDrushAliasPath();
+    $drushFilePath = $this['drush_alias.path'];
     if (!is_file($drushFilePath)) {
       $content = '';
       $content = "<?php" . PHP_EOL;
@@ -204,19 +204,11 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Calculate the drush alias path.
-   * TODO: This should move into a config key!
-   */
-  public function getDrushAliasPath() {
-    return $this['system']->getUserHomeFolder() . '/.drush/' . $this['name'] . '.aliases.drushrc.php';
-  }
-
-  /**
    * Removes all traces of this site from this system.
    */
   public function remove() {
     $this['system']->ensureDeleted($this['site.working_directory']);
-    $this['system']->ensureDeleted($this->getDrushAliasPath());
+    $this['system']->ensureDeleted($this['drush_alias.path']);
     if ($this['database']->exists()) {
       $this['database']->removeDatabase();
     }
@@ -497,6 +489,10 @@ class Site extends Pimple implements SiteInterface {
 
     $this['build_hook_file.path'] = function($c) {
       return $c['site.code_directory'] . '/sites/default/fetcher.make.php';
+    };
+
+    $this['drush_alias.path'] = function($c) {
+      return $c['system']->getUserHomeFolder() . '/.drush/' . $c['name'] . '.aliases.drushrc.php';
     };
 
   }
