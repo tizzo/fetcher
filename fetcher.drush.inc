@@ -136,6 +136,8 @@ function fetcher_drush_command() {
 
 /**
  * List sites available with the current configuration.
+ *
+ * TODO: Page there should be an option for number of items to display.
  */
 function drush_fetcher_list($name = '', $page = 0) {
   try {
@@ -227,13 +229,11 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 }
 
 /**
- * Setup a local copy of an Fetcher site.
+ * Setup a local copy of a Fetcher site.
  *
- * Do all of the work to setup a local copy of a site tracked
- * by Fetcher, optionally syncronizing database and file with
- * an environment tracked by Fetcher.
- *
- * TODO: Document installation instructions.
+ * Do all of the work to setup a local copy of a site tracked by Fetcher, 
+ * optionally syncronizing the database and files with an environment
+ * tracked by Fetcher.
  */
 function drush_fetcher_get($site_name = FALSE, $remote_environment = FALSE) {
 
@@ -242,6 +242,7 @@ function drush_fetcher_get($site_name = FALSE, $remote_environment = FALSE) {
     return FALSE;
   }
   // If a remote environment was set, use it here.
+  // TODO: Refactor this into a function that gets variables from the context.
   if ($remote_environment) {
     $site_info['environment.remote'] = $remote_environment;
   }
@@ -673,6 +674,7 @@ function fetcher_fetcher_search_paths() {
  *   An array of variables for the asset, each will be available in the scope
  *   of the asset template with a variable name of the key and a value of the
  *   value.
+ * TODO: This should be moved into the site object.
  */
 function drush_fetcher_get_asset($asset_name, array $vars = array()) {
   $path = __DIR__ . '/assets/' . $asset_name . '.tpl.php';
