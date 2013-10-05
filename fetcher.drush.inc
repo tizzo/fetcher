@@ -178,7 +178,7 @@ function drush_fetcher_info($site_name = NULL) {
   $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
   if (!$site_info) {
     if ($site_name = drush_fetcher_prompt_for_site_name()) {
-      drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
+      $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
     }
     else {
       drush_log(dt('Site information could not be found', 'error'));
