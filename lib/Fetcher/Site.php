@@ -613,8 +613,6 @@ class Site extends Pimple implements SiteInterface {
    *    arguments: If this callable does not receive the site object as the sole parameter provide the arguments.
    */
   public function registerTask($name, $task, $options = array()) {
-    if (!is_callable($task) && !is_array($task)) {
-    }
     $this->tasks[$name] = $options;
     if (is_callable($task)) {
       $this->tasks[$name]['callable'] = $task;
