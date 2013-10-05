@@ -659,20 +659,19 @@ class Site extends Pimple implements SiteInterface {
     $this->tasks[$name] = $task;
   }
 
-
-
-   /**
-    * Run a task by name.
-    *
-    * @param $name
-    *   The name of the registered task (or task set) to run.
-    */
+  /**
+   * Run a task by name.
+   *
+   * @param $name
+   *   The name of the registered task (or task set) to run.
+   */
   public function runTask($name) {
     $task = $this->getTask($name);
-    if ($task === FALSE) {
+    if ($task === NULL) {
       throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
     }
     if (isset($task['starting_message'])) {
+      // TODO: We should just use closure's with the site object context for messages.
       $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
       if (!empty($task['starting_message_arguments_callback'])) {
         // By default tasks recieve the site object as the only parameter but an array of arguments can be specified.
@@ -699,6 +698,9 @@ class Site extends Pimple implements SiteInterface {
     }
   }
 
+  /**
+   * TODO: Implement this.
+   */
   public function insertBeforeSubtask($task, $subtask, $taskToAdd) {
   }
 
@@ -717,6 +719,7 @@ class Site extends Pimple implements SiteInterface {
     $tasks = array(
       'before_build_hooks',
       'ensure_working_directory',
+      'ensure_site_info_file',
       'ensure_code',
       'ensure_database_connection',
       'ensure_settings_file',
@@ -753,7 +756,7 @@ class Site extends Pimple implements SiteInterface {
       'success_message' => 'The code is in place.',
     );
     $this->registerTask('ensure_code', array($this, 'ensureCode'), $options);
-    
+
     $options = array(
       'description' => 'Ensure the drupal database and database user exist creating the requisite grants if necessary.',
       'success_message' => 'The database exists and the site user has successfully conntected to it.',
@@ -789,7 +792,7 @@ class Site extends Pimple implements SiteInterface {
       'success_message_arguments_callback' => function($site) {
         return array(
           '!alias' => $site['name'],
-          '@path' => $site->getDrushAliasPath(),
+          '@path' => $site['drush_alias.path'],
         );
       },
     );
@@ -799,7 +802,7 @@ class Site extends Pimple implements SiteInterface {
       'description' => 'Ensure that the configuration for this site has been captured in the site_info file for the site..',
       'success_message' => 'The site info file for this site has been created.',
     );
-    $this->registerTask('ensure_site_info', array($this, 'ensureSiteInfoFileExists'), $options);
+    $this->registerTask('ensure_site_info_file', array($this, 'ensureSiteInfoFileExists'), $options);
 
     $options = array(
       'description' => 'Ensure that the server is configured with the appropriate virtualhost or equivalent.',
