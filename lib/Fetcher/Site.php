@@ -639,15 +639,16 @@ class Site extends Pimple implements SiteInterface {
    */
   public function getTask($task) {
     if (empty($this->tasks[$task])) {
-      return FALSE;
+      return NULL;
     }
     return $this->tasks[$task];
   }
 
   /**
-   * Accepts the bare data internal data structure as returned by getTask.
+   * Accepts the bare internal data structure as returned by Site::getTask().
    *
-   * This is provided primarily for messing with exisitng defined tasks (or task stacks).
+   * This is provided primarily for messing with exisitng defined tasks (or task
+   * stacks).
    *
    * @param $name
    *   The name of the task.
