@@ -102,6 +102,7 @@ class Site extends Pimple implements SiteInterface {
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/watchdog.log');
 
     // Ensure the server handler has been instantiated.
+    // We do this because the server creates the server.user config key.
     $this['server'];
     // Ensure we have our files folders.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user']);
