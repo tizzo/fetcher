@@ -38,6 +38,8 @@ class TaskTest extends PHPUnit_Framework_TestCase {
     $annotatedObject = new TaskAnnotationError();
     try {
       $loader->scanObject($annotatedObject);
+      // If we don't throw an exception in the line above something went wrong.
+      throw new \Exception('Scanning the TaskAnnotationError class should have throw a TaskLoaderException.');
     }
     catch (TaskLoaderException $exception) {
       $this->assertInstanceOf('\Fetcher\Task\TaskLoaderException', $exception);
