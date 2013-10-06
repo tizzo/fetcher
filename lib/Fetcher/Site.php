@@ -170,7 +170,9 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Ensure that all symlinks besides the webroot symlink have been created.
+   * Ensure that all configured symlinks have been created.
+   *
+   * Note, with standard layout the webroot symlink is created separately.
    */
   public function ensureSymLinks() {
     foreach ($this['symlinks'] as $realPath => $symLink) {
@@ -179,7 +181,9 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Ensure the site has been added to the appropriate server (e.g. apache vhost).
+   * Ensure the site has been added to the appropriate server.
+   *
+   * On apache this invovles creating a vhost entry.
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -353,7 +357,6 @@ class Site extends Pimple implements SiteInterface {
       return $process;
     });
 
-
     // If the log function is changed it must have the same function signature.
     $this['log function'] = 'drush_log';
 
@@ -369,7 +372,7 @@ class Site extends Pimple implements SiteInterface {
     // TODO: Do some detection?
     $this['system class'] = '\Fetcher\System\Ubuntu';
 
-    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
+    // Load a plugin appropriate to the system.
     $this['system'] = $this->share(function($c) {
       return new $c['system class']($c);
     });
@@ -377,7 +380,7 @@ class Site extends Pimple implements SiteInterface {
     // Set our default server to Apache2.
     $this['server class'] = '\Fetcher\Server\Apache2';
 
-    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
+    // Load a plugin appropriate to the server.
     $this['server'] = $this->share(function($c) {
       return new $c['server class']($c);
     });
@@ -385,7 +388,7 @@ class Site extends Pimple implements SiteInterface {
     // Set our default database to MySQL.
     $this['database class'] = '\Fetcher\DB\Mysql';
 
-    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
+    // Load a plugin appropriate to the database.
     $this['database'] = $this->share(function($c) {
       return new $c['database class']($c);
     });
@@ -394,6 +397,7 @@ class Site extends Pimple implements SiteInterface {
       return $c['database class']::getDriver();
     });
 
+    // Map the version control system specified to the handler.
     $this['code_fetcher.vcs_mapping'] = array(
       'git' => 'Fetcher\CodeFetcher\VCS\Git',
     );
@@ -506,7 +510,7 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Apply an array of conifguration to this site object.
-   * 
+   *
    * @param $config
    *   An array of configuration to apply to the site.
    */
