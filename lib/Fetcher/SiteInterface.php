@@ -5,6 +5,17 @@ namespace Fetcher;
 interface SiteInterface {
 
   /**
+   * Apply an array of configuration.
+   *
+   * This array is set on the object using array access.
+   * See the Pimple docs for details.
+   *
+   * @param $conf
+   *  An array of keys and values to be handed to the site object.
+   */
+  public function configure(Array $conf);
+
+  /**
    * Ensure the database exists, the user exists, and the user can connect.
    */
   public function ensureDatabase();
@@ -104,24 +115,5 @@ interface SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults();
-
-  /**
-   * Configure the service container with site information loaded from a class
-   * implementing Fetcher\InfoFetcherInterface.
-   *
-   * @param $siteInfo
-   *   The information returned from `\drush_fetcher_get_site_info()`.
-   * TODO: Deprecate this in favor of a constructor that receives an alias.
-   * TODO: Deprecate this in favor 
-   */
-  public function configureWithSiteInfo(Array $siteInfo);
-
-  /**
-   * Apply an array of conifguration to this site object.
-   * 
-   * @param $config
-   *   An array of configuration to apply to the site.
-   */
-  //abstract public function configure(Array $config);
 
 }

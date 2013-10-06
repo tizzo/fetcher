@@ -23,7 +23,48 @@ class Site extends Pimple implements SiteInterface {
     $this->setDefaults();
     $this->registerDefaultTasks();
     if (!empty($siteInfo)) {
-      $this->configureWithSiteInfo($siteInfo);
+      $this->configure($siteInfo);
+    }
+  }
+
+  /**
+   * Apply an array of configuration.
+   *
+   * This array is set on the object using array access.
+   * See the Pimple docs for details.
+   *
+   * @param $conf
+   *   An array of keys and values to be handed to the site object.
+   * @param $override_exising
+   *   A flag to specify whether this configuration should be treated only
+   *   as a set of defaults or whether it should override exising cofniguration.
+   */
+  public function configure(Array $conf, $override_existing = FALSE) {
+    foreach ($conf as $key => $value) {
+      if (!isset($this[$key]) || $override_existing) {
+        if (is_string($value)) {
+          // Conf files often end up with trailing whitespace, trim it.
+          $this[$key] = trim($value);
+        }
+        else {
+          $this[$key] = $value;
+        }
+      }
+    }
+    return $this;
+  }
+
+  /**
+   * Sets the default for a key if it is not already set.
+   *
+   * @param $key
+   *   A string representing the configuration key.
+   * @param $value
+   *   The default value to set if the key does not already have configuration.
+   */
+  public function setDefaultConfigration($key, $value) {
+    if (!isset($this[$key])) {
+      $this[$key] = $value;
     }
   }
 
@@ -511,38 +552,6 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Apply an array of conifguration to this site object.
-   *
-   * @param $config
-   *   An array of configuration to apply to the site.
-   */
-  public function configure(Array $config) {
-  }
-
-  /**
-   * Configure the service container with site information loaded from a class
-   * implementing Fetcher\InfoFetcherInterface.
-   *
-   * @param $siteInfo
-   *   The information returned from `\drush_fetcher_get_site_info()`.
-   * TODO: Deprecate this in favor of a constructor that receives an alias.
-   */
-  public function configureWithSiteInfo(Array $siteInfo) {
-
-    // Merge in configuration.
-    foreach ($siteInfo as $key => $value) {
-      if (is_string($value)) {
-        $this[$key] = trim($value);
-      }
-      else {
-        $this[$key] = $value;
-      }
-    }
-
-    return $this;
-  }
-
-  /**
    * Export an array as executable PHP code.
    *
    * @param (Array) $data
@@ -583,19 +592,6 @@ class Site extends Pimple implements SiteInterface {
   }
 
 
-  /**
-   * Sets the default for a key if it is not already set.
-   *
-   * @param $key
-   *   A string representing the configuration key.
-   * @param $value
-   *   The default value to set if the key does not already have configuration.
-   */
-  public function setDefaultConfigration($key, $value) {
-    if (!isset($this[$key])) {
-      $this[$key] = $value;
-    }
-  }
 
   /**
    * Register a task that can be performed on the site.
@@ -866,6 +862,6 @@ class Site extends Pimple implements SiteInterface {
       'arguments' => array('after'),
     );
     $this->registerTask('after_build_hooks', array($this, 'runOperationBuildHooks'), $options);
-
   }
+
 }
