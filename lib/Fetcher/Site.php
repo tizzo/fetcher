@@ -402,9 +402,15 @@ class Site extends Pimple implements SiteInterface {
     $this['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
     $this['code_fetcher.config'] = array();
 
-    // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
+    // Load a plugin appropriate to the Code Fetcher.
     $this['code_fetcher'] = $this->share(function($c) {
-      $vcs = new $c['code_fetcher.class']($c);
+      if (isset($siteInfo['vcs'])) {
+        $class = $c['code_fetcher.class'] = $c['code_fetcher.vcs_mapping'][$c['vcs']];
+      }
+      else {
+        $class = $c['code_fetcher.class'];
+      }
+      $vcs = new $class($c);
       return $vcs;
     });
 
@@ -516,11 +522,6 @@ class Site extends Pimple implements SiteInterface {
    * TODO: Deprecate this in favor of a constructor that receives an alias.
    */
   public function configureWithSiteInfo(Array $siteInfo) {
-
-    // TODO: The code_fetcher.class should just be a function that looks up the real class using the vcs mapping and vcs keys.
-    if (isset($siteInfo['vcs'])) {
-      $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$siteInfo['vcs']];
-    }
 
     // Merge in configuration.
     foreach ($siteInfo as $key => $value) {
