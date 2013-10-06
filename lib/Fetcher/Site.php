@@ -352,6 +352,8 @@ class Site extends Pimple implements SiteInterface {
     };
 
     $this['process'] = $this->protect(function() {
+      // This is the only way to dynamically instantiate an object with unknown
+      // dynamic parameters.
       $reflection = new \ReflectionClass('Symfony\Component\Process\Process');
       $process = $reflection->newInstanceArgs(func_get_args());
       return $process;
