@@ -25,4 +25,15 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($site['beep'], 'boop');
     $this->assertEquals($site['monkey'], 'banana');
   }
+
+  public function testSetDefaultConfiguration() {
+    $site = new Site();
+    $this->assertFalse(isset($site['foo']));
+    $site->setDefaultConfigration('foo', 'bar');
+    // Ensure we can set an unset key.
+    $this->assertEquals($site['foo'], 'bar');
+    $site->setDefaultConfigration('foo', 'baz');
+    // Ensure we will not override a set key.
+    $this->assertEquals($site['foo'], 'bar');
+  }
 }
