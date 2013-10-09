@@ -8,21 +8,24 @@ class Task implements TaskInterface {
   // The machine name of this task.
   public $fetcherTask = NULL;
 
-  // The description
+  // The description for this task for the task list.
   public $description = NULL;
 
-  //
+  // A log message to print before running the task.
   public $beforeMessage = NULL;
 
+  // A log message to print after the callable has been run successfully.
   public $afterMessage = NULL;
 
+  // A log message to print after the callable has been run successfully.
   public $callable = NULL;
+
+  // Any defined task stacks to add this task to.
+  public $task_stack = array();
 
   public $beforeTask = array();
 
   public $afterTask = array();
-
-  public $task_stack = array();
 
   public $arguments = array();
 
@@ -36,6 +39,9 @@ class Task implements TaskInterface {
     $this->fetcherTask = $fetcherTask;
   }
 
+  /**
+   * Run this task.
+   */
   public function run($site, $arguments = array()) {
     if (empty($this->callable)) {
       throw new TaskRunException('No callable was assigned to the task before running.');
