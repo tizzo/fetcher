@@ -3,7 +3,7 @@
 namespace Fetcher\Task;
 use Symfony\Process;
 
-class Task {
+class Task implements TaskInterface {
 
   // The machine name of this task.
   public $fetcherTask = NULL;
