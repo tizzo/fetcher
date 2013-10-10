@@ -47,7 +47,7 @@ class Task implements TaskInterface {
       throw new TaskRunException('No callable was assigned to the task before running.');
     }
     if (!empty($this->beforeMessage)) {
-      $site['log']($this->prepMessage($this->beforeMessage, $site));
+      $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
     }
     \call_user_func_array($this->callable, array($site) + $arguments);
     if (!empty($this->afterMessage)) {
