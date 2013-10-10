@@ -130,6 +130,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Setup our basic working directory.
+   *
+   * @fetcherTask ensure_working_directory
+   * @description Setup the working directory by creating folders, files, and symlinks.
+   * @afterMessage The working directory is properly setup.
    */
   public function ensureWorkingDirectory() {
 
@@ -192,6 +196,11 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure the code is in place.
+   *
+   * @fetcherTask ensure_code
+   * @description Fetch the site's code from the appropriate place.
+   * @beforeMessage Fetching code...
+   * @afterMessage The code is in place.
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
@@ -228,6 +237,10 @@ class Site extends Pimple implements SiteInterface {
    * Ensure the site has been added to the appropriate server.
    *
    * On apache this invovles creating a vhost entry.
+   *
+   * @fetcherTask ensure_server_host_enabled
+   * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.',
+   * @afterMessage The site is enabled and is running at [[hostname]].',
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -240,6 +253,11 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Synchronize the database with a remote environment.
+   *
+   * @fetcherTask sync_db
+   * @description Synchronize the drupal database on this site with one on a remote server.
+   * @beforeMessage Attempting to sync database from remote...
+   * @afterMessage The database was properly synchronized.
    */
   public function syncDatabase() {
     return $this['database_synchronizer']->syncDB();
@@ -254,6 +272,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Removes all traces of this site from this system.
+   *
+   * @fetcherTask remove_site
+   * @description Completely remove this site and destroy all data associated with it on the server.
+   * @afterMessage This site has been completely removed.
    */
   public function remove() {
     $this['system']->ensureDeleted($this['site.working_directory']);
