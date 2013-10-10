@@ -24,14 +24,22 @@ class TaskLoader {
    *
    * @param $class
    *   A string containing the name of a class to scan.
+   * @param $instance
+   *   If we have an instantiated object, use it this to generate the task callable.
    * @return
    *   An array of tasks.
    */
-  public function scanClass($class) {
+  public function scanClass($class, $instance = NULL) {
     $tasks = array();
     $reflection = new \ReflectionClass($class);
     foreach ($reflection->getMethods() as $method) {
       $annotations = $this->parseAnnotations($method->getDocComment());
+      if (!$method->isStatic() && !empty($instance)) {
+        $task->callable = array($instance, $method->getName());
+      }
+      else {
+        $task->callable = array($class, $method->getName());
+      }
       if ($task = $this->parseTaskInfo($annotations)) {
         $tasks[$task->fetcherTask] = $task;
       }
@@ -48,6 +56,9 @@ class TaskLoader {
    *   A task definition.
    */
   public function parseTaskInfo(Array $annotations) {
+    if (empty($annotations['fetcherTask'])) {
+      return FALSE;
+    }
     if (count($annotations['fetcherTask']) !== 1) {
       throw new TaskLoaderException('Exactly one task must be specified');
     }

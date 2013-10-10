@@ -4,6 +4,13 @@ namespace Fetcher\Tests\Fixtures\Tasks;
 class TaskAnnotation {
 
   /**
+   * A function that is not a task.
+   */
+  public function notATask() {
+    return 'This is not a task.';
+  }
+
+  /**
    * @fetcherTask some_task_name 
    * @description Provides a sample task for parsing.
    * @beforeMessage We are about to run a task.
