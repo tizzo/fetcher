@@ -188,6 +188,9 @@ class Site extends Pimple implements SiteInterface {
       $conf = $this;
       $vars = array();
       // TODO: This is ugly, what we're doing with this container here...
+      // TODO: maybe evaluate all of the keys before running?
+      // Ensure defaults are set by the database handler.
+      $this['database'];
       $vars =  array(
         'database' => $conf['database.database'],
         'hostname' => $conf['database.hostname'],
