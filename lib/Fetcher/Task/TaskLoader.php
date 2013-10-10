@@ -33,7 +33,7 @@ class TaskLoader {
     foreach ($reflection->getMethods() as $method) {
       $annotations = $this->parseAnnotations($method->getDocComment());
       if ($task = $this->parseTaskInfo($annotations)) {
-        $tasks[$task['fetcher_task']] = $task;
+        $tasks[$task->fetcherTask] = $task;
       }
     }
     return $tasks;
@@ -48,29 +48,29 @@ class TaskLoader {
    *   A task definition.
    */
   public function parseTaskInfo(Array $annotations) {
-    if (count($annotations['fetcher_task']) !== 1) {
+    if (count($annotations['fetcherTask']) !== 1) {
       throw new TaskLoaderException('Exactly one task must be specified');
     }
-    $task = array();
+    $task = new Task();
     $singleValueAttributes = array(
-      'fetcher_task',
+      'fetcherTask',
       'description',
-      'before_message',
-      'after_message',
+      'beforeMessage',
+      'afterMessage',
     );
     foreach ($singleValueAttributes as $attribute) {
       if (!empty($annotations[$attribute])) {
-        $task[$attribute] = $annotations[$attribute][0];
+        $task->{$attribute} = $annotations[$attribute][0];
       }
     }
     $multiValueAttributes = array(
-      'before_task',
-      'after_task',
+      'beforeTask',
+      'afterTask',
       'stacks',
     );
     foreach ($multiValueAttributes as $attribute) {
       if (!empty($annotations[$attribute])) {
-        $task[$attribute] = $annotations[$attribute];
+        $task->{$attribute} = $annotations[$attribute];
       }
     }
     return $task;

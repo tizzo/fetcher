@@ -75,7 +75,6 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('three a', $taskNames[3]);
   }
 
-
   /**
    * Get a configured task stack with 3 tasks.
    */

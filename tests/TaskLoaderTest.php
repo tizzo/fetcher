@@ -21,13 +21,13 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $tasks = $loader->scanObject($annotatedObject);
     $this->assertNotEmpty($tasks);
     $task = array_pop($tasks);
-    $this->assertEquals($task['description'], 'Provides a sample task for parsing.');
-    $this->assertEquals($task['fetcher_task'], 'some_task_name');
-    $this->assertEquals($task['before_message'], 'We are about to run a task.');
-    $this->assertEquals($task['after_message'], 'We have just run a task.');
-    $this->assertContains('foo', $task['before_task']);
-    $this->assertContains('bar', $task['before_task']);
-    $this->assertContains('baz', $task['after_task']);
+    $this->assertEquals($task->description, 'Provides a sample task for parsing.');
+    $this->assertEquals($task->fetcherTask, 'some_task_name');
+    $this->assertEquals($task->beforeMessage, 'We are about to run a task.');
+    $this->assertEquals($task->afterMessage, 'We have just run a task.');
+    $this->assertContains('foo', $task->beforeTask);
+    $this->assertContains('bar', $task->beforeTask);
+    $this->assertContains('baz', $task->afterTask);
   }
 
   /**
