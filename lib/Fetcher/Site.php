@@ -4,7 +4,10 @@ namespace Fetcher;
 
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
-use Symfony\Component\Process\Process;
+use \Symfony\Component\Process\Process;
+use \Fetcher\Task\TaskLoader,
+    \Fetcher\Task\TaskStack,
+    \Fetcher\Task\Task;
 
 class Site extends Pimple implements SiteInterface {
 
@@ -591,44 +594,6 @@ class Site extends Pimple implements SiteInterface {
     return $string;
   }
 
-
-
-  /**
-   * Register a task that can be performed on the site.
-   *
-   * @param $name
-   *   A variable safe machine name for the task.
-   * @param $task
-   *   Either a callable to perform the task or an array of task names for a task stack.
-   *     The callable should take a Fetcher\Site object as its parameter.
-   * @param $options
-   *   An array of options which may contain the following keys:
-   *    description: A description of the operation the task will perform. Without a description tasks are
-   *      left out of the fetcher-task drush listing.
-   *    starting_message: A message to display when the task is beginning.
-   *      Useful for alerting users long running tasks are in progress.
-   *    starting_message_arguments: An array of tokens to substitute in the starting message.
-   *    starting_message_arguments_callback: A callable that receives the site object as the only paramter and
-   *      returns the array generally specified in starting_message_arguments.
-   *    success_message: A message to display if the task was succsesfull.
-   *    success_message_arguments: An array of tokens to substitute in the success message.
-   *    success_message_arguments_callback: A callable that receives the site object as the only paramter and
-   *      returns the array generally specified in success_message_arguments.
-   *    arguments: If this callable does not receive the site object as the sole parameter provide the arguments.
-   */
-  public function registerTask($name, $task, $options = array()) {
-    $this->tasks[$name] = $options;
-    if (is_callable($task)) {
-      $this->tasks[$name]['callable'] = $task;
-    }
-    else if (is_array($task)) {
-      $this->tasks[$name]['stack'] = $task;
-    }
-    else {
-      throw new \Exception('Invalid task definition. Tasks must be callables or an array of tasks.');
-    }
-  }
-
   /**
    * Returns the internal datastrcuture representing all registered tasks.
    *
@@ -674,47 +639,18 @@ class Site extends Pimple implements SiteInterface {
     if ($task === NULL) {
       throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
     }
-    if (isset($task['starting_message'])) {
-      // TODO: We should just use closure's with the site object context for messages.
-      $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
-      if (!empty($task['starting_message_arguments_callback'])) {
-        // By default tasks recieve the site object as the only parameter but an array of arguments can be specified.
-        $arguments = call_user_func($task['starting_message_arguments_callback'], $this);
-      }
-      $this['log'](dt($task['starting_message'], $arguments), 'ok');
-    }
-    // If the task is an array run each task listed in its keys.
-    if (!empty($task['stack'])) {
-      foreach ($task['stack'] as $subtask) {
-        $this->runTask($subtask);
-      }
-    }
-    else {
-      $arguments = !empty($task['arguments']) ? $task['arguments'] : array($this);
-      call_user_func_array($task['callable'], $arguments);
-    }
-    if (isset($task['success_message'])) {
-      $arguments = !empty($task['success_message_arguments']) ? $task['success_message_arguments'] : array();
-      if (!empty($task['success_message_arguments_callback'])) {
-        $arguments = call_user_func($task['success_message_arguments_callback'], $this);
-      }
-      $this['log'](dt($task['success_message'], $arguments), 'success');
-    }
-  }
-
-  /**
-   * TODO: Implement this.
-   */
-  public function insertBeforeSubtask($task, $subtask, $taskToAdd) {
-  }
-
-  public function insertAfterSubtask() {
+    $task->run($this);
   }
 
   /**
    * Registers the default tasks that ship as methods on 
    */
   public function registerDefaultTasks() {
+    $taskLoader = new TaskLoader();
+    $this->tasks = $taskLoader->scanObject($this);
+  }
+
+  public function legacyRegisterDefaultTasks() {
 
     $options = array(
       'description' => 'Ensure that a site is properly configured to run on this server.',

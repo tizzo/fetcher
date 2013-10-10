@@ -25,6 +25,14 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($task->fetcherTask, 'some_task_name');
     $this->assertEquals($task->beforeMessage, 'We are about to run a task.');
     $this->assertEquals($task->afterMessage, 'We have just run a task.');
+    $site = new \Fetcher\Site();
+    $history = array();
+    $site['log'] = $site->protect(function ($message) use (&$history) {
+      $history[] = $message;
+    });
+    $task->run($site);
+    $this->assertEquals($history[0], 'We are about to run a task.');
+    $this->assertEquals($history[1], 'We have just run a task.');
     $this->assertContains('foo', $task->beforeTask);
     $this->assertContains('bar', $task->beforeTask);
     $this->assertContains('baz', $task->afterTask);

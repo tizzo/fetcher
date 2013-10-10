@@ -16,7 +16,7 @@ class TaskLoader {
    *   An array of tasks.
    */
   public function scanObject($object) {
-    return $this->scanClass(\get_class($object));
+    return $this->scanClass(\get_class($object), $object);
   }
 
   /**
@@ -34,14 +34,14 @@ class TaskLoader {
     $reflection = new \ReflectionClass($class);
     foreach ($reflection->getMethods() as $method) {
       $annotations = $this->parseAnnotations($method->getDocComment());
-      if (!$method->isStatic() && !empty($instance)) {
-        $task->callable = array($instance, $method->getName());
-      }
-      else {
-        $task->callable = array($class, $method->getName());
-      }
       if ($task = $this->parseTaskInfo($annotations)) {
         $tasks[$task->fetcherTask] = $task;
+        if (!$method->isStatic() && !empty($instance)) {
+          $task->callable = array($instance, $method->getName());
+        }
+        else {
+          $task->callable = array($class, $method->getName());
+        }
       }
     }
     return $tasks;

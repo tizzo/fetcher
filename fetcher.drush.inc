@@ -386,8 +386,8 @@ function drush_fetcher_list_tasks($site) {
   );
   $tasks = $site->getTasks();
   foreach ($tasks as $name => $task) {
-    if (!empty($task['description'])) {
-      $rows[] = array($name, $task['description']);
+    if (!empty($task->description)) {
+      $rows[] = array($name, $task->description);
     }
   }
   drush_print_table($rows, TRUE);
