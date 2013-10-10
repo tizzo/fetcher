@@ -73,6 +73,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure the database exists, the user exists, and the user can connect.
+   *
+   * @fetcherTask ensure_database_connection
+   * @description Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.
+   * @afterMessage The database exists and the site user has successfully conntected to it.
    */
   public function ensureDatabase() {
     if (!$this['database']->canConnect()) {
@@ -91,6 +95,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Build the drush alias and place it in the home folder.
+   *
+   * @fetcherTask ensure_drush_alias
+   * @description Create a drush alias for this site.
+   * @afterMessage The alias [[name]].local exists and resides in the file [[drush_alias.path]].
    */
   public function ensureDrushAlias() {
     $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
@@ -159,6 +167,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure the site folder exists.
+   *
+   * @fetcherTask ensure_site_folder
    */
   public function ensureSiteFolder() {
     $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server.user']);
@@ -166,6 +176,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Checks to see whether settings.php exists and creates it if it does not.
+   *
+   * @fetcherTask ensure_settings_file
+   * @description Ensure the settings.php file is in place (and dynamically generate it if it is not).
+   * @afterMessage The settings.php file is in place.
    */
   public function ensureSettingsFileExists() {
     $settingsFilePath = $this['site.directory'] . '/settings.php';
@@ -226,6 +240,10 @@ class Site extends Pimple implements SiteInterface {
    * Ensure that all configured symlinks have been created.
    *
    * Note, with standard layout the webroot symlink is created separately.
+   *
+   * @fetcherTask ensure_sym_links
+   * @description Ensure any configured symlinks have been created and point at the correct path.
+   * @afterMessage All symlinks exist and point to the correct path.
    */
   public function ensureSymLinks() {
     foreach ($this['symlinks'] as $realPath => $symLink) {
@@ -239,8 +257,8 @@ class Site extends Pimple implements SiteInterface {
    * On apache this invovles creating a vhost entry.
    *
    * @fetcherTask ensure_server_host_enabled
-   * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.',
-   * @afterMessage The site is enabled and is running at [[hostname]].',
+   * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.
+   * @afterMessage The site is enabled and is running at [[hostname]].
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -370,6 +388,10 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Write a site info file from our siteInfo if it doesn't already exist.
+   *
+   * @fetcherTask ensure_site_info_file
+   * @description Ensure that the configuration for this site has been captured in the site_info file for the site.
+   * @afterMessage The site info file for this site has been created.
    */
   public function ensureSiteInfoFileExists() {
     $conf = array();
@@ -693,109 +715,12 @@ class Site extends Pimple implements SiteInterface {
     );
     $this->registerTask('ensure_site', $tasks, $options);
 
-    $options = array(
-      'description' => 'Completely remove this site and destroy all data associated with it on the server.',
-      'success_message' => 'This site has been completely removed.',
-    );
-    $stack = array(
-      'remove_site_site_method',
-    );
-    $this->registerTask('remove_site', $stack, $options);
-
-    // Private method for calling remove on this site.
-    // TODO: Break this into subtasks.
-    $this->registerTask('remove_site_site_method', array($this, 'remove'));
-
-    $options = array(
-      'description' => 'Setup the working directory by creating folders, files, and symlinks.',
-      'success_message' => 'The working directory is properly setup.',
-    );
-    $this->registerTask('ensure_working_directory', array($this, 'ensureWorkingDirectory'), $options);
-
-    $options = array(
-      'description' => 'Fetch the site\'s code from the appropriate place.',
-      'starting_message' => 'Fetching code...',
-      'success_message' => 'The code is in place.',
-    );
-    $this->registerTask('ensure_code', array($this, 'ensureCode'), $options);
-
-    $options = array(
-      'description' => 'Ensure the drupal database and database user exist creating the requisite grants if necessary.',
-      'success_message' => 'The database exists and the site user has successfully conntected to it.',
-    );
-    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
-
-    // Ensure the site's folder is in place.
-    $this->registerTask('ensure_site_folder', array($this, 'ensureSiteFolder'));
-
-    $options = array(
-      'description' => 'Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.',
-      'success_message' => 'The database exists and the site user has successfully conntected to it.',
-    );
-    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
-
-    $options = array(
-      'description' => 'Ensure the settings.php file is in place (and dynamically generate it if it is not).',
-      'success_message' => 'The settings.php file is in place.',
-    );
-    $this->registerTask('ensure_settings_file', array($this, 'ensureSettingsFileExists'), $options);
-
-    // Create necessary symlinks.
-
-    $options = array(
-      'description' => 'Ensure any configured symlinks have been created and point at the correct path.',
-      'success_message' => 'All symlinks exist and point to the correct path.',
-    );
-    $this->registerTask('ensure_symlinks', array($this, 'ensureSymLinks'), $options);
-
-    $options = array(
-      'description' => 'Create a drush alias for this site.',
-      'success_message' => 'The alias @!alias.local exists and resides in the file @path',
-      'success_message_arguments_callback' => function($site) {
-        return array(
-          '!alias' => $site['name'],
-          '@path' => $site['drush_alias.path'],
-        );
-      },
-    );
-    $this->registerTask('ensure_drush_alias', array($this, 'ensureDrushAlias'), $options);
-
-    $options = array(
-      'description' => 'Ensure that the configuration for this site has been captured in the site_info file for the site..',
-      'success_message' => 'The site info file for this site has been created.',
-    );
-    $this->registerTask('ensure_site_info_file', array($this, 'ensureSiteInfoFileExists'), $options);
-
-    $options = array(
-      'description' => 'Ensure that the server is configured with the appropriate virtualhost or equivalent.',
-      'success_message' => 'The site is enabled and is running at @hostname',
-      'success_message_arguments_callback' => function($site) {
-        return array('@hostname' => $site['hostname']);
-      },
-    );
-    $this->registerTask('ensure_server_host_enabled', array($this, 'ensureSiteEnabled'), $options);
-
-
-    $options = array(
-      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'starting_message' => 'Attempting to sync database from remote...',
-      'success_message' => 'The database was properly synchronized.',
-    );
-    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
-
     $task = function ($site) {
       if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
         require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
       }
     };
     $this->registerTask('include_fetcher_make', $task);
-
-    $options = array(
-      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'starting_message' => 'Attempting to sync database from remote...',
-      'success_message' => 'The database was properly synchronized.',
-    );
-    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
 
 
     // If there is an fetcher.make.php file, load it to allow build hooks to be
