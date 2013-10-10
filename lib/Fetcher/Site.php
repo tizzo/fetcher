@@ -347,6 +347,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Run all registered callbacks for an operation.
+   *
+   * TODO: Reimplement these as tasks, this function is bazonkers and gross.
    */
   public function runOperationBuildHooks($operation) {
     if (!empty($this->buildHooks[$operation])) {
@@ -691,6 +693,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Registers the default tasks that ship as methods on 
+   *
+   * TODO: Should this be named more intuitively?
    */
   public function registerDefaultTasks() {
     $taskLoader = new TaskLoader();
