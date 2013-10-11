@@ -371,7 +371,12 @@ function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
     drush_fetcher_list_tasks($site);
   }
   else {
-    $site->runTask($task_name);
+    try {
+      $site->runTask($task_name);
+    }
+    catch (Exception $e) {
+      drush_fetcher_log_exception_information($e);
+    }
   }
 }
 
