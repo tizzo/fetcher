@@ -671,14 +671,14 @@ class Site extends Pimple implements SiteInterface {
    */
   public function registerDefaultTasks() {
     $taskLoader = new TaskLoader();
-    $this->tasks = $taskLoader->scanObject($this);
+    $this->tasks = $taskLoader->scanObject($this) + $this->tasks;
   }
 
   public function legacyRegisterDefaultTasks() {
 
     $options = array(
       'description' => 'Ensure that a site is properly configured to run on this server.',
-      'success_message' => 'Your site has been setup!',
+      'afterMessage' => 'Your site has been setup!',
     );
     $tasks = array(
       'before_build_hooks',
