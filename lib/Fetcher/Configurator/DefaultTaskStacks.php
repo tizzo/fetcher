@@ -20,10 +20,12 @@ class DefaultTaskStacks implements ConfiguratorInterface {
       'ensure_symlinks',
       'ensure_drush_alias',
       'ensure_server_host_enabled',
-      'load_make_file',
     );
     foreach ($tasks as $task) {
-      $stack->addTask($site->getTask($task));
+      $task = $site->getTask($task);
+      if ($task) {
+        $stack->addTask($task);
+      }
     }
     $site->addTask($stack);
   }
