@@ -58,6 +58,23 @@ class TaskStack extends Task implements TaskInterface {
   }
 
   /**
+   * Add a subtask after an existing task.
+   *
+   * @param $name
+   *    The task to add after.
+   * @param $task
+   *    A \Fetcher\TaskInterface implementing object. 
+   */
+  public function addAfter($itemName, $task) {
+    if (!isset($this->tasks[$itemName])) {
+      return FALSE;
+    }
+    $position = array_search($itemName, array_keys($this->tasks));
+    $this->taskSplice($task, $position + 1);
+    return $this;
+  }
+
+  /**
    * Splice a new task into the existing array.
    *
    * @param $taskToAdd
@@ -73,21 +90,4 @@ class TaskStack extends Task implements TaskInterface {
     $this->tasks = $oldSectionOne + $newSection + $oldSectionTwo;
   }
 
-  /**
-   * Add a subtask after an existing task.
-   *
-   * @param $name
-   *    The task to add after.
-   * @param $task
-   *    A \Fetcher\TaskInterface implementing object. 
-   */
-  public function addTaskAfter($itemName, $task) {
-    if (!isset($this->tasks[$itemName])) {
-      return FALSE;
-    }
-    $position = array_search($itemName, array_keys($this->tasks));
-    $this->taskSplice($task, $position + 1);
-    return $this;
-
-  }
 }
