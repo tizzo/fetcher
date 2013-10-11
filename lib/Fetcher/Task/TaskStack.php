@@ -19,7 +19,7 @@ class TaskStack extends Task implements TaskInterface {
       $site['log']($this->prepMessage($this->beforeMessage, $site));
     }
     foreach ($this->tasks as $name => $task) {
-      $task->run();
+      $task->run($site);
     }
     if (!empty($this->afterMessage)) {
       $site['log']($this->prepMessage($this->afterMessage, $site));

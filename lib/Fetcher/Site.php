@@ -8,7 +8,8 @@ use \Symfony\Component\Process\Process;
 use \Fetcher\Utility\PHPGenerator,
     \Fetcher\Task\TaskLoader,
     \Fetcher\Task\TaskStack,
-    \Fetcher\Task\Task;
+    \Fetcher\Task\Task
+    \Fetcher\Configurator\DefaultTaskStacks;
 
 class Site extends Pimple implements SiteInterface {
 
@@ -23,9 +24,14 @@ class Site extends Pimple implements SiteInterface {
    * Constructor function to populate the dependency injection container.
    */
   public function __construct($siteInfo = NULL) {
+    $this->registerDefaultTasks();
+    if (empty($siteInfo['configurators'])) {
+      $this['configurators'] = array(
+        '\Fetcher\Configurator\DefaultTaskStacks',
+      );
+    }
     // Populate defaults.
     $this->setDefaults();
-    $this->registerDefaultTasks();
     if (!empty($siteInfo)) {
       $this->configure($siteInfo);
     }
@@ -437,6 +443,12 @@ class Site extends Pimple implements SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults() {
+    // Set default configuration from configrator list.
+    if (isset($this['configurators'])) {
+      foreach ($this['configurators'] as $configurator) {
+        $configurator::configure($this);
+      }
+    }
 
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
@@ -634,8 +646,8 @@ class Site extends Pimple implements SiteInterface {
    * @param $task
    *   An array representing the task.
    */
-  public function setTask($name, $task) {
-    $this->tasks[$name] = $task;
+  public function addTask($task) {
+    $this->tasks[$task->fetcherTask] = $task;
   }
 
   /**
