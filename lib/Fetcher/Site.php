@@ -5,7 +5,8 @@ namespace Fetcher;
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
 use \Symfony\Component\Process\Process;
-use \Fetcher\Task\TaskLoader,
+use \Fetcher\Utility\PHPGenerator,
+    \Fetcher\Task\TaskLoader,
     \Fetcher\Task\TaskStack,
     \Fetcher\Task\Task;
 
@@ -101,6 +102,7 @@ class Site extends Pimple implements SiteInterface {
    * @afterMessage The alias [[name]].local exists and resides in the file [[drush_alias.path]].
    */
   public function ensureDrushAlias() {
+    // TODO: More of this should probably move into another class.
     $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
     $this['system']->ensureFolderExists($drushPath);
     $drushFilePath = $this['drush_alias.path'];
@@ -130,7 +132,7 @@ class Site extends Pimple implements SiteInterface {
           });
           $environment['fetcher'] = $copy;
         }
-        $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";" . PHP_EOL;
+        $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
       }
       $this['system']->writeFile($drushFilePath, $content);
     }
@@ -463,9 +465,8 @@ class Site extends Pimple implements SiteInterface {
     });
     unset($site);
 
-    // Set our default system to Ubuntu.
     // TODO: Do some detection?
-    $this['system class'] = '\Fetcher\System\Ubuntu';
+    $this['system class'] = '\Fetcher\System\Posix';
 
     // Load a plugin appropriate to the system.
     $this['system'] = $this->share(function($c) {
@@ -529,7 +530,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Usually set by the drush option.
-    // If set print logs but take no action.
+    // If set print log messages but take no actions.
     $this['simulate'] = FALSE;
 
     // Usually set by drush option.
@@ -601,46 +602,6 @@ class Site extends Pimple implements SiteInterface {
       return $c['system']->getUserHomeFolder() . '/.drush/' . $c['name'] . '.aliases.drushrc.php';
     };
 
-  }
-
-  /**
-   * Export an array as executable PHP code.
-   *
-   * @param (Array) $data
-   *  The array to be exported.
-   * @param (string) $string
-   *  The string to add to this array to.
-   * @param (int) $indentLevel
-   *  The level of indentation this should be run at.
-   *
-   * TOOD: Move this into another component
-   */
-  public function arrayExport(Array $data, &$string, $indentLevel) {
-    $i = 0;
-    $indent = '';
-    while ($i < $indentLevel) {
-      $indent .= '  ';
-      $i++;
-    }
-    $string .= "array(" . PHP_EOL;
-    foreach ($data as $name => $value) {
-      $string .= "$indent  '$name' => ";
-      if (is_array($value)) {
-        $inner_string = '';
-        $string .= $this->arrayExport($value, $inner_string, $indentLevel + 1) . "," . PHP_EOL;
-      }
-      else if (is_numeric($value)) {
-        $string .= "$value," . PHP_EOL;
-      }
-      else if (is_string($value)) {
-        $string .= "'" . str_replace("'", "\'", $value) . "'," . PHP_EOL;
-      }
-      else if (is_null($value)) {
-        $string .= 'NULL,' . PHP_EOL;
-      }
-    }
-    $string .= "$indent)";
-    return $string;
   }
 
   /**
