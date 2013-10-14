@@ -156,6 +156,7 @@ class Site extends Pimple implements SiteInterface {
     // Ensure we have our working directory.
     $this['system']->ensureFolderExists($this['site.working_directory']);
 
+    // TODO: Move more of the log stuff into configuration.
     // Ensure we have a log directory.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/logs');
 
@@ -207,7 +208,7 @@ class Site extends Pimple implements SiteInterface {
         'driver' => $conf['database.driver'],
         'environment_local' => $conf['environment.local'],
       );
-      // TODO: Get the settings.php for the appropriate version.
+      // TODO: Generate the settings.php file dynamically without a template.
       $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
 
       // If we have a site-settings.php file for this site, add it here.
