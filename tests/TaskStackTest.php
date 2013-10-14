@@ -56,20 +56,20 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests TaskStack::addTaskAfter().
+   * Tests TaskStack::addAfter().
    */
-  public function testAddTaskAfter() {
+  public function testAddAfter() {
 
     // Ensure we can add an item after a task in the middle of the stack.
     $stack = $this->getSimpleTaskStack();
-    $stack->addTaskAfter('two', new Task('two a'));
+    $stack->addAfter('two', new Task('two a'));
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals('two', $taskNames[1]);
     $this->assertEquals('two a', $taskNames[2]);
 
     // Ensure we can add an item to the very end of the stack.
     $stack = $this->getSimpleTaskStack();
-    $stack->addTaskAfter('three', new Task('three a'));
+    $stack->addAfter('three', new Task('three a'));
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals('three', $taskNames[2]);
     $this->assertEquals('three a', $taskNames[3]);
