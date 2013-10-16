@@ -56,6 +56,7 @@ function fetcher_drush_command() {
       'environment.remote' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
     ),
     'options' => array(
+      'site' => 'The folder to use in drupal\'s `sites/` folder, defaults to default.',
       'branch' => 'The branch of the repository to checkout',
       'tag' => 'The tag of the repository to checkout',
       'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
