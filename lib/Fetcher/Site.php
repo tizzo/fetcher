@@ -23,17 +23,20 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Constructor function to populate the dependency injection container.
    */
-  public function __construct($siteInfo = NULL) {
+  public function __construct($conf = NULL) {
+    // Pimple explodes if you use isset() and you have not yet set any value.
+    $this['initialized'] = TRUE;
+
     $this->registerDefaultTasks();
-    if (empty($siteInfo['configurators'])) {
+    if (empty($conf['configurators'])) {
       $this['configurators'] = array(
         '\Fetcher\Configurator\DefaultTaskStacks',
       );
     }
     // Populate defaults.
     $this->setDefaults();
-    if (!empty($siteInfo)) {
-      $this->configure($siteInfo);
+    if (!empty($conf)) {
+      $this->configure($conf);
     }
   }
 
@@ -397,8 +400,6 @@ class Site extends Pimple implements SiteInterface {
       chdir($startingDir);
     }
   }
-
-
 
   /**
    * Write a site info file from our siteInfo if it doesn't already exist.
