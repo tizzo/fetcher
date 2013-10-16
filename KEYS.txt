@@ -9,6 +9,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'code_fetcher' - The instantiated code fetcher object.
   - 'code_fetcher.class' - The class used to fetch the code for the site.  This may download a fresh copy from Drupal or fetch the site using version control.
   - 'code_fetcher.config' - An array, often containing a "branch" key.
+  - 'configuration.ephemeral' - An array of configuration that does not get persisted to the site_info.yaml and will not be reused across commands.
   - 'database' - The database handler object used to perform database operations.
   - 'database.admin.user.name' - The username used to perform administrative mysql tasks. This user needs to have permissions to create and drop users and datbases and to grant permissions.
   - 'database.admin.user.password' - The password for the administrative user.

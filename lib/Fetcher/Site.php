@@ -412,8 +412,12 @@ class Site extends Pimple implements SiteInterface {
     $conf = array();
     foreach ($this->keys() as $key) {
       $value = $this[$key];
-      if (!is_object($value) || get_class($value) == 'stdClass') {
-        $conf[$key] = $value;
+      // Ensure we should be storing this configuration.
+      if (in_array($key, $this['configuration.ephemeral'])) {
+        // Ensure this is the sort of value we can store.
+        if (!is_object($value) || get_class($value) == 'stdClass') {
+          $conf[$key] = $value;
+        }
       }
     }
     $string = Yaml::dump($conf, 5, 2);
@@ -615,6 +619,13 @@ class Site extends Pimple implements SiteInterface {
     $this['drush_alias.path'] = function($c) {
       return $c['system']->getUserHomeFolder() . '/.drush/' . $c['name'] . '.aliases.drushrc.php';
     };
+
+    $this['configuration.ephemeral'] = array(
+      'initialized',
+      'simulate',
+      'verbose',
+      'environment.remote',
+    );
 
   }
 
