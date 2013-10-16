@@ -86,20 +86,6 @@ function fetcher_drush_command() {
     ),
   );
 
-  $environment_items['fetcher-release'] = array(
-    'description' => 'Release an Fetcher managed site to a specific tag.',
-    'aliases' => array('fer'),
-    'arguments' => array(
-      'site name' => 'The name of the site to release.',
-      'tag' => 'The tag to release. Branches are not supported.',
-    ),
-    'options' => array(
-      'backup' => 'Flag to determine whether to create a backup.',
-      'backup-dir' => 'Path to create a SQL dump.',
-      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-    ),
-  );
-
   $environment_items['fetcher-delete'] = array(
     'description' => 'Remove an Fetcher managed site from this server entirely.',
     'aliases' => array('fed'),
@@ -397,16 +383,6 @@ function drush_fetcher_list_tasks($site) {
     }
   }
   drush_print_table($rows, TRUE);
-}
-
-function drush_fetcher_release() {
-  // Optionally create a MySQL backup.
-  // Checkout a new tag.
-  // Create settings.php and files symlinks.
-  // Put the site in offline mode.
-  // Update the webroot symlink.
-  // Optionally run update.php
-  // Take the site out of offline mode.
 }
 
 /**
