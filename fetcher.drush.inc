@@ -204,6 +204,9 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
+      // Ensure this works.
+      //'local-name' => 'name',
+      'site' => 'site',
     );
     drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
     drush_log(dt('Admin user created with username `admin` and password `pass`.'));
@@ -408,6 +411,63 @@ function drush_fetcher_get_site($site_info = array(), $assemble_info = TRUE) {
 }
 
 /**
+ * Configure a site from the global context.
+ *
+ * @param $site
+ *   The site object to configure.
+ */
+function drush_fetcher_configure_site(\Fetcher\SiteInterface $site) {
+  // Apply system defaults from drushrc.php files. All values are pre-merged.
+  $site->configure(drush_fetcher_extract_keys_from_context());
+  // Load the existing configuraiton values into the object.
+  if (is_file($temp_site['site.info path'])) {
+    $site->configureWithSiteInfoFile();
+  }
+}
+
+/**
+ * Configure a site from drush context and options.
+ *
+ * @param $site
+ *   The site object, must implement \Fetcher\SiteInterface.
+ */
+function drush_fetcher_extract_configuration_keys_from_drush_config(\Fetcher\SiteInterface $site) {
+  $keys = drush_command_invoke_all('fetcher_option_key_mapping', $site);
+  drush_command_invoke_all('fetcher_option_key_mapping_alter', $keys);
+  // Load any config from the global context and set them on the site object.
+  if (!empty($keys['context'])) {
+    foreach ($keys['context'] as $drush_name => $config_name) {
+      $site[$config_name] = drush_get_context($drush_name);
+    }
+  }
+  // Load any options from the cli parameters and configure them on the site object.
+  if (!empty($keys['options'])) {
+    foreach ($keys['options'] as $drush_name => $config_name) {
+      if ($value = drush_get_option($drush_name)) {
+        $site[$config_name] = $value;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_fetcher_option_key_mapping().
+ */
+function fetcher_fetcher_option_key_mapping() {
+  return array(
+    'context' => array(
+      'DRUSH_SIMULATE' => 'simulate',
+      'DRUSH_VERBOSE' => 'verbose',
+    ),
+    'options' => array(
+      'environment-local' => 'environment.local',
+      'environment-remote' => 'environment.remote',
+      'database-admin-user-name' => 'database.admin.user.name',
+      'database-admin-user-password' => 'database.admin.user.password',
+  );
+}
+
+/**
  * Merge configuration in to build the configuration.
  *
  * Defaults exist for all values but can be overridden by keys set in a drushrc
@@ -545,7 +605,7 @@ function drush_fetcher_get_config_from_options($site_info) {
 }
 
 /**
- * Combine all settings inside the fetcher namespace.
+ * Combine all drushrc.php settings inside the fetcher namespace.
  */
 function drush_fetcher_extract_keys_from_context() {
   $context = array_reverse(drush_get_context());

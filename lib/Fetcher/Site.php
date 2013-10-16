@@ -437,11 +437,19 @@ class Site extends Pimple implements SiteInterface {
    * Load the site_info array from the YAML file.
    */
   public function getSiteInfoFromInfoFile() {
-    $path = $this['site.working_directory'] . '/site_info.yaml';
-    if (is_file($path)) {
-      $yaml = file_get_contents($path);
+    if (is_file($this['site.info path'])) {
+      $yaml = file_get_contents($this['site.info path']);
       $info = $this->parseSiteInfo($yaml);
       return $info;
+    }
+  }
+
+  /**
+   * Configure the site object from the siteInfo file.
+   */
+  public function configureWithSiteInfoFile() {
+    if ($conf = getSiteInfoFromInfoFile()) {
+      $this->configure($conf);
     }
   }
 
