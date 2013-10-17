@@ -768,7 +768,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
   $site_info = FALSE;
   try {
     // If we have a drush alias starting with `@` then we look up the local
-    // alias and try to get the site info from the siteInfo file.
+    // alias and try to get the site info from the site_info file.
     if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
       // We may have multiple environments but if we wrote the aliases then the
       // first one is the local one.
@@ -794,7 +794,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
       return $site_info;
     }
     else {
-      drush_log(dt('This site information could not be loaded.'), 'error');
+      drush_set_error('This site information could not be loaded.');
       return FALSE;
     }
   }
@@ -815,6 +815,7 @@ function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FA
 function drush_fetcher_load_site_info_from_file($path) {
   $return = FALSE;
   if (is_file($path) && $site_info = file_get_contents($path)) {
+    // TODO This should be using fetcher_drush_get_option at the very least.
     $class = drush_get_option('fetcher_site_class', '\Fetcher\Site');
     $return = $class::parseSiteInfo($site_info);
   }
