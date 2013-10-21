@@ -50,7 +50,7 @@ function fetcher_drush_command() {
   // Environment items are the items that inherit the environment options.
   $environment_items['fetcher-get'] = array(
     'description' => 'Setup a site on this machine managed by Fetcher synchronizing the database and files if desired.',
-    'aliases' => array('feg'),
+    'aliases' => array('fetch'),
     'arguments' => array(
       'site' => 'The name of a site to install on this server.',
       'environment.remote' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
