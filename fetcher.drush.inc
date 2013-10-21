@@ -464,6 +464,7 @@ function fetcher_fetcher_option_key_mapping() {
       'environment-remote' => 'environment.remote',
       'database-admin-user-name' => 'database.admin.user.name',
       'database-admin-user-password' => 'database.admin.user.password',
+    ),
   );
 }
 
