@@ -42,6 +42,7 @@ class Mysql {
     }
     $site->setDefaultConfigration('database.port', 3306);
     $site->setDefaultConfigration('mysql.binary', 'mysql');
+    $site['configuration.ephemeral'] = array('data.admin.user.password') + $site['configuration.ephemeral'];
   }
 
   /**

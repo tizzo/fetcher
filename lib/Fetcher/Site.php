@@ -410,10 +410,18 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureSiteInfoFileExists() {
     $conf = array();
-    foreach ($this->keys() as $key) {
+    $keys = $this->keys();
+    // We do this the first time to instantiate our handler classes allowing
+    // them to set their own defaults.
+    foreach ($keys as $key) {
+      $this[$key];
+    }
+    $keys = $this->keys();
+    sort($keys);
+    foreach ($keys as $key) {
       $value = $this[$key];
       // Ensure we should be storing this configuration.
-      if (in_array($key, $this['configuration.ephemeral'])) {
+      if (!in_array($key, $this['configuration.ephemeral'])) {
         // Ensure this is the sort of value we can store.
         if (!is_object($value) || get_class($value) == 'stdClass') {
           $conf[$key] = $value;
@@ -696,26 +704,6 @@ class Site extends Pimple implements SiteInterface {
   }
 
   public function legacyRegisterDefaultTasks() {
-
-    $options = array(
-      'description' => 'Ensure that a site is properly configured to run on this server.',
-      'afterMessage' => 'Your site has been setup!',
-    );
-    $tasks = array(
-      'before_build_hooks',
-      'ensure_working_directory',
-      'ensure_site_info_file',
-      'ensure_code',
-      'ensure_database_connection',
-      'ensure_settings_file',
-      'ensure_symlinks',
-      'ensure_drush_alias',
-      'ensure_server_host_enabled',
-      'load_make_file',
-      'after_build_hooks',
-    );
-    $this->registerTask('ensure_site', $tasks, $options);
-
     $task = function ($site) {
       if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
         require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
