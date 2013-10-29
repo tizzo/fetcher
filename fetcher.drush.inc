@@ -423,6 +423,7 @@ function drush_fetcher_configure_site(\Fetcher\SiteInterface $site) {
   if (is_file($temp_site['site.info path'])) {
     $site->configureWithSiteInfoFile();
   }
+  drush_fetcher_extract_configuration_keys_from_drush_config($site);
 }
 
 /**
