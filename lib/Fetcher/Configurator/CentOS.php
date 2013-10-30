@@ -14,6 +14,11 @@ class CentOS implements ConfiguratorInterface {
     $site['server.vhost_enabled_folder'] = '/etc/httpd/conf.d';
     $site['server.vhost_available_folder'] = '/etc/httpd/conf.d';
     $site['server.restart_command'] = 'sudo service httpd reload';
+    $site['server.disable_site_command'] = function($c) {
+      return 'rm /etc/httpd/conf.d/' . $c['name'] . '.conf';
+    };
+    // TODO: Make this lie less
+    $site['server.enable_site_command'] = 'echo "not functional on centos"';
   }
 }
  

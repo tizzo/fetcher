@@ -12,7 +12,12 @@ class Apache2 {
     $site->setDefaultConfigration('server.vhost_enabled_folder', '/etc/apache2/sites-enabled');
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
     $site->setDefaultConfigration('server.restart_command', 'sudo service apache2 reload');
-    $this->site = $site;
+    $site->setDefaultConfigration('server.enable_site_command', function($c) {
+      return 'a2ensite ' . $c['name'];
+    });
+    $site->setDefaultConfigration('server.disable_site_command', function($c) {
+      return 'a2dissite ' . $c['name'];
+    });
     $this->site = $site;
   }
 
@@ -100,10 +105,14 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function ensureSiteEnabled() {
-    $command = 'a2ensite ' . $this->site['name'];
-    drush_log('Executing `' . $command . '`.');
-    if (!drush_shell_exec($command)) {
-      throw new \Fetcher\FetcherException(dt('The site @site could not be enabled.'), array('@site' => $this->site['name']));
+    $site = $this->site;
+    $site['log'](\sprintf('Executing `%s`.', $site['server.enable_site_command']));
+    if (!$site['simulate']) {
+      $process = $site['process']($site['server.enable_site_command']);
+      $process->run();
+      if (!$process->isSuccessful()) {
+        throw new \Fetcher\Exception\FetcherException(\sprintf('The site %s could not be enabled.', $this->site['name']));
+      }
     }
   }
 
