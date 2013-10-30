@@ -3,7 +3,7 @@
 namespace Fetcher\InfoFetcher;
 use Fetcher\InfoFetcher\InfoFetcherInterface;
 
-class DrushAlias  implements InfoFetcherInterface {
+class DrushAlias implements InfoFetcherInterface {
 
   /**
    * Implements Fetcher\InfoFetcher\InfofetcherInterface::listSites().
