@@ -473,6 +473,10 @@ class Site extends Pimple implements SiteInterface {
   public function configureWithSiteInfoFile() {
     if ($conf = getSiteInfoFromInfoFile()) {
       $this->configure($conf);
+      return TRUE;
+    }
+    else {
+      return FALSE;
     }
   }
 
@@ -492,14 +496,26 @@ class Site extends Pimple implements SiteInterface {
    * TODO: fetchInfo() should be a method on the site object that can load
    * from a file or load from site_info.yaml.
    *
-   * @param $remote
+   * @param $force_remote
    *   Whether to ignore the potential location of a site_info.yaml file and
    *   load directly from the configured InfoFetcher.class instead.
    * @return
-   *   False if site information could not be found
+   *   TRUE on success NULL if information could not be loaded.
    */
-  public function fetchInfo() {
-    throw Exception('Not yet implemented');
+  public function fetchInfo($force_remote = FALSE) {
+    if (!isset($this['name'])) {
+      return FALSE;
+    }
+    // We don't go looking for an info file if `name` isn't set.
+    if (!$force_remote && is_file($this['site.info path'])) {
+      return $this->getSiteInfoFromInfoFile();
+    }
+    else {
+      if ($conf = $this['info_fetcher']->getInfo($this['name'])) {
+        $this->configure($conf);
+        return TRUE;
+      }
+    }
   }
 
   /**
@@ -681,6 +697,11 @@ class Site extends Pimple implements SiteInterface {
       'environment.remote',
     );
 
+    $this['info_fetcher.class'] = 'Fetcher\InfoFetcher\DrushAlias';
+    // Load a plugin appropriate to the info fetcher.
+    $this['info_fetcher'] = $this->share(function($c) {
+      return new $c['info_fetcher.class']($c);
+    });
   }
 
   /**
