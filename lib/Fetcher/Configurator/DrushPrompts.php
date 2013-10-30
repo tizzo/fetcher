@@ -21,10 +21,10 @@ class DrushPrompts implements ConfiguratorInterface {
           return $environments[0];
         }
         else if (count($environments) > 1) {
-          $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($environments)));
+          return drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($environments)));
         }
         else {
-          return NULL;
+          throw new \Fetcher\Exception\FetcherException('A valid environment could not be loaded');
         }
       }
     });
