@@ -26,7 +26,12 @@ class Site extends Pimple implements SiteInterface {
   public function __construct($conf = NULL) {
     // Pimple explodes if you use isset() and you have not yet set any value.
     $this['initialized'] = TRUE;
+    $this['log'] = $this->protect(function($message) {
+      print $message . PHP_EOL;
+    });
 
+    // Default tasks currently must be registered before task stacks that use them
+    // are defined.
     $this->registerDefaultTasks();
     if (empty($conf['configurators'])) {
       $this['configurators'] = array(
@@ -311,7 +316,7 @@ class Site extends Pimple implements SiteInterface {
    *
    * @fetcherTask remove_site
    * @description Completely remove this site and destroy all data associated with it on the server.
-   * @afterMessage This site has been completely removed.
+   * @afterMessage This site `[[name]]` has been completely removed.
    */
   public function remove() {
     $this['system']->ensureDeleted($this['site.working_directory']);
@@ -405,14 +410,9 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Write a site info file from our siteInfo if it doesn't already exist.
-   *
-   * @fetcherTask ensure_site_info_file
-   * @description Ensure that the configuration for this site has been captured in the site_info file for the site.
-   * @afterMessage The site info file for this site has been created.
+   * Export the configuration of the object to an array.
    */
-  public function ensureSiteInfoFileExists() {
-    $conf = array();
+  public function exportConfiguration() {
     $keys = $this->keys();
     // We do this the first time to instantiate our handler classes allowing
     // them to set their own defaults.
@@ -431,7 +431,19 @@ class Site extends Pimple implements SiteInterface {
         }
       }
     }
-    $string = Yaml::dump($conf, 5, 2);
+    return $conf;
+  }
+
+  /**
+   * Write a site info file from our siteInfo if it doesn't already exist.
+   *
+   * @fetcherTask ensure_site_info_file
+   * @description Ensure that the configuration for this site has been captured in the site_info file for the site.
+   * @afterMessage The site info file for this site has been created.
+   */
+  public function ensureSiteInfoFileExists() {
+    $conf = array();
+    $string = Yaml::dump($this->exportConfiguration(), 5, 2);
     $this['system']->writeFile($this['site.info path'], $string);
   }
 
