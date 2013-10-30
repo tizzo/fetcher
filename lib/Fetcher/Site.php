@@ -641,7 +641,7 @@ class Site extends Pimple implements SiteInterface {
       return $c['site.code_directory'] . '/sites/' . $c['site'];
     };
 
-    // Some systems place the Drupal webroot in a subdirectory.
+    // Some systems (including Acquia) place the Drupal webroot in a subdirectory.
     // This option configures the name of the subdirectory (some use htdocs).
     $this['webroot_subdirectory'] = 'webroot';
 
@@ -666,13 +666,14 @@ class Site extends Pimple implements SiteInterface {
     $this['environment.local'] = 'local';
 
     $this['build_hook_file.path'] = function($c) {
-      return $c['site.code_directory'] . '/sites/default/fetcher.make.php';
+      return $c['site.code_directory'] . '/sites/' . $c['site'] . '/fetcher.make.php';
     };
 
     $this['drush_alias.path'] = function($c) {
       return $c['system']->getUserHomeFolder() . '/.drush/' . $c['name'] . '.aliases.drushrc.php';
     };
 
+    // These keys are not persisted to the site_info.yaml file.
     $this['configuration.ephemeral'] = array(
       'initialized',
       'simulate',
@@ -742,8 +743,8 @@ class Site extends Pimple implements SiteInterface {
 
   public function legacyRegisterDefaultTasks() {
     $task = function ($site) {
-      if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
-        require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
+      if (is_file($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php')) {
+        require($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php');
       }
     };
     $this->registerTask('include_fetcher_make', $task);

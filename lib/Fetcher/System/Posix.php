@@ -155,7 +155,6 @@ class Posix {
       }
     }
     else if (!$this->site['simulate']) {
-      drush_print((string) gettype($this->site['simulate']));
       throw new FetcherException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
     }
   }
