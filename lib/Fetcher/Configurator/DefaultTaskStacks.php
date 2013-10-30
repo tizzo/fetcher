@@ -17,14 +17,17 @@ class DefaultTaskStacks implements ConfiguratorInterface {
       'ensure_code',
       'ensure_database_connection',
       'ensure_settings_file',
-      'ensure_symlinks',
+      'ensure_sym_links',
       'ensure_drush_alias',
       'ensure_server_host_enabled',
     );
-    foreach ($tasks as $task) {
-      $task = $site->getTask($task);
+    foreach ($tasks as $name) {
+      $task = $site->getTask($name);
       if ($task) {
         $stack->addTask($task);
+      }
+      else {
+        $site['log'](\sprintf('Task `%s` not found.', $name), 'warning');
       }
     }
     $site->addTask($stack);
