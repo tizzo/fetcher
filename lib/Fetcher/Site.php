@@ -35,9 +35,12 @@ class Site extends Pimple implements SiteInterface {
     }
     // Populate defaults.
     $this->setDefaults();
+    // Configure with any settings passed into the constructor.
     if (!empty($conf)) {
       $this->configure($conf);
     }
+    // Apply any configurators.
+    $this->runConfigurators();
   }
 
   /**
@@ -462,16 +465,35 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Populate this object with defaults.
+   * Apply any configured configurators.
    */
-  public function setDefaults() {
+  public function runConfigurators() {
     // Set default configuration from configrator list.
     if (isset($this['configurators'])) {
       foreach ($this['configurators'] as $configurator) {
         $configurator::configure($this);
       }
     }
+  }
 
+  /**
+   * TODO: fetchInfo() should be a method on the site object that can load
+   * from a file or load from site_info.yaml.
+   *
+   * @param $remote
+   *   Whether to ignore the potential location of a site_info.yaml file and
+   *   load directly from the configured InfoFetcher.class instead.
+   * @return
+   *   False if site information could not be found
+   */
+  public function fetchInfo() {
+    throw Exception('Not yet implemented');
+  }
+
+  /**
+   * Populate this object with defaults.
+   */
+  public function setDefaults() {
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
@@ -489,7 +511,9 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // If the log function is changed it must have the same function signature.
-    $this['log function'] = 'drush_log';
+    $this['log function'] = $this->protect(function($message) {
+      print $message . PHP_EOL;
+    });;
 
     // We need a copy of site to close over in our closure.
     $site = $this;
@@ -581,6 +605,7 @@ class Site extends Pimple implements SiteInterface {
     $this['hostname'] = function($c) {
       return $c['uri'];
     };
+
     // The URI of the site.
     $this['uri'] = function($c) {
       return strtolower($c['name'] . '.' . $c['system hostname']);

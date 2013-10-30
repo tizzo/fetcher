@@ -159,23 +159,35 @@ function drush_fetcher_log_exception_information(Exception $e) {
 }
 
 /**
+ * Constructor function for creating and configuring a site object.
+ */
+function fetcher_get_site($name = FALSE) {
+  $conf['configurators'] = array(
+    '\Fetcher\Configurator\DrushPrompts',
+    '\Fetcher\Configurator\DefaultTaskStacks',
+  );
+  // TODO: Move this somewhere to detect configuration.
+  if (is_dir('/etc') && is_file('/etc/issue')) {
+    $issue = file_get_contents('/etc/issue');
+    if (strpos($issue, 'CentOS') !== -1 || strpos($issue, 'Red Hat') !== -1) {
+      $conf['configurators'][] = '\Fetcher\Configurator\CentOS';
+    }
+  }
+  $site = new \Fetcher\Site($conf);
+  drush_fetcher_extract_configuration_keys_from_drush_config($site);
+  if ($name) {
+    $site['name'] = $name;
+  }
+  return $site;
+}
+
+/**
  * Print out information about a single site.
  */
 function drush_fetcher_info($site_name = NULL) {
-  $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
-  if (!$site_info) {
-    if ($site_name = drush_fetcher_prompt_for_site_name()) {
-      $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
-    }
-    else {
-      drush_log(dt('Site information could not be found', 'error'));
-      drush_set_error('FETCHER_INFO_FAILURE', dt('Site information could not be found'));
-      return;
-    }
-  }
-  if ($site_info) {
-    drush_print_r($site_info);
-  }
+  $site = fetcher_get_site();
+  $site['name'] = $site_name;
+  drush_print_r($site->exportConfiguration());
 }
 
 /**
@@ -190,7 +202,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   // Build a new site object.
   $site_info = array();
   $site_info['name'] = $site_name;
-  $site = drush_fetcher_get_site($site_info);
+  $site = fetcher_get_site();
 
   $site['version'] = $version;
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
@@ -324,8 +336,7 @@ function drush_fetcher_fetch_site_info($site_name) {
  */
 function drush_fetcher_get_info_fetcher() {
   $class = fetcher_drush_get_option('info-fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
-  $site = drush_fetcher_get_site();
-  return new $class($site);
+  return new $class();
 }
 
 
@@ -339,11 +350,8 @@ function drush_fetcher_delete($site_name) {
     return;
   }
   try {
-    $site_info = array();
-    $site_info['name'] = $site_name;
-    $site = drush_fetcher_get_site($site_info);
+    $site = fetcher_get_site($site_name);
     $site->runTask('remove_site');
-    drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
   }
   catch (Exception $e) {
     drush_fetcher_log_exception_information($e);
