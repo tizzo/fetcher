@@ -427,13 +427,15 @@ function drush_fetcher_extract_configuration_keys_from_drush_config(\Fetcher\Sit
   drush_command_invoke_all('fetcher_option_key_mapping_alter', $keys);
   // Load any config from the global context and set them on the site object.
   if (!empty($keys['context'])) {
-    foreach ($keys['context'] as $drush_name => $config_name) {
-      $site[$config_name] = drush_get_context($drush_name);
+    foreach ($keys['context'] as $config_name => $drush_name) {
+      if ($value = drush_get_context($drush_name)) {
+        $site[$config_name] = $value;
+      }
     }
   }
   // Load any options from the cli parameters and configure them on the site object.
   if (!empty($keys['options'])) {
-    foreach ($keys['options'] as $drush_name => $config_name) {
+    foreach ($keys['options'] as $config_name => $drush_name) {
       if ($value = drush_get_option($drush_name)) {
         $site[$config_name] = $value;
       }
@@ -455,6 +457,10 @@ function fetcher_fetcher_option_key_mapping() {
       'environment-remote' => 'environment.remote',
       'database-admin-user-name' => 'database.admin.user.name',
       'database-admin-user-password' => 'database.admin.user.password',
+      'hostname' => 'hostname',
+      'site' => 'site',
+      // This is a bit weird and there's probably a better way to do this.
+      'name' => 'local-name',
     ),
   );
 }
