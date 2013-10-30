@@ -185,7 +185,7 @@ function fetcher_get_site($name = FALSE) {
  * Print out information about a single site.
  */
 function drush_fetcher_info($site_name = NULL) {
-  $site = fetcher_get_site();
+  $site = fetcher_get_site($site_name);
   $site['name'] = $site_name;
   drush_print_r($site->exportConfiguration());
 }
@@ -200,9 +200,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   }
 
   // Build a new site object.
-  $site_info = array();
-  $site_info['name'] = $site_name;
-  $site = fetcher_get_site();
+  $site = fetcher_get_site($site_name);
 
   $site['version'] = $version;
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
@@ -216,8 +214,6 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
-      // Ensure this works.
-      //'local-name' => 'name',
       'site' => 'site',
     );
     drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
@@ -332,7 +328,7 @@ function drush_fetcher_fetch_site_info($site_name) {
  *
  */
 function drush_fetcher_get_info_fetcher() {
-  $class = fetcher_drush_get_option('info-fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
+  $class = fetcher_drush_get_option('info_fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
   return new $class();
 }
 
@@ -360,7 +356,7 @@ function drush_fetcher_delete($site_name) {
  * List and run tasks available on a fetcher site.
  */
 function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
-  $site = fetcher_get_site();
+  $site = fetcher_get_site($site_name);
   if ($site_name) {
     $site['name'] = $site_name;
   }
@@ -511,26 +507,6 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     }
   }
   return $sites;
-}
-
-/**
- * TODO: Make this somehow pluggable/extensible.
- */
-function drush_fetcher_get_config_from_options($site_info) {
-  $keys = array(
-    'database.admin.user.name',
-    'database.admin.user.password',
-    'hostname',
-    'site',
-  );
-  foreach ($keys as $key) {
-    $option = str_replace('.', '-', $key);
-    $option = str_replace(' ', '-', $option);
-    if (drush_get_option($option)) {
-      $site_info[$key] = drush_get_option($option);
-    }
-  }
-  return $site_info;
 }
 
 /**
