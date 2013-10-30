@@ -11,6 +11,7 @@ class Apache2 {
     $site->setDefaultConfigration('server.webroot', '/var/www');
     $site->setDefaultConfigration('server.vhost_enabled_folder', '/etc/apache2/sites-enabled');
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
+    $site->setDefaultConfigration('server.restart_command', 'sudo service apache2 reload');
     $this->site = $site;
     $this->site = $site;
   }
@@ -127,8 +128,7 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function restart() {
-    $command = 'sudo service apache2 reload';
-    if (!drush_shell_exec($command)) {
+    if (!drush_shell_exec($this->site['server.restart_command'])) {
       throw new \Fetcher\Exception\FetcherException(dt('Apache failed to restart, the server may be down.'));
     }
   }
