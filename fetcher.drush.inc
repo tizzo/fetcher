@@ -48,12 +48,11 @@ function fetcher_drush_command() {
   );
 
   // Environment items are the items that inherit the environment options.
-  $environment_items['fetcher-get'] = array(
+  $environment_items['fetcher-fetch'] = array(
     'description' => 'Setup a site on this machine managed by Fetcher synchronizing the database and files if desired.',
-    'aliases' => array('fetch'),
+    'aliases' => array('fetch', 'fetcher-get'),
     'arguments' => array(
       'site' => 'The name of a site to install on this server.',
-      'environment.remote' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
     ),
     'options' => array(
       'site' => 'The folder to use in drupal\'s `sites/` folder, defaults to default.',
@@ -69,6 +68,7 @@ function fetcher_drush_command() {
       'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
       'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
       'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
+      'environment-remote' => 'The name of the environment to load from.',
     ),
   );
 
@@ -233,11 +233,11 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 /**
  * Setup a local copy of a Fetcher site.
  *
- * Do all of the work to setup a local copy of a site tracked by Fetcher, 
+ * Do all of the work to setup a local copy of a site tracked by Fetcher,
  * optionally syncronizing the database and files with an environment
  * tracked by Fetcher.
  */
-function drush_fetcher_get($site_name = FALSE, $remote_environment = FALSE) {
+function drush_fetcher_fetch($site_name = FALSE) {
 
   if (!$site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name)) {
     drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
