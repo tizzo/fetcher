@@ -158,8 +158,14 @@ function drush_fetcher_log_exception_information(Exception $e) {
 
 /**
  * Constructor function for creating and configuring a site object.
+ *
+ * @param $name
+ *   The name of the site to load.
+ * @return
+ *   An instantiated and configured \Fetcher\Site object.
  */
 function fetcher_get_site($name = FALSE) {
+  // Set drush appropriate configurators.
   $conf['configurators'] = array(
     '\Fetcher\Configurator\DrushPrompts',
     '\Fetcher\Configurator\DefaultTaskStacks',
@@ -172,10 +178,12 @@ function fetcher_get_site($name = FALSE) {
     }
   }
   $site = new \Fetcher\Site($conf);
-  drush_fetcher_extract_configuration_keys_from_drush_config($site);
   if ($name) {
     $site['name'] = $name;
   }
+  // TODO: does the call to Site::fetchInfo() belong here?
+  $site->fetchInfo();
+  drush_fetcher_extract_configuration_keys_from_drush_config($site);
   return $site;
 }
 
