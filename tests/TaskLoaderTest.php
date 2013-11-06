@@ -54,6 +54,28 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     }
   }
 
+  /**
+   * Test the scanFunctionsInFile method.
+   * This method also tests the scanFunctions() method.
+   */
+  public function testScanFunctionsInFile() {
+    $loader = new TaskLoader();
+    $path = __DIR__ . '/../lib/Fetcher/Tests/Fixtures/Tasks/taskFunctions.php';
+    $tasks = $loader->scanFunctionsInFile($path);
+    $this->assertEquals(1, count($tasks), 'The correct number of tasks were detected and loaded.');
+    $task = array_pop($tasks);
+    $this->assertEquals('fetcher_task_annotated_function', $task->callable);
+    $this->assertEquals('some_function', $task->fetcherTask);
+    $this->assertEquals('This does some stuff', $task->description);
+    $this->assertEquals('The stuff it does is awesome.', $task->afterMessage);
+    try {
+      $loader->scanFunctionsInFile('NONEXISTANTPATH');
+      $this->assertEquals(FALSE, TRUE, 'Loader failed to throw an exception when loading a non-existant path.');
+    }
+    catch (\Exception $exception) {
+      $this->assertInstanceOf('\Fetcher\Task\TaskLoaderException', $exception);
+    }
+  }
 
 }
 
