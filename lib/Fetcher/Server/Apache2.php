@@ -8,6 +8,7 @@ class Apache2 {
 
   public function __construct(\Pimple $site) {
     $site->setDefaultConfigration('server.user', 'www-data');
+    $site->setDefaultConfigration('server.port', 80);
     $site->setDefaultConfigration('server.webroot', '/var/www');
     $site->setDefaultConfigration('server.vhost_enabled_folder', '/etc/apache2/sites-enabled');
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
@@ -70,7 +71,8 @@ class Apache2 {
       $vars = array(
         'site_name' => $site['name'],
         'hostname' => $site['hostname'],
-        'site_folder' => $site['site.working_directory'],
+        'webroot' => $site['site.webroot'],
+        'port' => $site['server.port'],
       );
       $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
       $site['system']->writeFile($vhostPath, $content);
