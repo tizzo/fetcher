@@ -188,7 +188,7 @@ function fetcher_get_site($name = FALSE) {
   }
   // TODO: does the call to Site::fetchInfo() belong here?
   $site->fetchInfo();
-  drush_fetcher_extract_configuration_keys_from_drush_config($site);
+  drush_fetcher_extract_configuration_keys_from_drush_context($site);
   return $site;
 }
 
@@ -321,26 +321,15 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 }
 
 /**
- * Use the configured info fetcher to retrieve a site's information by name.
- */
-function drush_fetcher_fetch_site_info($site_name) {
-  try {
-    $result = drush_fetcher_get_info_fetcher()->getInfo($site_name);
-    return $result;
-  }
-  catch (Exception $e) {
-    drush_fetcher_log_exception_information($e);
-    drush_log(dt('Site info loading failed - @message', array('@message' => $e->getMessage())), 'error');
-  }
-}
-
-/**
  * Get the conifugred siteInfoFetcher().
  *
+ * @return
+ *   An instantiated object implmeenting \Fetcher\InfoFetcherInterface().
  */
 function drush_fetcher_get_info_fetcher() {
-  $class = fetcher_drush_get_option('info_fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
-  return new $class(new \Fetcher\Site());
+  $config = drush_fetcher_extract_keys_from_context();
+  $site = new \Fetcher\Site($config);
+  return $site['info_fetcher'];
 }
 
 
@@ -406,28 +395,12 @@ function drush_fetcher_list_tasks($site) {
 }
 
 /**
- * Configure a site from the global context.
- *
- * @param $site
- *   The site object to configure.
- */
-function drush_fetcher_configure_site(\Fetcher\SiteInterface $site) {
-  // Apply system defaults from drushrc.php files. All values are pre-merged.
-  $site->configure(drush_fetcher_extract_keys_from_context());
-  // Load the existing configuraiton values into the object.
-  if (is_file($temp_site['site.info path'])) {
-    $site->configureWithSiteInfoFile();
-  }
-  drush_fetcher_extract_configuration_keys_from_drush_config($site);
-}
-
-/**
  * Configure a site from drush context and options.
  *
  * @param $site
  *   The site object, must implement \Fetcher\SiteInterface.
  */
-function drush_fetcher_extract_configuration_keys_from_drush_config(\Fetcher\SiteInterface $site) {
+function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\SiteInterface $site) {
   $keys = drush_command_invoke_all('fetcher_option_key_mapping', $site);
   drush_command_invoke_all('fetcher_option_key_mapping_alter', $keys);
   // Load any config from the global context and set them on the site object.
@@ -460,6 +433,11 @@ function fetcher_fetcher_option_key_mapping() {
     'options' => array(
       'environment-local' => 'environment.local',
       'environment-remote' => 'environment.remote',
+      'database-user-name' => 'database.user.name',
+      'database-user-password' => 'database.user.password',
+      'database' => 'database.database',
+      'database-hostname' => 'database.hostname',
+      'database-port' => 'database.port',
       'database-admin-user-name' => 'database.admin.user.name',
       'database-admin-user-password' => 'database.admin.user.password',
       'hostname' => 'hostname',
