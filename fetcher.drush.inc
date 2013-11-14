@@ -177,8 +177,8 @@ function fetcher_get_site($name = FALSE) {
   );
   // TODO: Move this somewhere to detect configuration.
   if (is_dir('/etc') && is_file('/etc/issue')) {
-    $issue = file_get_contents('/etc/issue');
-    if (strpos($issue, 'CentOS') !== -1 || strpos($issue, 'Red Hat') !== -1) {
+    $issue = strtolower(file_get_contents('/etc/issue'));
+    if (strpos($issue, 'centos') !== FALSE || strpos($issue, 'red hat') !== FALSE) {
       $conf['configurators'][] = '\Fetcher\Configurator\CentOS';
     }
   }
