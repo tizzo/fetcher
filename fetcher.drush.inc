@@ -335,7 +335,7 @@ function drush_fetcher_fetch_site_info($site_name) {
  */
 function drush_fetcher_get_info_fetcher() {
   $class = fetcher_drush_get_option('info_fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
-  return new $class();
+  return new $class(new \Fetcher\Site());
 }
 
 
