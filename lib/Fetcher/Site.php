@@ -140,6 +140,8 @@ class Site extends Pimple implements SiteInterface {
       if (is_file($this['site.directory'] . '/site-settings.php')) {
         $content .= PHP_EOL . "require_once('site-settings.php');" . PHP_EOL;
       }
+
+      $this['system']->ensureFolderExists($this['site.directory']);
       $this['system']->writeFile($settingsFilePath, $content);
     }
   }
