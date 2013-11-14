@@ -71,7 +71,7 @@ class Apache2 {
       $vars = array(
         'site_name' => $site['name'],
         'hostname' => $site['hostname'],
-        'webroot' => $site['site.webroot'],
+        'docroot' => $site['site.webroot'],
         'port' => $site['server.port'],
       );
       $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
