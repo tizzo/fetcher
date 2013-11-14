@@ -584,6 +584,9 @@ class Site extends Pimple implements SiteInterface {
       'git' => 'Fetcher\CodeFetcher\VCS\Git',
     );
 
+    // Default to the most recent stable release.
+    $this['version'] = 7;
+
     // Set our default code fetcher class to drush download.
     $this['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
     $this['code_fetcher.config'] = array();
