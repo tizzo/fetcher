@@ -233,6 +233,8 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureSettingsFileExists() {
     $settingsFilePath = $this['site.directory'] . '/settings.php';
+    // Ensure the site folder exists.
+    $this['system']->ensureFolderExists($this['site.directory']);
     // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
       $conf = $this;
