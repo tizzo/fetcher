@@ -262,6 +262,7 @@ function drush_fetcher_fetch($site_name = FALSE) {
   }
   // TODO: Deprecate this function all the task running function instead.
   if (!drush_fetcher_ensure_site($site)) {
+    drush_set_error(dt('Provisioing and synchronizing the site has failed.'));
     return FALSE;
   }
 
@@ -667,7 +668,7 @@ function fetcher_get_site_from_name_alias_or_context($site_name = FALSE) {
       $site_info = drush_fetcher_fetch_site_info($site_name);
     }
     else {
-      drush_set_error('This site information could not be loaded.');
+      drush_set_error(dt('This site information could not be loaded.'));
       return FALSE;
     }
   }
