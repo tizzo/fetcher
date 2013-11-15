@@ -258,9 +258,7 @@ function drush_fetcher_fetch($site_name = FALSE) {
   */
   if (drush_get_option('sql-sync')) {
     // Add the db sync task to the stack.
-    $task = $site->getTask('sync_db');
-    $site->getTask('ensure_site')
-      ->addTask($task);
+    $site->addSubTask('ensure_site', 'sync_db');
   }
   // TODO: Deprecate this function all the task running function instead.
   if (!drush_fetcher_ensure_site($site)) {

@@ -8,8 +8,9 @@ use \Symfony\Component\Process\Process;
 use \Fetcher\Utility\PHPGenerator,
     \Fetcher\Task\TaskLoader,
     \Fetcher\Task\TaskStack,
-    \Fetcher\Task\Task
-    \Fetcher\Configurator\DefaultTaskStacks;
+    \Fetcher\Task\Task,
+    \Fetcher\Configurator\DefaultTaskStacks,
+    \Fetcher\Exception\FetcherException;
 
 class Site extends Pimple implements SiteInterface {
 
@@ -109,6 +110,33 @@ class Site extends Pimple implements SiteInterface {
         $this['database']->grantAccessToUser();
       }
     }
+  }
+
+  /**
+   * Configure the site object from one of the loaded environments.
+   */
+  public function configureFromEnvironment($environment = NULL) {
+    if (empty($environment)) {
+      $environment = $this['environment.remote'];
+    }
+    $environments = $this['environments'];
+    if (empty($environments[$environment])) {
+      throw new FetcherException('Invalid environment specified.');
+    }
+    foreach ($environments[$environment]  as $key => $value) {
+      // Prevent environment specific settings from being persisted.
+      $this->addEphemeralKey($key);
+      $this[$key] = $value;
+    }
+  }
+
+  /**
+   * Adds a key to the ephemeral list.
+   */
+  public function addEphemeralKey($key) {
+    $ephemeralKeys = $this['configuration.ephemeral'];
+    $ephemeralKeys[] = $key;
+    $this['configuration.ephemeral'] = $ephemeralKeys;
   }
 
   /**

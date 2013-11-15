@@ -1,7 +1,10 @@
 <?php
 require_once "vendor/autoload.php";
 
-use \Fetcher\Site;
+use \Fetcher\Site,
+    \Fetcher\Exception\FetcherException,
+    \Fetcher\Task\TaskStack,
+    \Fetcher\Task\Task;
  
 class SiteTest extends PHPUnit_Framework_TestCase {
 
@@ -35,5 +38,31 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->setDefaultConfigration('foo', 'baz');
     // Ensure we will not override a set key.
     $this->assertEquals($site['foo'], 'bar');
+  }
+
+  public function testConfigureFromEnvironment() {
+    $site = new Site();
+    $site['foo'] = NULL;
+    $site['environments'] = array(
+      'dev' => array(
+        'foo' => 'bar',
+      ),
+      'stage' => array(
+        'foo' => 'baz',
+      ),
+    );
+    $this->assertEquals(NULL, $site['foo'], 'Original value set successfully.');
+    $site->configureFromEnvironment('dev');
+    $this->assertEquals('bar', $site['foo'], 'Original value set successfully.');
+    $this->assertContains('foo', $site['configuration.ephemeral']);
+    $site->configureFromEnvironment('stage');
+    $this->assertEquals('baz', $site['foo'], 'Original value set successfully.');
+    try {
+      $site->configureFromEnvironment('nonsense');
+      $this->assertTrue('FALSE', 'An exception should have been thrown.');
+    }
+    catch(FetcherException $e) {
+      $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
+    }
   }
 }
