@@ -191,6 +191,8 @@ class Site extends Pimple implements SiteInterface {
    * @afterMessage The working directory is properly setup.
    */
   public function ensureWorkingDirectory() {
+    // TODO: Make this more dynamic, we should be able to support things like
+    // the lullabot boilerplate layout.
 
     // Ensure we have our working directory.
     $this['system']->ensureFolderExists($this['site.working_directory']);
@@ -778,7 +780,7 @@ class Site extends Pimple implements SiteInterface {
   public function runTask($name) {
     $task = $this->getTask($name);
     if ($task === NULL) {
-      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+      throw new FetcherException(sprintf('Attempting to run undefined task %s.', $name));
     }
     $task->run($this);
   }
