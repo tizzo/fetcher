@@ -503,7 +503,7 @@ class Site extends Pimple implements SiteInterface {
    * Configure the site object from the siteInfo file.
    */
   public function configureWithSiteInfoFile() {
-    if ($conf = getSiteInfoFromInfoFile()) {
+    if ($conf = $this->getSiteInfoFromInfoFile()) {
       $this->configure($conf);
       return TRUE;
     }
@@ -540,10 +540,10 @@ class Site extends Pimple implements SiteInterface {
     }
     // We don't go looking for an info file if `name` isn't set.
     if (!$force_remote && is_file($this['site.info path'])) {
-      return $this->getSiteInfoFromInfoFile();
+      return $this->configureWithSiteInfoFile();
     }
     else {
-      if ($conf = $this['info_fetcher']->getInfo($this['name'])) {
+      if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {
         $this->configure($conf);
         return TRUE;
       }
@@ -554,6 +554,10 @@ class Site extends Pimple implements SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults() {
+    // Defaults to the local name.
+    $this['name.global'] = function($c) {
+      return $c['name'];
+    };
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
@@ -620,19 +624,21 @@ class Site extends Pimple implements SiteInterface {
     $this['version'] = 7;
 
     // Set our default code fetcher class to drush download.
-    $this['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
+    $this['code_fetcher.class'] = function($c) {
+      if (isset($c['vcs'])) {
+        return $c['code_fetcher.vcs_mapping'][$c['vcs']];
+      }
+      else {
+        return 'Fetcher\CodeFetcher\Download';
+      }
+    };
+
     $this['code_fetcher.config'] = array();
 
     // Load a plugin appropriate to the Code Fetcher.
     $this['code_fetcher'] = $this->share(function($c) {
-      if (isset($siteInfo['vcs'])) {
-        $class = $c['code_fetcher.class'] = $c['code_fetcher.vcs_mapping'][$c['vcs']];
-      }
-      else {
-        $class = $c['code_fetcher.class'];
-      }
-      $vcs = new $class($c);
-      return $vcs;
+      $class = $c['code_fetcher.class'];
+      return new $class($c);
     });
 
     // For most cases, the Drush sql-sync command can be used for synchronizing.
@@ -715,6 +721,7 @@ class Site extends Pimple implements SiteInterface {
     );
 
     $this['environment.local'] = 'local';
+    $this['environments'] = array();
 
     $this['build_hook_file.path'] = function($c) {
       return $c['site.code_directory'] . '/sites/' . $c['site'] . '/fetcher.make.php';

@@ -170,11 +170,13 @@ function drush_fetcher_log_exception_information(Exception $e) {
  *   An instantiated and configured \Fetcher\Site object.
  */
 function fetcher_get_site($name = FALSE) {
+
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
     '\Fetcher\Configurator\DrushPrompts',
     '\Fetcher\Configurator\DefaultTaskStacks',
   );
+
   // TODO: Move this somewhere to detect configuration.
   if (is_dir('/etc') && is_file('/etc/issue')) {
     $issue = strtolower(file_get_contents('/etc/issue'));
@@ -182,13 +184,28 @@ function fetcher_get_site($name = FALSE) {
       $conf['configurators'][] = '\Fetcher\Configurator\CentOS';
     }
   }
+
   $site = new \Fetcher\Site($conf);
   if ($name) {
     $site['name'] = $name;
   }
-  // TODO: does the call to Site::fetchInfo() belong here?
-  $site->fetchInfo();
+
+  // Use conifgured defaults where possible.
+  $site->configure(drush_fetcher_extract_keys_from_context());
+
+  // First we apply configuration from the global context
+  // because it could effect the behavior of the info fetcher.
   drush_fetcher_extract_configuration_keys_from_drush_context($site);
+
+  // Next we fetch information specific to the site, that includes calls
+  // to the infoFetcher if no site_info.yaml was already found.
+  $site->fetchInfo();
+
+  // Now we re-apply configuration keys form the context because anything
+  // specified at the command line should override what was cached in the
+  // site_info.yml file.
+  drush_fetcher_extract_configuration_keys_from_drush_context($site);
+
   return $site;
 }
 
@@ -197,7 +214,6 @@ function fetcher_get_site($name = FALSE) {
  */
 function drush_fetcher_info($site_name = NULL) {
   $site = fetcher_get_site($site_name);
-  $site['name'] = $site_name;
   drush_print_r($site->exportConfiguration());
 }
 
@@ -338,7 +354,7 @@ function drush_fetcher_get_info_fetcher() {
 function drush_fetcher_delete($site_name) {
   // TODO: Validate $site_name.
   // TODO: Allow deletion of other webroots (check site info?).
-  if (!drush_confirm("Are you sure you want to delete $site_name?")) {
+  if (!drush_confirm(dt("Are you sure you want to delete @site_name?", array('@site_name' => $site_name)))) {
     return;
   }
   try {
