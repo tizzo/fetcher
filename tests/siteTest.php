@@ -65,4 +65,26 @@ class SiteTest extends PHPUnit_Framework_TestCase {
       $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
     }
   }
+
+  public function testAddSubTask() {
+    $site = new Site();
+    $stack = new TaskStack('foo');
+    $task1 = new Task('bar');
+    $site->addTask($stack);
+    // Add a task object.
+    $site->addSubTask('foo', $task1);
+    $this->assertContains($task1, $site->getTask('foo')->tasks, 'Subtask successfully added to task stack.');
+    // Add a task by task name.
+    $task2 = new Task('baz');
+    $site->addTask($task2);
+    $site->addSubTask('foo', 'baz');
+    $this->assertContains($task2, $site->getTask('foo')->tasks, 'Subtask successfully added to task stack.');
+    try {
+      $site->addSubtask('nonsense', $task1);
+      $this->assertTrue('FALSE', 'An exception should have been thrown.');
+    }
+    catch(FetcherException $e) {
+      $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
+    }
+  }
 }

@@ -786,7 +786,27 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Registers the default tasks that ship as methods on 
+   * Add a task to an existing task stack.
+   *
+   * @taskStack
+   *   The name of a configured TaskStack.
+   * @task
+   *   The task to add, can be a task or an object implementing
+   *   \Fetcher\Task\TaskInterface().
+   */
+  public function addSubTask($taskStack, $task) {
+    $stack = $this->getTask($taskStack);
+    if (empty($stack)) {
+      throw new FetcherException('Can not add a task to an undefined task stack.');
+    }
+    if (is_string($task)) {
+      $task = $this->getTask($task);
+    }
+    $stack->addTask($task);
+  }
+
+  /**
+   * Registers the default tasks that ship as methods on the Site class.
    *
    * TODO: Should this be named more intuitively?
    */
