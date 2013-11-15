@@ -18,11 +18,15 @@ class DrushAlias implements InfoFetcherInterface {
     // TODO: We need to handle multiple environments here.
     foreach ($aliases as $name => $alias) {
       if (!empty($alias['fetcher'])) {
-        $info = $alias['fetcher'];
-        if (!empty($list[$info['name']])) {
-          $info = ((array) $list[$info['name']] + $info);
-        }
-        $list[$info['name']] = $info;
+        $alias = $alias + $alias['fetcher'];
+        unset($alias['fetcher']);
+      }
+      // If the alias has a `name` key set, we will presume it is fetcher-eligible.
+      if (isset($alias['name'])) {
+        $siteName = preg_replace('/(.*)\.(.*)/', '\1', $name);
+        $environmentName = preg_replace('/(.*)\.(.*)/', '\2', $name);
+        $list[$siteName]['environments'][$environmentName] = $alias;
+        $list[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
       }
     }
     return $list;
