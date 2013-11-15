@@ -402,9 +402,8 @@ function drush_fetcher_delete($site_name) {
  */
 function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
   $site = fetcher_get_site($site_name);
-  if ($site_name) {
-    $site['name'] = $site_name;
-  }
+  $site->configureFromEnvironment();
+
   if (is_null($task_name)) {
     drush_fetcher_list_tasks($site);
   }
