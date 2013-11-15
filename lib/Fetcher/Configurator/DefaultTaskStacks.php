@@ -13,12 +13,12 @@ class DefaultTaskStacks implements ConfiguratorInterface {
     $stack->afterMessage = 'Your site is setup and is now running at [[hostname]]!';
     $tasks = array(
       'ensure_working_directory',
-      'ensure_site_info_file',
       'ensure_code',
-      'ensure_database_connection',
       'ensure_settings_file',
       'ensure_sym_links',
       'ensure_drush_alias',
+      'ensure_database_connection',
+      'ensure_site_info_file',
       'ensure_server_host_enabled',
     );
     foreach ($tasks as $name) {
