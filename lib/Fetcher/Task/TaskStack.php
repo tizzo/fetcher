@@ -16,13 +16,13 @@ class TaskStack extends Task implements TaskInterface {
       throw new TaskRunException('No sub-tasks were added before running the task stack.');
     }
     if (!empty($this->beforeMessage)) {
-      $site['log']($this->prepMessage($this->beforeMessage, $site));
+      $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
     }
     foreach ($this->tasks as $name => $task) {
       $task->run($site);
     }
     if (!empty($this->afterMessage)) {
-      $site['log']($this->prepMessage($this->afterMessage, $site));
+      $site['log']($this->prepMessage($this->afterMessage, $site), 'success');
     }
   }
 

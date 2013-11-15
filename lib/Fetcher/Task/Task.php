@@ -51,7 +51,7 @@ class Task implements TaskInterface {
     }
     \call_user_func_array($this->callable, array($site) + $arguments);
     if (!empty($this->afterMessage)) {
-      $site['log']($this->prepMessage($this->afterMessage, $site));
+      $site['log']($this->prepMessage($this->afterMessage, $site), 'ok');
     }
   }
 
