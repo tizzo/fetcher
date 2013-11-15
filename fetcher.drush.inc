@@ -150,18 +150,6 @@ function drush_fetcher_list($name = '', $page = 0) {
 }
 
 /**
- * Logs information in a standard way from an Exception that occured.
- */
-function drush_fetcher_log_exception_information(Exception $e) {
-  $args = array(
-    '@error' => $e->getMessage(),
-    '@line' => $e->getLine(),
-    '@file' => $e->getFile()
-  );
-  drush_log(dt('@error on line @line of @file.', $args), 'error');
-}
-
-/**
  * Constructor function for creating and configuring a site object.
  *
  * @param $name
@@ -537,19 +525,6 @@ function drush_fetcher_extract_keys_from_context() {
 }
 
 /**
- * Prompt for a valid site name.
- */
-function drush_fetcher_prompt_for_site_name() {
-  $site_name = drush_prompt(dt('Please enter the site name you would like to work with or n to cancel'));
-  if ($site_name == 'n') {
-    return FALSE;
-  }
-  else {
-    return trim($site_name);
-  }
-}
-
-/**
  * Implements hook_drush_init().
  *
  * Register our autoloader.
@@ -633,100 +608,15 @@ function drush_fetcher_get_asset($asset_name, array $vars = array()) {
 }
 
 /**
- * Attempt to identify the site we are working with from the specified path.
- *
- * @return
- *   A stdClass object containing site information or FALSE on failure.
+ * Logs information in a standard way from an Exception that occured.
  */
-function drush_fetcher_find_site_by_directory($directory) {
-  $parts = explode(DIRECTORY_SEPARATOR, $directory);
-  $site_info = FALSE;
-  while (count($parts)) {
-    $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
-    if (file_exists($path)) {
-      $site_info = drush_fetcher_load_site_info_from_file($path);
-      break;
-    }
-    array_pop($parts);
-  }
-  return $site_info;
+function drush_fetcher_log_exception_information(Exception $e) {
+  $args = array(
+    '@error' => $e->getMessage(),
+    '@line' => $e->getLine(),
+    '@file' => $e->getFile()
+  );
+  drush_log(dt('@error on line @line of @file.', $args), 'error');
 }
 
-/**
- * Find a site from a site name, drush alias or current path.
- *
- * @param $site_name
- *   An optional param representing a site name or drush alias to the site.
- * @return
- *   An array object containing site information.
- */
-function fetcher_get_site_from_name_alias_or_context($site_name = FALSE) {
 
-  $site_info = FALSE;
-  try {
-    // If we have a drush alias starting with `@` then we look up the local
-    // alias and try to get the site info from the site_info file.
-    if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
-      // We may have multiple environments but if we wrote the aliases then the
-      // first one is the local one.
-      $spec = array_shift($specs);
-      $site_info = drush_fetcher_find_site_by_directory($spec['root']);
-      if (is_array($site_info)) {
-        $site_name = $site_info['name'];
-      }
-    }
-
-    $site = fetcher_get_site($site_name);
-    $site_name = $site['name'];
-
-    // Otherwise load the site from the info fetcher based on the site name.
-    if ($site->fetchInfo()) {
-      $site_info = drush_fetcher_fetch_site_info($site_name);
-    }
-    else {
-      drush_set_error(dt('This site information could not be loaded.'));
-      return FALSE;
-    }
-  }
-  catch (Exception $e) {
-    drush_fetcher_log_exception_information($e);
-    drush_set_error(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())));
-  }
-}
-
-/**
- * Load site info from a specific file.
- *
- * @param $path
- *   The path of the yaml file where site info is stored.
- * @return
- *   A stdClass object with data about the site.
- */
-function drush_fetcher_load_site_info_from_file($path) {
-  $return = FALSE;
-  if (is_file($path) && $site_info = file_get_contents($path)) {
-    // TODO This should be using fetcher_drush_get_option at the very least.
-    $class = drush_get_option('fetcher_site_class', '\Fetcher\Site');
-    $return = $class::parseSiteInfo($site_info);
-  }
-  return $return;
-}
-
-/**
- * Get an option from the configured Fetcher array.
- *
- * @param $option
- *   The name of the option.
- * @param $default
- *  The default to use if no value is specified.
- */
-function fetcher_drush_get_option($option, $default = NULL) {
-  $options = drush_fetcher_extract_keys_from_context();
-  if (isset($options[$option])) {
-    $return = $options[$option];
-  }
-  else {
-    $return = $default;
-  }
-  return $return;
-}
