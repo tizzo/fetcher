@@ -150,6 +150,41 @@ function drush_fetcher_list($name = '', $page = 0) {
 }
 
 /**
+ * Attempt to identify the site we are working with from the specified path.
+ *
+ * Searches out from the site_info.yaml file.
+ *
+ * @return
+ *   A stdClass object containing site information or FALSE on failure.
+ */
+function fetcher_find_site_info_from_path($directory) {
+  $parts = explode(DIRECTORY_SEPARATOR, $directory);
+  $site_info = FALSE;
+  $path = '';
+  while (count($parts)) {
+    $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
+    if (file_exists($path)) {
+      return $path;
+    }
+    array_pop($parts);
+  }
+}
+
+/**
+ * Attempt to find a site info path from current direocry or site alias.
+ */
+function fetcher_find_site_info_path_from_name_or_cwd($name) {
+  $path = FALSE;
+  if (strpos($name, '@') === 0 && $specs = drush_sitealias_get_record($name)) {
+    $path = $specs['root'];
+  }
+  if (!$name && !$path) {
+    $path = getcwd();
+  }
+  return fetcher_find_site_info_from_path($path);
+}
+
+/**
  * Constructor function for creating and configuring a site object.
  *
  * @param $name
@@ -158,6 +193,12 @@ function drush_fetcher_list($name = '', $page = 0) {
  *   An instantiated and configured \Fetcher\Site object.
  */
 function fetcher_get_site($name = FALSE) {
+
+  $conf = array();
+
+  if ($site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
+    $conf['site.info path'] = $site_info_path;
+  }
 
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
@@ -251,6 +292,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 function drush_fetcher_fetch($site_name = FALSE) {
 
   $site = fetcher_get_site($site_name);
+  $site->configureFromEnvironment();
 
   /*
   // TODO: Consider deprecating this crazy function.
