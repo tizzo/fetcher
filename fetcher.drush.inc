@@ -215,11 +215,11 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
   $site['version'] = $version;
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
-  $site['name'] = $site_name;
 
   try {
     drush_fetcher_ensure_site($site);
     // Install the site
+    // TODO: Move this part into a task.
     $commandline_args = array();
     $commandline_options = array(
       'account-name' => 'admin',
