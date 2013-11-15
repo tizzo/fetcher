@@ -574,8 +574,8 @@ class Site extends Pimple implements SiteInterface {
       return $process;
     });
 
-    // If the log function is changed it must have the same function signature.
-    $this['log function'] = $this->protect(function($message) {
+    // If the log.function is changed it must have the same function signature.
+    $this['log.function'] = $this->protect(function($message) {
       print $message . PHP_EOL;
     });;
 
@@ -583,7 +583,7 @@ class Site extends Pimple implements SiteInterface {
     $site = $this;
     $this['log'] = $this->protect(function() use ($site) {
       $args = func_get_args();
-      return call_user_func_array($site['log function'], $args);
+      return call_user_func_array($site['log.function'], $args);
     });
     unset($site);
 

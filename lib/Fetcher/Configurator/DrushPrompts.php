@@ -12,6 +12,8 @@ class DrushPrompts implements ConfiguratorInterface {
     $site['name'] = $site->share(function($c) {
       return \drush_prompt(\dt('Please specify a site name'));
     });
+    $site['log.function'] = 'drush_log';
+
     // Get the environment for this operation.
     $site['environment.remote'] = function($c) {
       static $value = FALSE;
