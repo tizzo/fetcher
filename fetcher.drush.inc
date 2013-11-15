@@ -278,7 +278,7 @@ function drush_fetcher_fetch($site_name = FALSE) {
   }
   // TODO: Deprecate this function all the task running function instead.
   if (!drush_fetcher_ensure_site($site)) {
-    drush_set_error(dt('Provisioing and synchronizing the site has failed.'));
+    drush_set_error(dt('Provisioning and synchronizing the site has failed.'));
     return FALSE;
   }
 
