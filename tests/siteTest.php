@@ -6,9 +6,15 @@ use \Fetcher\Site,
     \Fetcher\Task\TaskStack,
     \Fetcher\Task\Task;
  
+/**
+ * Tests the \Fetcher\Site() class.
+ */
 class SiteTest extends PHPUnit_Framework_TestCase {
 
-  public function testConfigureMethod() {
+  /**
+   * Test the conifgure() method.
+   */
+  public function testConfigure() {
     $conf = array('foo' => 'bar');
     $site = new Site($conf);
     $this->assertEquals($site['foo'], 'bar');
@@ -29,6 +35,9 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($site['monkey'], 'banana');
   }
 
+  /**
+   * Test the setDefaultConfigration() method.
+   */
   public function testSetDefaultConfiguration() {
     $site = new Site();
     $this->assertFalse(isset($site['foo']));
@@ -40,6 +49,9 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($site['foo'], 'bar');
   }
 
+  /**
+   * Test the configureFromEnvironment() method.
+   */
   public function testConfigureFromEnvironment() {
     $site = new Site();
     $site['foo'] = NULL;
@@ -66,6 +78,9 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     }
   }
 
+  /**
+   * Test the addSubTask() method.
+   */
   public function testAddSubTask() {
     $site = new Site();
     $stack = new TaskStack('foo');

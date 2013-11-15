@@ -3,7 +3,8 @@ require_once "vendor/autoload.php";
 
 // Load domain classes
 use \Fetcher\Task\TaskLoader,
-  \Fetcher\Task\TaskLoaderException;
+  \Fetcher\Task\TaskLoaderException,
+  \Fetcher\Site;
 
 // Load test fixture classes.
 use \Fetcher\Tests\Fixtures\Tasks\TaskAnnotation,
@@ -11,6 +12,17 @@ use \Fetcher\Tests\Fixtures\Tasks\TaskAnnotation,
 
 
 class TaskLoaderTest extends PHPUnit_Framework_TestCase {
+
+  /**
+   * Get a site object.
+   */
+  public function getSite(&$history = array()) {
+    $site = new Site();
+    $site['log'] = $site->protect(function ($message) use (&$history) {
+      $history[] = $message;
+    });
+    return $site;
+  }
 
   /**
    * Test the scanObject() method.
@@ -25,11 +37,8 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($task->fetcherTask, 'some_task_name');
     $this->assertEquals($task->beforeMessage, 'We are about to run a task.');
     $this->assertEquals($task->afterMessage, 'We have just run a task.');
-    $site = new \Fetcher\Site();
     $history = array();
-    $site['log'] = $site->protect(function ($message) use (&$history) {
-      $history[] = $message;
-    });
+    $site = $this->getSite($history); 
     $task->run($site);
     $this->assertEquals($history[0], 'We are about to run a task.');
     $this->assertEquals($history[1], 'We have just run a task.');
@@ -68,6 +77,9 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('some_function', $task->fetcherTask);
     $this->assertEquals('This does some stuff', $task->description);
     $this->assertEquals('The stuff it does is awesome.', $task->afterMessage);
+    $site = $this->getSite();
+    $task->run($site);
+    $this->assertTrue($site['fetcher_task_annotated_function_ran'], 'The annotated function was properly added as the task\'s callable.');
     try {
       $loader->scanFunctionsInFile('NONEXISTANTPATH');
       $this->assertEquals(FALSE, TRUE, 'Loader failed to throw an exception when loading a non-existant path.');

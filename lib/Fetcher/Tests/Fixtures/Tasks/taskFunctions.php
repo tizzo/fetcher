@@ -17,5 +17,5 @@ function fetcher_test_non_annotated_function() {
  * @afterMessage The stuff it does is awesome.
  */
 function fetcher_task_annotated_function(\Fetcher\SiteInterface $site) {
-  $site['fetcher_task_annotated_function'] = TRUE;
+  $site['fetcher_task_annotated_function_ran'] = TRUE;
 }
