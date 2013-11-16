@@ -29,6 +29,12 @@ function fetcher_drush_command() {
     'database-admin-user-name' => 'The database username to use for administration commands.',
     'database-admin-user-password' => 'The database password to use for administration commands.',
     'site' => 'The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.',
+    'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
+    'site' => 'The folder to use in drupal\'s `sites/` folder, defaults to default.',
+    'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
+    'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
+    'remote-environment' => 'The name of the environment to load from.',
+
   );
 
   $items['fetcher-list'] = array(
@@ -60,19 +66,14 @@ function fetcher_drush_command() {
       'name' => 'The name of a site to install on this server.',
     ),
     'options' => array(
-      'site' => 'The folder to use in drupal\'s `sites/` folder, defaults to default.',
-      'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       'file-sync' => array(
         'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
         'value' => 'optional',
         'example-value' => 'private',
       ),
-      'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
       //'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
-      'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-      'remote-environment' => 'The name of the environment to load from.',
-    ),
+          ),
   );
 
   $environment_items['fetcher-create'] =  array(
