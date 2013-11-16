@@ -9,7 +9,7 @@ class DrushPrompts implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
     // Note, this conifgurator is only intended for use with drush.
-    $site['name'] = $site->share(function($c) {
+    $site['name.global'] = $site->share(function($c) {
       return \drush_prompt(\dt('Please specify a site name'));
     });
     $site['log.function'] = 'drush_log';

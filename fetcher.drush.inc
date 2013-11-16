@@ -216,10 +216,10 @@ function fetcher_get_site($name = FALSE) {
 
   $site = new \Fetcher\Site($conf);
   if ($name) {
-    $site['name'] = $name;
+    $site['name.global'] = $name;
   }
 
-  // Use conifgured defaults where possible.
+  // Use conifgured defaults from drushrc files.
   $site->configure(drush_fetcher_extract_keys_from_context());
 
   // First we apply configuration from the global context
@@ -486,8 +486,7 @@ function fetcher_fetcher_option_key_mapping() {
       'database-admin-user-password' => 'database.admin.user.password',
       'hostname' => 'hostname',
       'site' => 'site',
-      // This is a bit weird and there's probably a better way to do this.
-      'name' => 'local-name',
+      'local-name' => 'name',
     ),
   );
 }

@@ -555,8 +555,8 @@ class Site extends Pimple implements SiteInterface {
    */
   public function setDefaults() {
     // Defaults to the local name.
-    $this['name.global'] = function($c) {
-      return $c['name'];
+    $this['name'] = function($c) {
+      return $c['name.global'];
     };
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
