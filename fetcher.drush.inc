@@ -493,6 +493,8 @@ function fetcher_fetcher_option_key_mapping() {
  *   The hostname of the sites to filter for, must be an exact match.
  */
 function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
+  /*
+  // Needs a refactor...
   $site = fetcher_get_site();
   if (is_null($server_hostname)) {
     $server_hostname = $site['system']->getHostname();
@@ -537,6 +539,7 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     }
   }
   return $sites;
+  */
 }
 
 /**
