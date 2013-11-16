@@ -196,7 +196,7 @@ function fetcher_get_site($name = FALSE) {
 
   $conf = array();
 
-  if ($site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
+  if (!$name && $site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
     $conf['site.info path'] = $site_info_path;
   }
 
