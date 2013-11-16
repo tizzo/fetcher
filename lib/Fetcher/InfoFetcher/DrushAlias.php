@@ -6,16 +6,11 @@ use Fetcher\InfoFetcher\InfoFetcherInterface;
 class DrushAlias implements InfoFetcherInterface {
 
   /**
-   * Implements Fetcher\InfoFetcher\InfofetcherInterface::listSites().
-   *
-   * List all sites specidied in the drush aliases.
+   * Get all available sites from aliases.
    */
-  public function listSites($name = '', $page = 0, $options = array()) {
-    // TODO: Add name searching.
+  public function getSitesFromAliases() {
     $aliases = _drush_sitealias_find_and_load_all_aliases();
     $sites = array();
-    $list = array();
-    // TODO: We need to handle multiple environments here.
     foreach ($aliases as $name => $alias) {
       if (!empty($alias['fetcher'])) {
         $alias = $alias + $alias['fetcher'];
@@ -25,8 +20,24 @@ class DrushAlias implements InfoFetcherInterface {
       if (isset($alias['name'])) {
         $siteName = preg_replace('/(.*)\.(.*)/', '\1', $name);
         $environmentName = preg_replace('/(.*)\.(.*)/', '\2', $name);
-        $list[$siteName]['environments'][$environmentName] = $alias;
-        $list[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
+        $sites[$siteName] = $alias;
+        $sites[$siteName]['environments'][$environmentName] = $alias;
+        $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
+      }
+    }
+    return $sites;
+  }
+
+  /**
+   * Implements Fetcher\InfoFetcher\InfofetcherInterface::listSites().
+   *
+   * List all sites specidied in the drush aliases.
+   */
+  public function listSites($search = '', $page = 0, $options = array()) {
+    $list = array();
+    foreach ($this->getSitesFromAliases() as $name => $site) {
+      if ($name == '' || strpos($name, $search) !== FALSE) {
+        $list[$name] = $site;
       }
     }
     return $list;
