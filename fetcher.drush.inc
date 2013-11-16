@@ -294,14 +294,6 @@ function drush_fetcher_fetch($site_name = FALSE) {
   $site = fetcher_get_site($site_name);
   $site->configureFromEnvironment();
 
-  /*
-  // TODO: Consider deprecating this crazy function.
-  // TODO: Make sure we properly report if no site could be found.
-  if (!$site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name)) {
-    drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
-    return FALSE;
-  }
-  */
   if (drush_get_option('sql-sync')) {
     // Add the db sync task to the stack.
     $site->addSubTask('ensure_site', 'sync_db');
