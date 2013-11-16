@@ -70,8 +70,8 @@ function fetcher_drush_command() {
       ),
       'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
       //'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
-      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-      'environment-remote' => 'The name of the environment to load from.',
+      'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
+      'remote-environment' => 'The name of the environment to load from.',
     ),
   );
 
@@ -449,7 +449,7 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
   drush_command_invoke_all('fetcher_option_key_mapping_alter', $keys);
   // Load any config from the global context and set them on the site object.
   if (!empty($keys['context'])) {
-    foreach ($keys['context'] as $config_name => $drush_name) {
+    foreach ($keys['context'] as $drush_name => $config_name) {
       if ($value = drush_get_context($drush_name)) {
         $site[$config_name] = $value;
       }
@@ -457,7 +457,7 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
   }
   // Load any options from the cli parameters and configure them on the site object.
   if (!empty($keys['options'])) {
-    foreach ($keys['options'] as $config_name => $drush_name) {
+    foreach ($keys['options'] as $drush_name => $config_name) {
       if ($value = drush_get_option($drush_name)) {
         $site[$config_name] = $value;
       }
@@ -475,8 +475,8 @@ function fetcher_fetcher_option_key_mapping() {
       'DRUSH_VERBOSE' => 'verbose',
     ),
     'options' => array(
-      'environment-local' => 'environment.local',
-      'environment-remote' => 'environment.remote',
+      'local-environment' => 'environment.local',
+      'remote-environment' => 'environment.remote',
       'database-user-name' => 'database.user.name',
       'database-user-password' => 'database.user.password',
       'database' => 'database.database',
