@@ -36,7 +36,7 @@ class DrushAlias implements InfoFetcherInterface {
   public function listSites($search = '', $page = 0, $options = array()) {
     $list = array();
     foreach ($this->getSitesFromAliases() as $name => $site) {
-      if ($name == '' || strpos($name, $search) !== FALSE) {
+      if ($search == '' || ($search != '' && strpos($name, $search) !== FALSE)) {
         $list[$name] = $site;
       }
     }
