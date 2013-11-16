@@ -196,8 +196,11 @@ function fetcher_get_site($name = FALSE) {
 
   $conf = array();
 
-  if (!$name && $site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
-    $conf['site.info path'] = $site_info_path;
+  // If we have an alias or no name at all try to find a site_info.yml file.
+  if (!$name || strpos($name, '@') === 0) {
+    if ($site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
+      $conf['site.info path'] = $site_info_path;
+    }
   }
 
   // Set drush appropriate configurators.
