@@ -20,7 +20,9 @@ class DrushAlias implements InfoFetcherInterface {
       if (isset($alias['name'])) {
         $siteName = preg_replace('/(.*)\.(.*)/', '\1', $name);
         $environmentName = preg_replace('/(.*)\.(.*)/', '\2', $name);
-        $sites[$siteName] = $alias;
+        if (empty($sites[$siteName])) {
+          $sites[$siteName] = $alias;
+        }
         $sites[$siteName]['environments'][$environmentName] = $alias;
         $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
       }
