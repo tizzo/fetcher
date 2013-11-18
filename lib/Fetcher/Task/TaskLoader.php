@@ -65,6 +65,14 @@ class TaskLoader {
   }
 
   /**
+   * Scan all user space functions.
+   */
+  public function scanAllUserSpaceFunctions() {
+    $existingFunctions = get_defined_functions();
+    return $this->scanFunctions($existingFunctions['user']);
+  }
+
+  /**
    *
    * @param $functions
    *   An array of functions to scan for fetcherTask annotations

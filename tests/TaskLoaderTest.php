@@ -64,6 +64,24 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Test the scanAllUserSpaceFunctions method.
+   * This method also tests the scanFunctions() method.
+   */
+  public function testScanUserSpaceFunctions() {
+    $loader = new TaskLoader();
+    $path = __DIR__ . '/../lib/Fetcher/Tests/Fixtures/Tasks/userSpaceFunctions.php';
+    $tasks = $loader->scanAllUserSpaceFunctions();
+    $this->assertEquals(0, count($tasks));
+    require $path;
+    $tasks = $loader->scanAllUserSpaceFunctions();
+    $this->assertEquals(1, count($tasks));
+    $task = array_pop($tasks);
+    $site = $this->getSite($history);
+    $task->run($site);
+    $this->assertEquals(TRUE, $site['user_space_task_ran']);
+  }
+
+  /**
    * Test the scanFunctionsInFile method.
    * This method also tests the scanFunctions() method.
    */
