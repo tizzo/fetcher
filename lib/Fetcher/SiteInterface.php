@@ -69,9 +69,40 @@ interface SiteInterface {
   public function syncFiles($type);
 
   /**
-   * Removes all traces of this site from this system.
+   * Removes The working diretory from this system.
+   *
+   * @fetcherTask remove_working_directory
+   * @description Remove the working directory.
+   * @afterMessage Removed `[[site.working_directory]]`.
    */
-  public function remove();
+  public function removeWorkingDirectory($site = NULL);
+
+  /**
+   * Removes drush aliases for this site from this system.
+   *
+   * @fetcherTask remove_drush_aliases
+   * @description Remove the site's drush aliases.
+   * @afterMessage Removed `[[drush_alias.path]]`.
+   */
+  public function removeDrushAliases($site = NULL);
+
+  /**
+   * Removes the site's database and user.
+   *
+   * @fetcherTask remove_database
+   * @description Remove the site's database and user.
+   * @afterMessage Removed database `[[database.database]]` and user `[[database.user.database]]@[[database.user.hostname]]`.
+   */
+  public function removeDatabase($site = NULL);
+
+  /**
+   * Removes the site's virtualhost.
+   *
+   * @fetcherTask remove_vhost
+   * @description Remove the site's virtualhost (or server equivalent).
+   * @afterMessage Removed virtual host for `[[hostname]]`.
+   */
+  public function removeVirtualHost($site = NULL);
 
   /**
    * Register a build hook that can be run before or after a site build.

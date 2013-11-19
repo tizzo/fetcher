@@ -21,6 +21,21 @@ class DefaultTaskStacks implements ConfiguratorInterface {
       'ensure_site_info_file',
       'ensure_server_host_enabled',
     );
+    self::addTasksToStack($tasks, $stack, $site);
+    $site->addTask($stack);
+    $stack = new TaskStack('remove_site');
+    $stack->description = 'Completely remove this site and destroy all data associated with it on the server.';
+    $stack->afterMessage = 'The site `[[name]]` at `[[site.working_directory]]` has been completely removed!';
+    $tasks = array(
+      'remove_working_directory',
+      'remove_drush_aliases',
+      'remove_database',
+      'remove_vhost',
+    );
+    self::addTasksToStack($tasks, $stack, $site);
+  }
+
+  static public function addTasksToStack($tasks, $stack, $site) {
     foreach ($tasks as $name) {
       $task = $site->getTask($name);
       if ($task) {
@@ -30,7 +45,6 @@ class DefaultTaskStacks implements ConfiguratorInterface {
         $site['log'](\sprintf('Task `%s` not found.', $name), 'warning');
       }
     }
-    $site->addTask($stack);
   }
 
 }

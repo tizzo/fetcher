@@ -357,22 +357,64 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Removes all traces of this site from this system.
+   * Removes The working diretory from this system.
    *
-   * @fetcherTask remove_site
-   * @description Completely remove this site and destroy all data associated with it on the server.
-   * @afterMessage This site `[[name]]` has been completely removed.
+   * @fetcherTask remove_working_directory
+   * @description Remove the working directory.
+   * @afterMessage Removed `[[site.working_directory]]`.
    */
-  public function remove() {
-    $this['system']->ensureDeleted($this['site.working_directory']);
-    $this['system']->ensureDeleted($this['drush_alias.path']);
-    if ($this['database']->exists()) {
-      $this['database']->removeDatabase();
+  public function removeWorkingDirectory($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
     }
-    if ($this['database']->userExists()) {
-      $this['database']->removeUser();
+    $site['system']->ensureDeleted($site['site.working_directory']);
+  }
+
+  /**
+   * Removes drush aliases for this site from this system.
+   *
+   * @fetcherTask remove_drush_aliases
+   * @description Remove the site's drush aliases.
+   * @afterMessage Removed `[[drush_alias.path]]`.
+   */
+  public function removeDrushAliases($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
     }
-    $this['server']->ensureSiteRemoved();
+    $site['system']->ensureDeleted($site['drush_alias.path']);
+  }
+
+  /**
+   * Removes the site's database and user.
+   *
+   * @fetcherTask remove_database
+   * @description Remove the site's database and user.
+   * @afterMessage Removed database `[[database.database]]` and user `[[database.user.database]]@[[database.user.hostname]]`.
+   */
+  public function removeDatabase($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
+    }
+    if ($site['database']->exists()) {
+      $site['database']->removeDatabase();
+    }
+    if ($site['database']->userExists()) {
+      $site['database']->removeUser();
+    }
+  }
+
+  /**
+   * Removes the site's virtualhost.
+   *
+   * @fetcherTask remove_vhost
+   * @description Remove the site's virtualhost (or server equivalent).
+   * @afterMessage Removed virtual host for `[[hostname]]`.
+   */
+  public function removeVirtualHost($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
+    }
+    $site['server']->ensureSiteRemoved();
   }
 
   /**
