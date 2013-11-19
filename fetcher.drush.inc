@@ -239,6 +239,9 @@ function fetcher_get_site($name = FALSE) {
   // site_info.yml file.
   drush_fetcher_extract_configuration_keys_from_drush_context($site);
 
+  // Allow other modules to modify the site object.
+  drush_command_invoke_all('fetcher_site_alter', $site);
+
   return $site;
 }
 
