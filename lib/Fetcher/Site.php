@@ -6,7 +6,6 @@ use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
 use \Symfony\Component\Process\Process;
 use \Fetcher\Utility\PHPGenerator,
-    \Fetcher\Task\TaskLoader,
     \Fetcher\Task\TaskStack,
     \Fetcher\Task\Task,
     \Fetcher\Configurator\DefaultTaskStacks,
@@ -31,6 +30,8 @@ class Site extends Pimple implements SiteInterface {
       print $message . PHP_EOL;
     });
 
+    // Populate defaults.
+    $this->setDefaults();
     // Default tasks currently must be registered before task stacks that use them
     // are defined.
     $this->registerDefaultTasks();
@@ -39,8 +40,6 @@ class Site extends Pimple implements SiteInterface {
         '\Fetcher\Configurator\DefaultTaskStacks',
       );
     }
-    // Populate defaults.
-    $this->setDefaults();
     // Configure with any settings passed into the constructor.
     if (!empty($conf)) {
       $this->configure($conf);
@@ -609,6 +608,7 @@ class Site extends Pimple implements SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults() {
+
     // Defaults to the local name.
     $this['name'] = function($c) {
       return $c['name.global'];
@@ -794,6 +794,13 @@ class Site extends Pimple implements SiteInterface {
     $this['info_fetcher'] = $this->share(function($c) {
       return new $c['info_fetcher.class']($c);
     });
+
+    $this['task_loader.class'] = '\Fetcher\Task\TaskLoader';
+    // Load a plugin appropriate to the Task Loader.
+    $this['task_loader'] = $this->share(function($c) {
+      $class = $c['task_loader.class'];
+      return new $class($c);
+    });
   }
 
   /**
@@ -870,8 +877,7 @@ class Site extends Pimple implements SiteInterface {
    * TODO: Should this be named more intuitively?
    */
   public function registerDefaultTasks() {
-    $taskLoader = new TaskLoader();
-    $this->tasks = $taskLoader->scanObject($this) + $this->tasks;
+    $this->tasks = $this['task_loader']->scanObject($this) + $this->tasks;
   }
 
   public function legacyRegisterDefaultTasks() {
