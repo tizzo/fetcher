@@ -138,7 +138,7 @@ class TaskLoader {
    * @param  string $docblock
    * @return array
    */
-  function parseAnnotations($docblock) {
+  public function parseAnnotations($docblock) {
     $annotations = array();
     if (preg_match_all('/@(?P<name>[A-Za-z_-]+)(?:[ \t]+(?P<value>.*?))?[ \t]*\r?$/m', $docblock, $matches)) {
       $numMatches = count($matches[0]);
