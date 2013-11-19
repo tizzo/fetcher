@@ -147,8 +147,10 @@ class Site extends Pimple implements SiteInterface {
    */
   public function addEphemeralKey($key) {
     $ephemeralKeys = $this['configuration.ephemeral'];
-    $ephemeralKeys[] = $key;
-    $this['configuration.ephemeral'] = $ephemeralKeys;
+    if (in_array($key, $ephemeralKeys) == FALSE) {
+      $ephemeralKeys[] = $key;
+      $this['configuration.ephemeral'] = $ephemeralKeys;
+    }
   }
 
   /**
