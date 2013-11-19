@@ -33,6 +33,7 @@ class DefaultTaskStacks implements ConfiguratorInterface {
       'remove_vhost',
     );
     self::addTasksToStack($tasks, $stack, $site);
+    $site->addTask($stack);
   }
 
   static public function addTasksToStack($tasks, $stack, $site) {
