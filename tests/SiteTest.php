@@ -102,4 +102,24 @@ class SiteTest extends PHPUnit_Framework_TestCase {
       $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
     }
   }
+
+  /**
+   * Test the getEnvironment() method.
+   */
+  public function testGetEnvironment() {
+    $site = new Site();
+    $site['environments'] = array(
+      'dev' => array(
+        'root' => '/foo',
+      ),
+      'staging' => array(
+        'root' => '/bar',
+      ),
+    );
+    $dev = $site->getEnvironment('dev');
+    $staging = $site->getEnvironment('staging');
+    $this->assertEquals('/foo', $dev['root']);
+    $this->assertEquals('/bar', $staging['root']);
+  }
+
 }

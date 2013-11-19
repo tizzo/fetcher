@@ -113,6 +113,19 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Get environment configuration.
+   *
+   * @param $environmentName
+   *   The name of the environment to fetch configuration for.
+   */
+  public function getEnvironment($environmentName) {
+    if (empty($this['environments'][$environmentName])) {
+      throw new FetcherException(sprintf('Invalid environment %s requested.', $environmentName));
+    }
+    return $this['environments'][$environmentName];
+  }
+
+  /**
    * Configure the site object from one of the loaded environments.
    */
   public function configureFromEnvironment($environment = NULL) {
