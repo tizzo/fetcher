@@ -3,8 +3,10 @@ require_once "vendor/autoload.php";
 
 // Load domain classes
 use \Fetcher\Task\TaskLoader,
-  \Fetcher\Task\TaskLoaderException,
-  \Fetcher\Site;
+    \Fetcher\Task\TaskLoaderException,
+    \Fetcher\Task\Task,
+    \Fetcher\Task\TaskStack,
+    \Fetcher\Site;
 
 // Load test fixture classes.
 use \Fetcher\Tests\Fixtures\Tasks\TaskAnnotation,

@@ -505,14 +505,16 @@ class Site extends Pimple implements SiteInterface {
     // We do this the first time to instantiate our handler classes allowing
     // them to set their own defaults.
     foreach ($keys as $key) {
-      $this[$key];
+      if (!in_array($key, $this['configuration.ephemeral'])) {
+        $this[$key];
+      }
     }
     $keys = $this->keys();
     sort($keys);
     foreach ($keys as $key) {
-      $value = $this[$key];
       // Ensure we should be storing this configuration.
       if (!in_array($key, $this['configuration.ephemeral'])) {
+        $value = $this[$key];
         // Ensure this is the sort of value we can store.
         if (!is_object($value) || get_class($value) == 'stdClass') {
           $conf[$key] = $value;
