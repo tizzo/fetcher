@@ -581,7 +581,10 @@ function fetcher_drush_init() {
   $command = drush_get_command();
   // Check to see if we're running a Fetcher command.
   if (strpos($command['command-hook'], 'fetcher-') === 0) {
+    // Include our autolaoder (allows us to autoload fetcher extension's classes).
     spl_autoload_register('fetcher_autoload');
+    // Include composer's autoloader.
+    require __DIR__ . '/vendor/autoload.php';
   }
 }
 
