@@ -172,7 +172,7 @@ class Mysql {
   /**
    * Execute a MySQL query at the command line.
    */
-  protected function executeQuery($command, $setDatabase = TRUE, $config = NULL) {
+  public function executeQuery($command, $setDatabase = TRUE, $config = NULL) {
 
     if (is_null($config)) {
       $config = $this->getQueryConfig(TRUE);
