@@ -3,28 +3,77 @@
 namespace Fetcher\InfoFetcher;
 use Fetcher\InfoFetcher\InfoFetcherInterface;
 
-class DrushAlias  implements InfoFetcherInterface {
+class DrushAlias implements InfoFetcherInterface {
+
+  /**
+   * Get all available sites from aliases.
+   */
+  public function getSitesFromAliases() {
+    $aliases = array();
+    // Here we use the method used by drush_sitealias_print (the guts of `drush sa`).
+    foreach (_drush_sitealias_all_list() as $site => $aliasRecord) {
+      $siteName = substr($site, 1);
+      $aliases[$siteName] = _drush_sitealias_find_and_load_alias($siteName);
+    }
+    $sites = array();
+    foreach ($aliases as $name => $alias) {
+      if (!empty($alias['fetcher'])) {
+        $alias = $alias + $alias['fetcher'];
+        unset($alias['fetcher']);
+      }
+      // If the alias has a `name` key set, we will presume it is fetcher-eligible.
+      if (isset($alias['name'])) {
+        $siteName = preg_replace('/(.*)\.(.*)/', '\1', $name);
+        $environmentName = preg_replace('/(.*)\.(.*)/', '\2', $name);
+        if (!isset($sites[$siteName])) {
+          $sites[$siteName] = array();
+        }
+        // Build up the site data.
+        $sites[$siteName] = $sites[$siteName] + $alias;
+        $sites[$siteName]['environments'][$environmentName] = $alias;
+        $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
+        // We already have an alias for this site, so specify the file.
+        $sites[$siteName]['drush_alias.path'] = $alias['#file'];
+
+      }
+    }
+    foreach ($sites as $siteName => $site) {
+      // To keep our data clean we only want to add items that are actually different from environment to environment.
+      if (count($sites[$siteName]['environments']) > 1) {
+        // Find keys common to all aliases, remove the.
+        $environmentRedundancies = call_user_func_array('array_intersect_assoc', $sites[$siteName]['environments']);
+        foreach ($sites[$siteName] as $key => $value) {
+          // Remove drush private attributes.
+          if (strpos($key, '#') === 0) {
+            foreach ($sites[$siteName]['environments'] as &$environment) {
+              unset($environment[$key]);
+            }
+            unset($sites[$siteName][$key]);
+          }
+          if (!empty($environmentRedundancies) && in_array($key, array_keys($environmentRedundancies))) {
+            foreach ($sites[$siteName]['environments'] as &$environment) {
+              unset($environment[$key]);
+            }
+          }
+        }
+      }
+    }
+    return $sites;
+  }
 
   /**
    * Implements Fetcher\InfoFetcher\InfofetcherInterface::listSites().
    *
    * List all sites specidied in the drush aliases.
    */
-  public function listSites($name = '', $page = 0, $options = array()) {
-    // TODO: Add name searching.
-    $aliases = _drush_sitealias_find_and_load_all_aliases();
-    $sites = array();
+  public function listSites($search = '', $page = 0, $options = array()) {
     $list = array();
-    // TODO: We need to handle multiple environments here.
-    foreach ($aliases as $name => $alias) {
-      if (!empty($alias['fetcher'])) {
-        $info = $alias['fetcher'];
-        if (!empty($list[$info['name']])) {
-          $info = ((array) $list[$info['name']] + $info);
-        }
-        $list[$info['name']] = $info;
+    foreach ($this->getSitesFromAliases() as $name => $site) {
+      if ($search == '' || ($search != '' && strpos($name, $search) !== FALSE)) {
+        $list[$name] = $site;
       }
     }
+    ksort($list);
     return $list;
   }
 

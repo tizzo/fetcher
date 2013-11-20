@@ -4,7 +4,12 @@ namespace Fetcher;
 
 use \Symfony\Component\Yaml\Yaml;
 use \Pimple;
-use Symfony\Component\Process\Process;
+use \Symfony\Component\Process\Process;
+use \Fetcher\Utility\PHPGenerator,
+    \Fetcher\Task\TaskStack,
+    \Fetcher\Task\Task,
+    \Fetcher\Configurator\DefaultTaskStacks,
+    \Fetcher\Exception\FetcherException;
 
 class Site extends Pimple implements SiteInterface {
 
@@ -18,17 +23,78 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Constructor function to populate the dependency injection container.
    */
-  public function __construct($siteInfo = NULL) {
+  public function __construct($conf = NULL) {
+    // Pimple explodes if you use isset() and you have not yet set any value.
+    $this['initialized'] = TRUE;
+    $this['log'] = $this->protect(function($message) {
+      print $message . PHP_EOL;
+    });
+
     // Populate defaults.
     $this->setDefaults();
+    // Default tasks currently must be registered before task stacks that use them
+    // are defined.
     $this->registerDefaultTasks();
-    if (!empty($siteInfo)) {
-      $this->configureWithSiteInfo($siteInfo);
+    if (empty($conf['configurators'])) {
+      $this['configurators'] = array(
+        '\Fetcher\Configurator\DefaultTaskStacks',
+      );
+    }
+    // Configure with any settings passed into the constructor.
+    if (!empty($conf)) {
+      $this->configure($conf);
+    }
+    // Apply any configurators.
+    $this->runConfigurators();
+  }
+
+  /**
+   * Apply an array of configuration.
+   *
+   * This array is set on the object using array access.
+   * See the Pimple docs for details.
+   *
+   * @param $conf
+   *   An array of keys and values to be handed to the site object.
+   * @param $overrideExising
+   *   A flag to specify whether this configuration should be treated only
+   *   as a set of defaults or whether it should override exising cofniguration.
+   */
+  public function configure(Array $conf, $overrideExisting = TRUE) {
+    foreach ($conf as $key => $value) {
+      if (!isset($this[$key]) || $overrideExisting) {
+        if (is_string($value)) {
+          // Conf files often end up with trailing whitespace, trim it.
+          $this[$key] = trim($value);
+        }
+        else {
+          $this[$key] = $value;
+        }
+      }
+    }
+    return $this;
+  }
+
+  /**
+   * Sets the default for a key if it is not already set.
+   *
+   * @param $key
+   *   A string representing the configuration key.
+   * @param $value
+   *   The default value to set if the key does not already have configuration.
+   */
+  public function setDefaultConfigration($key, $value) {
+    if (!isset($this[$key])) {
+      $this[$key] = $value;
     }
   }
 
   /**
    * Ensure the database exists, the user exists, and the user can connect.
+   *
+   * @fetcherTask ensure_database_connection
+   * @description Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.
+   * @afterMessage The database exists and the site user has successfully conntected to it.
    */
   public function ensureDatabase() {
     if (!$this['database']->canConnect()) {
@@ -46,9 +112,56 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Get environment configuration.
+   *
+   * @param $environmentName
+   *   The name of the environment to fetch configuration for.
+   */
+  public function getEnvironment($environmentName) {
+    if (empty($this['environments'][$environmentName])) {
+      throw new FetcherException(sprintf('Invalid environment %s requested.', $environmentName));
+    }
+    return $this['environments'][$environmentName];
+  }
+
+  /**
+   * Configure the site object from one of the loaded environments.
+   */
+  public function configureFromEnvironment($environment = NULL) {
+    if (empty($environment)) {
+      $environment = $this['environment.remote'];
+    }
+    $environments = $this['environments'];
+    if (empty($environments[$environment])) {
+      throw new FetcherException('Invalid environment specified.');
+    }
+    foreach ($environments[$environment]  as $key => $value) {
+      // Prevent environment specific settings from being persisted.
+      $this->addEphemeralKey($key);
+      $this[$key] = $value;
+    }
+  }
+
+  /**
+   * Adds a key to the ephemeral list.
+   */
+  public function addEphemeralKey($key) {
+    $ephemeralKeys = $this['configuration.ephemeral'];
+    if (in_array($key, $ephemeralKeys) == FALSE) {
+      $ephemeralKeys[] = $key;
+      $this['configuration.ephemeral'] = $ephemeralKeys;
+    }
+  }
+
+  /**
    * Build the drush alias and place it in the home folder.
+   *
+   * @fetcherTask ensure_drush_alias
+   * @description Create a drush alias for this site.
+   * @afterMessage The alias [[name]].local exists and resides in the file [[drush_alias.path]].
    */
   public function ensureDrushAlias() {
+    // TODO: More of this should probably move into another class.
     $drushPath = $this['system']->getUserHomeFolder() . '/.drush';
     $this['system']->ensureFolderExists($drushPath);
     $drushFilePath = $this['drush_alias.path'];
@@ -78,7 +191,7 @@ class Site extends Pimple implements SiteInterface {
           });
           $environment['fetcher'] = $copy;
         }
-        $content .= "\$aliases['$name'] = " . $this->arrayExport($environment, $string, 0) . ";" . PHP_EOL;
+        $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
       }
       $this['system']->writeFile($drushFilePath, $content);
     }
@@ -86,12 +199,19 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Setup our basic working directory.
+   *
+   * @fetcherTask ensure_working_directory
+   * @description Setup the working directory by creating folders, files, and symlinks.
+   * @afterMessage The working directory is properly setup.
    */
   public function ensureWorkingDirectory() {
+    // TODO: Make this more dynamic, we should be able to support things like
+    // the lullabot boilerplate layout.
 
     // Ensure we have our working directory.
     $this['system']->ensureFolderExists($this['site.working_directory']);
 
+    // TODO: Move more of the log stuff into configuration.
     // Ensure we have a log directory.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/logs');
 
@@ -102,6 +222,7 @@ class Site extends Pimple implements SiteInterface {
     $this['system']->ensureFileExists($this['site.working_directory'] . '/logs/watchdog.log');
 
     // Ensure the server handler has been instantiated.
+    // We do this because the server creates the server.user config key.
     $this['server'];
     // Ensure we have our files folders.
     $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user']);
@@ -110,6 +231,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure the site folder exists.
+   *
+   * @fetcherTask ensure_site_folder
    */
   public function ensureSiteFolder() {
     $this['system']->ensureFolderExists($this['site.directory'], NULL, $this['server.user']);
@@ -117,14 +240,23 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Checks to see whether settings.php exists and creates it if it does not.
+   *
+   * @fetcherTask ensure_settings_file
+   * @description Ensure the settings.php file is in place (and dynamically generate it if it is not).
+   * @afterMessage The settings.php file is in place.
    */
   public function ensureSettingsFileExists() {
     $settingsFilePath = $this['site.directory'] . '/settings.php';
+    // Ensure the site folder exists.
+    $this['system']->ensureFolderExists($this['site.directory']);
     // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
       $conf = $this;
       $vars = array();
       // TODO: This is ugly, what we're doing with this container here...
+      // TODO: maybe evaluate all of the keys before running?
+      // Ensure defaults are set by the database handler.
+      $this['database'];
       $vars =  array(
         'database' => $conf['database.database'],
         'hostname' => $conf['database.hostname'],
@@ -133,7 +265,7 @@ class Site extends Pimple implements SiteInterface {
         'driver' => $conf['database.driver'],
         'environment_local' => $conf['environment.local'],
       );
-      // TODO: Get the settings.php for the appropriate version.
+      // TODO: Generate the settings.php file dynamically without a template.
       $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
 
       // If we have a site-settings.php file for this site, add it here.
@@ -149,6 +281,11 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Ensure the code is in place.
+   *
+   * @fetcherTask ensure_code
+   * @description Fetch the site's code from the appropriate place.
+   * @beforeMessage Fetching code...
+   * @afterMessage The code is in place.
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
@@ -171,7 +308,13 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Ensure that all symlinks besides the webroot symlink have been created.
+   * Ensure that all configured symlinks have been created.
+   *
+   * Note, with standard layout the webroot symlink is created separately.
+   *
+   * @fetcherTask ensure_sym_links
+   * @description Ensure any configured symlinks have been created and point at the correct path.
+   * @afterMessage All symlinks exist and point to the correct path.
    */
   public function ensureSymLinks() {
     foreach ($this['symlinks'] as $realPath => $symLink) {
@@ -180,7 +323,13 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Ensure the site has been added to the appropriate server (e.g. apache vhost).
+   * Ensure the site has been added to the appropriate server.
+   *
+   * On apache this invovles creating a vhost entry.
+   *
+   * @fetcherTask ensure_server_host_enabled
+   * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.
+   * @afterMessage The site is enabled and is running at [[hostname]].
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -193,6 +342,11 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Synchronize the database with a remote environment.
+   *
+   * @fetcherTask sync_db
+   * @description Synchronize the drupal database on this site with one on a remote server.
+   * @beforeMessage Attempting to sync database from remote...
+   * @afterMessage The database was properly synchronized.
    */
   public function syncDatabase() {
     return $this['database_synchronizer']->syncDB();
@@ -206,18 +360,64 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Removes all traces of this site from this system.
+   * Removes The working diretory from this system.
+   *
+   * @fetcherTask remove_working_directory
+   * @description Remove the working directory.
+   * @afterMessage Removed `[[site.working_directory]]`.
    */
-  public function remove() {
-    $this['system']->ensureDeleted($this['site.working_directory']);
-    $this['system']->ensureDeleted($this['drush_alias.path']);
-    if ($this['database']->exists()) {
-      $this['database']->removeDatabase();
+  public function removeWorkingDirectory($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
     }
-    if ($this['database']->userExists()) {
-      $this['database']->removeUser();
+    $site['system']->ensureDeleted($site['site.working_directory']);
+  }
+
+  /**
+   * Removes drush aliases for this site from this system.
+   *
+   * @fetcherTask remove_drush_aliases
+   * @description Remove the site's drush aliases.
+   * @afterMessage Removed `[[drush_alias.path]]`.
+   */
+  public function removeDrushAliases($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
     }
-    $this['server']->ensureSiteRemoved();
+    $site['system']->ensureDeleted($site['drush_alias.path']);
+  }
+
+  /**
+   * Removes the site's database and user.
+   *
+   * @fetcherTask remove_database
+   * @description Remove the site's database and user.
+   * @afterMessage Removed database `[[database.database]]` and user `[[database.user.database]]@[[database.user.hostname]]`.
+   */
+  public function removeDatabase($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
+    }
+    if ($site['database']->exists()) {
+      $site['database']->removeDatabase();
+    }
+    if ($site['database']->userExists()) {
+      $site['database']->removeUser();
+    }
+  }
+
+  /**
+   * Removes the site's virtualhost.
+   *
+   * @fetcherTask remove_vhost
+   * @description Remove the site's virtualhost (or server equivalent).
+   * @afterMessage Removed virtual host for `[[hostname]]`.
+   */
+  public function removeVirtualHost($site = NULL) {
+    if (is_null($site)) {
+      $site = $this->site;
+    }
+    $site['server']->ensureSiteRemoved();
   }
 
   /**
@@ -257,6 +457,8 @@ class Site extends Pimple implements SiteInterface {
 
   /**
    * Run all registered callbacks for an operation.
+   *
+   * TODO: Reimplement these as tasks, this function is bazonkers and gross.
    */
   public function runOperationBuildHooks($operation) {
     if (!empty($this->buildHooks[$operation])) {
@@ -297,20 +499,43 @@ class Site extends Pimple implements SiteInterface {
     }
   }
 
-
+  /**
+   * Export the configuration of the object to an array.
+   */
+  public function exportConfiguration() {
+    $keys = $this->keys();
+    // We do this the first time to instantiate our handler classes allowing
+    // them to set their own defaults.
+    foreach ($keys as $key) {
+      if (!in_array($key, $this['configuration.ephemeral'])) {
+        $this[$key];
+      }
+    }
+    $keys = $this->keys();
+    sort($keys);
+    foreach ($keys as $key) {
+      // Ensure we should be storing this configuration.
+      if (!in_array($key, $this['configuration.ephemeral'])) {
+        $value = $this[$key];
+        // Ensure this is the sort of value we can store.
+        if (!is_object($value) || get_class($value) == 'stdClass') {
+          $conf[$key] = $value;
+        }
+      }
+    }
+    return $conf;
+  }
 
   /**
    * Write a site info file from our siteInfo if it doesn't already exist.
+   *
+   * @fetcherTask ensure_site_info_file
+   * @description Ensure that the configuration for this site has been captured in the site_info file for the site.
+   * @afterMessage The site info file for this site has been created.
    */
   public function ensureSiteInfoFileExists() {
     $conf = array();
-    foreach ($this->keys() as $key) {
-      $value = $this[$key];
-      if (!is_object($value) || get_class($value) == 'stdClass') {
-        $conf[$key] = $value;
-      }
-    }
-    $string = Yaml::dump($conf, 5, 2);
+    $string = Yaml::dump($this->exportConfiguration(), 5, 2);
     $this['system']->writeFile($this['site.info path'], $string);
   }
 
@@ -327,11 +552,61 @@ class Site extends Pimple implements SiteInterface {
    * Load the site_info array from the YAML file.
    */
   public function getSiteInfoFromInfoFile() {
-    $path = $this['site.working_directory'] . '/site_info.yaml';
-    if (is_file($path)) {
-      $yaml = file_get_contents($path);
+    if (is_file($this['site.info path'])) {
+      $yaml = file_get_contents($this['site.info path']);
       $info = $this->parseSiteInfo($yaml);
       return $info;
+    }
+  }
+
+  /**
+   * Configure the site object from the siteInfo file.
+   */
+  public function configureWithSiteInfoFile() {
+    if ($conf = $this->getSiteInfoFromInfoFile()) {
+      $this->configure($conf);
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Apply any configured configurators.
+   */
+  public function runConfigurators() {
+    // Set default configuration from configrator list.
+    if (isset($this['configurators'])) {
+      foreach ($this['configurators'] as $configurator) {
+        $configurator::configure($this);
+      }
+    }
+  }
+
+  /**
+   * TODO: fetchInfo() should be a method on the site object that can load
+   * from a file or load from site_info.yaml.
+   *
+   * @param $force_remote
+   *   Whether to ignore the potential location of a site_info.yaml file and
+   *   load directly from the configured InfoFetcher.class instead.
+   * @return
+   *   TRUE on success NULL if information could not be loaded.
+   */
+  public function fetchInfo($force_remote = FALSE) {
+    if (!isset($this['name'])) {
+      return FALSE;
+    }
+    // We don't go looking for an info file if `name` isn't set.
+    if (!$force_remote && is_file($this['site.info path'])) {
+      return $this->configureWithSiteInfoFile();
+    }
+    else {
+      if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {
+        $this->configure($conf);
+        return TRUE;
+      }
     }
   }
 
@@ -340,6 +615,10 @@ class Site extends Pimple implements SiteInterface {
    */
   public function setDefaults() {
 
+    // Defaults to the local name.
+    $this['name'] = function($c) {
+      return $c['name.global'];
+    };
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
@@ -349,28 +628,30 @@ class Site extends Pimple implements SiteInterface {
     };
 
     $this['process'] = $this->protect(function() {
+      // This is the only way to dynamically instantiate an object with unknown
+      // dynamic parameters.
       $reflection = new \ReflectionClass('Symfony\Component\Process\Process');
       $process = $reflection->newInstanceArgs(func_get_args());
       return $process;
     });
 
-
-    // If the log function is changed it must have the same function signature.
-    $this['log function'] = 'drush_log';
+    // If the log.function is changed it must have the same function signature.
+    $this['log.function'] = $this->protect(function($message) {
+      print $message . PHP_EOL;
+    });;
 
     // We need a copy of site to close over in our closure.
     $site = $this;
     $this['log'] = $this->protect(function() use ($site) {
       $args = func_get_args();
-      return call_user_func_array($site['log function'], $args);
+      return call_user_func_array($site['log.function'], $args);
     });
     unset($site);
 
-    // Set our default system to Ubuntu.
     // TODO: Do some detection?
-    $this['system class'] = '\Fetcher\System\Ubuntu';
+    $this['system class'] = '\Fetcher\System\Posix';
 
-    // Attempt to load a plugin appropriate to the system, defaulting to Ubuntu.
+    // Load a plugin appropriate to the system.
     $this['system'] = $this->share(function($c) {
       return new $c['system class']($c);
     });
@@ -378,7 +659,7 @@ class Site extends Pimple implements SiteInterface {
     // Set our default server to Apache2.
     $this['server class'] = '\Fetcher\Server\Apache2';
 
-    // Attempt to load a plugin appropriate to the server, defaulting to Apache2.
+    // Load a plugin appropriate to the server.
     $this['server'] = $this->share(function($c) {
       return new $c['server class']($c);
     });
@@ -386,7 +667,7 @@ class Site extends Pimple implements SiteInterface {
     // Set our default database to MySQL.
     $this['database class'] = '\Fetcher\DB\Mysql';
 
-    // Attempt to load a plugin appropriate to the database, defaulting to Mysql.
+    // Load a plugin appropriate to the database.
     $this['database'] = $this->share(function($c) {
       return new $c['database class']($c);
     });
@@ -395,18 +676,30 @@ class Site extends Pimple implements SiteInterface {
       return $c['database class']::getDriver();
     });
 
+    // Map the version control system specified to the handler.
     $this['code_fetcher.vcs_mapping'] = array(
       'git' => 'Fetcher\CodeFetcher\VCS\Git',
     );
 
+    // Default to the most recent stable release.
+    $this['version'] = 7;
+
     // Set our default code fetcher class to drush download.
-    $this['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
+    $this['code_fetcher.class'] = function($c) {
+      if (isset($c['vcs'])) {
+        return $c['code_fetcher.vcs_mapping'][$c['vcs']];
+      }
+      else {
+        return 'Fetcher\CodeFetcher\Download';
+      }
+    };
+
     $this['code_fetcher.config'] = array();
 
-    // Attempt to load a plugin appropriate to the Code Fetcher, defaulting to Git.
+    // Load a plugin appropriate to the Code Fetcher.
     $this['code_fetcher'] = $this->share(function($c) {
-      $vcs = new $c['code_fetcher.class']($c);
-      return $vcs;
+      $class = $c['code_fetcher.class'];
+      return new $class($c);
     });
 
     // For most cases, the Drush sql-sync command can be used for synchronizing.
@@ -425,7 +718,7 @@ class Site extends Pimple implements SiteInterface {
     });
 
     // Usually set by the drush option.
-    // If set print logs but take no action.
+    // If set print log messages but take no actions.
     $this['simulate'] = FALSE;
 
     // Usually set by drush option.
@@ -440,10 +733,6 @@ class Site extends Pimple implements SiteInterface {
     // The URI of the site.
     // TODO: We have standardized on drush alias keys where possible, this is deprecated.
     $this['hostname'] = function($c) {
-      return $c['uri'];
-    };
-    // The URI of the site.
-    $this['uri'] = function($c) {
       return strtolower($c['name'] . '.' . $c['system hostname']);
     };
 
@@ -465,7 +754,7 @@ class Site extends Pimple implements SiteInterface {
       return $c['site.code_directory'] . '/sites/' . $c['site'];
     };
 
-    // Some systems place the Drupal webroot in a subdirectory.
+    // Some systems (including Acquia) place the Drupal webroot in a subdirectory.
     // This option configures the name of the subdirectory (some use htdocs).
     $this['webroot_subdirectory'] = 'webroot';
 
@@ -488,143 +777,36 @@ class Site extends Pimple implements SiteInterface {
     );
 
     $this['environment.local'] = 'local';
+    $this['environments'] = array();
 
     $this['build_hook_file.path'] = function($c) {
-      return $c['site.code_directory'] . '/sites/default/fetcher.make.php';
+      return $c['site.code_directory'] . '/sites/' . $c['site'] . '/fetcher.make.php';
     };
 
     $this['drush_alias.path'] = function($c) {
       return $c['system']->getUserHomeFolder() . '/.drush/' . $c['name'] . '.aliases.drushrc.php';
     };
 
-  }
+    // These keys are not persisted to the site_info.yaml file.
+    $this['configuration.ephemeral'] = array(
+      'initialized',
+      'simulate',
+      'verbose',
+      'environment.remote',
+    );
 
-  /**
-   * Apply an array of conifguration to this site object.
-   * 
-   * @param $config
-   *   An array of configuration to apply to the site.
-   */
-  public function configure(Array $config) {
-  }
+    $this['info_fetcher.class'] = 'Fetcher\InfoFetcher\DrushAlias';
+    // Load a plugin appropriate to the info fetcher.
+    $this['info_fetcher'] = $this->share(function($c) {
+      return new $c['info_fetcher.class']($c);
+    });
 
-  /**
-   * Configure the service container with site information loaded from a class
-   * implementing Fetcher\InfoFetcherInterface.
-   *
-   * @param $siteInfo
-   *   The information returned from `\drush_fetcher_get_site_info()`.
-   * TODO: Deprecate this in favor of a constructor that receives an alias.
-   */
-  public function configureWithSiteInfo(Array $siteInfo) {
-
-    // TODO: The code_fetcher.class should just be a function that looks up the real class using the vcs mapping and vcs keys.
-    if (isset($siteInfo['vcs'])) {
-      $this['code_fetcher.class'] = $this['code_fetcher.vcs_mapping'][$siteInfo['vcs']];
-    }
-
-    // Merge in configuration.
-    foreach ($siteInfo as $key => $value) {
-      if (is_string($value)) {
-        $this[$key] = trim($value);
-      }
-      else {
-        $this[$key] = $value;
-      }
-    }
-
-    return $this;
-  }
-
-  /**
-   * Export an array as executable PHP code.
-   *
-   * @param (Array) $data
-   *  The array to be exported.
-   * @param (string) $string
-   *  The string to add to this array to.
-   * @param (int) $indentLevel
-   *  The level of indentation this should be run at.
-   *
-   * TOOD: Move this into another component
-   */
-  public function arrayExport(Array $data, &$string, $indentLevel) {
-    $i = 0;
-    $indent = '';
-    while ($i < $indentLevel) {
-      $indent .= '  ';
-      $i++;
-    }
-    $string .= "array(" . PHP_EOL;
-    foreach ($data as $name => $value) {
-      $string .= "$indent  '$name' => ";
-      if (is_array($value)) {
-        $inner_string = '';
-        $string .= $this->arrayExport($value, $inner_string, $indentLevel + 1) . "," . PHP_EOL;
-      }
-      else if (is_numeric($value)) {
-        $string .= "$value," . PHP_EOL;
-      }
-      else if (is_string($value)) {
-        $string .= "'" . str_replace("'", "\'", $value) . "'," . PHP_EOL;
-      }
-      else if (is_null($value)) {
-        $string .= 'NULL,' . PHP_EOL;
-      }
-    }
-    $string .= "$indent)";
-    return $string;
-  }
-
-
-  /**
-   * Sets the default for a key if it is not already set.
-   *
-   * @param $key
-   *   A string representing the configuration key.
-   * @param $value
-   *   The default value to set if the key does not already have configuration.
-   */
-  public function setDefaultConfigration($key, $value) {
-    if (!isset($this[$key])) {
-      $this[$key] = $value;
-    }
-  }
-
-  /**
-   * Register a task that can be performed on the site.
-   *
-   * @param $name
-   *   A variable safe machine name for the task.
-   * @param $task
-   *   Either a callable to perform the task or an array of task names for a task stack.
-   *     The callable should take a Fetcher\Site object as its parameter.
-   * @param $options
-   *   An array of options which may contain the following keys:
-   *    description: A description of the operation the task will perform. Without a description tasks are
-   *      left out of the fetcher-task drush listing.
-   *    starting_message: A message to display when the task is beginning.
-   *      Useful for alerting users long running tasks are in progress.
-   *    starting_message_arguments: An array of tokens to substitute in the starting message.
-   *    starting_message_arguments_callback: A callable that receives the site object as the only paramter and
-   *      returns the array generally specified in starting_message_arguments.
-   *    success_message: A message to display if the task was succsesfull.
-   *    success_message_arguments: An array of tokens to substitute in the success message.
-   *    success_message_arguments_callback: A callable that receives the site object as the only paramter and
-   *      returns the array generally specified in success_message_arguments.
-   *    arguments: If this callable does not receive the site object as the sole parameter provide the arguments.
-   */
-  public function registerTask($name, $task, $options = array()) {
-    $this->tasks[$name] = $options;
-    if (is_callable($task)) {
-      $this->tasks[$name]['callable'] = $task;
-    }
-    else if (is_array($task)) {
-      $this->tasks[$name]['stack'] = $task;
-    }
-    else {
-      throw new \Exception('Invalid task definition. Tasks must be callables or an array of tasks.');
-    }
+    $this['task_loader.class'] = '\Fetcher\Task\TaskLoader';
+    // Load a plugin appropriate to the Task Loader.
+    $this['task_loader'] = $this->share(function($c) {
+      $class = $c['task_loader.class'];
+      return new $class($c);
+    });
   }
 
   /**
@@ -657,8 +839,8 @@ class Site extends Pimple implements SiteInterface {
    * @param $task
    *   An array representing the task.
    */
-  public function setTask($name, $task) {
-    $this->tasks[$name] = $task;
+  public function addTask($task) {
+    $this->tasks[$task->fetcherTask] = $task;
   }
 
   /**
@@ -670,172 +852,47 @@ class Site extends Pimple implements SiteInterface {
   public function runTask($name) {
     $task = $this->getTask($name);
     if ($task === NULL) {
-      throw new \Exception(sprintf('Attempting to run undefined task %s.', $name));
+      throw new FetcherException(sprintf('Attempting to run undefined task %s.', $name));
     }
-    if (isset($task['starting_message'])) {
-      // TODO: We should just use closure's with the site object context for messages.
-      $arguments = !empty($task['starting_message_arguments']) ? $task['starting_message_arguments'] : array();
-      if (!empty($task['starting_message_arguments_callback'])) {
-        // By default tasks recieve the site object as the only parameter but an array of arguments can be specified.
-        $arguments = call_user_func($task['starting_message_arguments_callback'], $this);
-      }
-      $this['log'](dt($task['starting_message'], $arguments), 'ok');
-    }
-    // If the task is an array run each task listed in its keys.
-    if (!empty($task['stack'])) {
-      foreach ($task['stack'] as $subtask) {
-        $this->runTask($subtask);
-      }
-    }
-    else {
-      $arguments = !empty($task['arguments']) ? $task['arguments'] : array($this);
-      call_user_func_array($task['callable'], $arguments);
-    }
-    if (isset($task['success_message'])) {
-      $arguments = !empty($task['success_message_arguments']) ? $task['success_message_arguments'] : array();
-      if (!empty($task['success_message_arguments_callback'])) {
-        $arguments = call_user_func($task['success_message_arguments_callback'], $this);
-      }
-      $this['log'](dt($task['success_message'], $arguments), 'success');
-    }
+    $task->run($this);
   }
 
   /**
-   * TODO: Implement this.
+   * Add a task to an existing task stack.
+   *
+   * @taskStack
+   *   The name of a configured TaskStack.
+   * @task
+   *   The task to add, can be a task or an object implementing
+   *   \Fetcher\Task\TaskInterface().
    */
-  public function insertBeforeSubtask($task, $subtask, $taskToAdd) {
-  }
-
-  public function insertAfterSubtask() {
+  public function addSubTask($taskStack, $task) {
+    $stack = $this->getTask($taskStack);
+    if (empty($stack)) {
+      throw new FetcherException('Can not add a task to an undefined task stack.');
+    }
+    if (is_string($task)) {
+      $task = $this->getTask($task);
+    }
+    $stack->addTask($task);
   }
 
   /**
-   * Registers the default tasks that ship as methods on 
+   * Registers the default tasks that ship as methods on the Site class.
+   *
+   * TODO: Should this be named more intuitively?
    */
   public function registerDefaultTasks() {
+    $this->tasks = $this['task_loader']->scanObject($this) + $this->tasks;
+  }
 
-    $options = array(
-      'description' => 'Ensure that a site is properly configured to run on this server.',
-      'success_message' => 'Your site has been setup!',
-    );
-    $tasks = array(
-      'before_build_hooks',
-      'ensure_working_directory',
-      'ensure_site_info_file',
-      'ensure_code',
-      'ensure_database_connection',
-      'ensure_settings_file',
-      'ensure_symlinks',
-      'ensure_drush_alias',
-      'ensure_server_host_enabled',
-      'load_make_file',
-      'after_build_hooks',
-    );
-    $this->registerTask('ensure_site', $tasks, $options);
-
-    $options = array(
-      'description' => 'Completely remove this site and destroy all data associated with it on the server.',
-      'success_message' => 'This site has been completely removed.',
-    );
-    $stack = array(
-      'remove_site_site_method',
-    );
-    $this->registerTask('remove_site', $stack, $options);
-
-    // Private method for calling remove on this site.
-    // TODO: Break this into subtasks.
-    $this->registerTask('remove_site_site_method', array($this, 'remove'));
-
-    $options = array(
-      'description' => 'Setup the working directory by creating folders, files, and symlinks.',
-      'success_message' => 'The working directory is properly setup.',
-    );
-    $this->registerTask('ensure_working_directory', array($this, 'ensureWorkingDirectory'), $options);
-
-    $options = array(
-      'description' => 'Fetch the site\'s code from the appropriate place.',
-      'starting_message' => 'Fetching code...',
-      'success_message' => 'The code is in place.',
-    );
-    $this->registerTask('ensure_code', array($this, 'ensureCode'), $options);
-
-    $options = array(
-      'description' => 'Ensure the drupal database and database user exist creating the requisite grants if necessary.',
-      'success_message' => 'The database exists and the site user has successfully conntected to it.',
-    );
-    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
-
-    // Ensure the site's folder is in place.
-    $this->registerTask('ensure_site_folder', array($this, 'ensureSiteFolder'));
-
-    $options = array(
-      'description' => 'Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.',
-      'success_message' => 'The database exists and the site user has successfully conntected to it.',
-    );
-    $this->registerTask('ensure_database_connection', array($this, 'ensureDatabase'), $options);
-
-    $options = array(
-      'description' => 'Ensure the settings.php file is in place (and dynamically generate it if it is not).',
-      'success_message' => 'The settings.php file is in place.',
-    );
-    $this->registerTask('ensure_settings_file', array($this, 'ensureSettingsFileExists'), $options);
-
-    // Create necessary symlinks.
-
-    $options = array(
-      'description' => 'Ensure any configured symlinks have been created and point at the correct path.',
-      'success_message' => 'All symlinks exist and point to the correct path.',
-    );
-    $this->registerTask('ensure_symlinks', array($this, 'ensureSymLinks'), $options);
-
-    $options = array(
-      'description' => 'Create a drush alias for this site.',
-      'success_message' => 'The alias @!alias.local exists and resides in the file @path',
-      'success_message_arguments_callback' => function($site) {
-        return array(
-          '!alias' => $site['name'],
-          '@path' => $site['drush_alias.path'],
-        );
-      },
-    );
-    $this->registerTask('ensure_drush_alias', array($this, 'ensureDrushAlias'), $options);
-
-    $options = array(
-      'description' => 'Ensure that the configuration for this site has been captured in the site_info file for the site..',
-      'success_message' => 'The site info file for this site has been created.',
-    );
-    $this->registerTask('ensure_site_info_file', array($this, 'ensureSiteInfoFileExists'), $options);
-
-    $options = array(
-      'description' => 'Ensure that the server is configured with the appropriate virtualhost or equivalent.',
-      'success_message' => 'The site is enabled and is running at @hostname',
-      'success_message_arguments_callback' => function($site) {
-        return array('@hostname' => $site['hostname']);
-      },
-    );
-    $this->registerTask('ensure_server_host_enabled', array($this, 'ensureSiteEnabled'), $options);
-
-
-    $options = array(
-      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'starting_message' => 'Attempting to sync database from remote...',
-      'success_message' => 'The database was properly synchronized.',
-    );
-    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
-
+  public function legacyRegisterDefaultTasks() {
     $task = function ($site) {
-      if (is_file($site['site.code_directory'] . '/sites/default/fetcher.make.php')) {
-        require($site['site.code_directory'] . '/sites/default/fetcher.make.php');
+      if (is_file($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php')) {
+        require($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php');
       }
     };
     $this->registerTask('include_fetcher_make', $task);
-
-    $options = array(
-      'description' => 'Synchronize the drupal database on this site with one on a remote server.',
-      'starting_message' => 'Attempting to sync database from remote...',
-      'success_message' => 'The database was properly synchronized.',
-    );
-    $this->registerTask('sync_db', array($this, 'syncDatabase'), $options);
 
 
     // If there is an fetcher.make.php file, load it to allow build hooks to be
@@ -860,6 +917,6 @@ class Site extends Pimple implements SiteInterface {
       'arguments' => array('after'),
     );
     $this->registerTask('after_build_hooks', array($this, 'runOperationBuildHooks'), $options);
-
   }
+
 }

@@ -18,9 +18,9 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 </Directory>
-<VirtualHost *:80>
+<VirtualHost *:<?php print $port ?>>
   ServerName <?php print $hostname . PHP_EOL; ?>
-  DocumentRoot /var/www/<?php print $site_name; ?>/webroot
+  DocumentRoot <?php print $docroot . PHP_EOL; ?>
   LogLevel warn
   ServerSignature Off
 </VirtualHost>

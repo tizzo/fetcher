@@ -5,6 +5,17 @@ namespace Fetcher;
 interface SiteInterface {
 
   /**
+   * Apply an array of configuration.
+   *
+   * This array is set on the object using array access.
+   * See the Pimple docs for details.
+   *
+   * @param $conf
+   *  An array of keys and values to be handed to the site object.
+   */
+  public function configure(Array $conf);
+
+  /**
    * Ensure the database exists, the user exists, and the user can connect.
    */
   public function ensureDatabase();
@@ -58,9 +69,40 @@ interface SiteInterface {
   public function syncFiles($type);
 
   /**
-   * Removes all traces of this site from this system.
+   * Removes The working diretory from this system.
+   *
+   * @fetcherTask remove_working_directory
+   * @description Remove the working directory.
+   * @afterMessage Removed `[[site.working_directory]]`.
    */
-  public function remove();
+  public function removeWorkingDirectory($site = NULL);
+
+  /**
+   * Removes drush aliases for this site from this system.
+   *
+   * @fetcherTask remove_drush_aliases
+   * @description Remove the site's drush aliases.
+   * @afterMessage Removed `[[drush_alias.path]]`.
+   */
+  public function removeDrushAliases($site = NULL);
+
+  /**
+   * Removes the site's database and user.
+   *
+   * @fetcherTask remove_database
+   * @description Remove the site's database and user.
+   * @afterMessage Removed database `[[database.database]]` and user `[[database.user.database]]@[[database.user.hostname]]`.
+   */
+  public function removeDatabase($site = NULL);
+
+  /**
+   * Removes the site's virtualhost.
+   *
+   * @fetcherTask remove_vhost
+   * @description Remove the site's virtualhost (or server equivalent).
+   * @afterMessage Removed virtual host for `[[hostname]]`.
+   */
+  public function removeVirtualHost($site = NULL);
 
   /**
    * Register a build hook that can be run before or after a site build.
@@ -104,24 +146,5 @@ interface SiteInterface {
    * Populate this object with defaults.
    */
   public function setDefaults();
-
-  /**
-   * Configure the service container with site information loaded from a class
-   * implementing Fetcher\InfoFetcherInterface.
-   *
-   * @param $siteInfo
-   *   The information returned from `\drush_fetcher_get_site_info()`.
-   * TODO: Deprecate this in favor of a constructor that receives an alias.
-   * TODO: Deprecate this in favor 
-   */
-  public function configureWithSiteInfo(Array $siteInfo);
-
-  /**
-   * Apply an array of conifguration to this site object.
-   * 
-   * @param $config
-   *   An array of configuration to apply to the site.
-   */
-  //abstract public function configure(Array $config);
 
 }

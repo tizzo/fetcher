@@ -21,9 +21,20 @@ function fetcher_drush_command() {
 
   // Options necessary for interacting with sites on this server.
   $environment_options = array(
+    'database-user-name' => 'The user name of the database user the site should use, defaults to site name.',
+    'database-user-password' => 'The password of the database user the site should use.',
+    'database' => 'The name of the databse the site sould use, defaults to site name.',
+    'database-port' => 'The port the database runs on.',
+    'database-hostname' => 'The hostname of the server the database runs on.',
     'database-admin-user-name' => 'The database username to use for administration commands.',
     'database-admin-user-password' => 'The database password to use for administration commands.',
     'site' => 'The site (folder withing the `sites` folder) on which we are acting.  Defaults to `default`.',
+    'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
+    'site' => 'The folder to use in drupal\'s `sites/` folder, defaults to default.',
+    'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
+    'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
+    'remote-environment' => 'The name of the environment to load from.',
+
   );
 
   $items['fetcher-list'] = array(
@@ -48,27 +59,21 @@ function fetcher_drush_command() {
   );
 
   // Environment items are the items that inherit the environment options.
-  $environment_items['fetcher-get'] = array(
+  $environment_items['fetcher-fetch'] = array(
     'description' => 'Setup a site on this machine managed by Fetcher synchronizing the database and files if desired.',
-    'aliases' => array('feg'),
+    'aliases' => array('fetch', 'fetcher-get'),
     'arguments' => array(
-      'site' => 'The name of a site to install on this server.',
-      'environment.remote' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
+      'name' => 'The name of a site to install on this server.',
     ),
     'options' => array(
-      'branch' => 'The branch of the repository to checkout',
-      'tag' => 'The tag of the repository to checkout',
-      'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       'file-sync' => array(
         'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
         'value' => 'optional',
         'example-value' => 'private',
       ),
-      'local-name' => 'The local name of the site to use for this deployment. This option allows you to get more than one variation of a site on one system.',
-      'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
-      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-    ),
+      //'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
+          ),
   );
 
   $environment_items['fetcher-create'] =  array(
@@ -81,20 +86,6 @@ function fetcher_drush_command() {
     'options' => array(
       'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
       'host-name' => NULL,
-      'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-    ),
-  );
-
-  $environment_items['fetcher-release'] = array(
-    'description' => 'Release an Fetcher managed site to a specific tag.',
-    'aliases' => array('fer'),
-    'arguments' => array(
-      'site name' => 'The name of the site to release.',
-      'tag' => 'The tag to release. Branches are not supported.',
-    ),
-    'options' => array(
-      'backup' => 'Flag to determine whether to create a backup.',
-      'backup-dir' => 'Path to create a SQL dump.',
       'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     ),
   );
@@ -160,35 +151,111 @@ function drush_fetcher_list($name = '', $page = 0) {
 }
 
 /**
- * Logs information in a standard way from an Exception that occured.
+ * Attempt to identify the site we are working with from the specified path.
+ *
+ * Searches out from the site_info.yaml file.
+ *
+ * @return
+ *   A stdClass object containing site information or FALSE on failure.
  */
-function drush_fetcher_log_exception_information(Exception $e) {
-  $args = array(
-    '@error' => $e->getMessage(),
-    '@line' => $e->getLine(),
-    '@file' => $e->getFile()
+function fetcher_find_site_info_from_path($directory) {
+  $parts = explode(DIRECTORY_SEPARATOR, $directory);
+  $site_info = FALSE;
+  $path = '';
+  while (count($parts)) {
+    $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
+    if (file_exists($path)) {
+      return $path;
+    }
+    array_pop($parts);
+  }
+}
+
+/**
+ * Attempt to find a site info path from current direocry or site alias.
+ */
+function fetcher_find_site_info_path_from_name_or_cwd($name) {
+  $path = FALSE;
+  if (strpos($name, '@') === 0 && $specs = drush_sitealias_get_record($name)) {
+    $path = $specs['root'];
+  }
+  if (!$name && !$path) {
+    $path = getcwd();
+  }
+  return fetcher_find_site_info_from_path($path);
+}
+
+/**
+ * Constructor function for creating and configuring a site object.
+ *
+ * @param $name
+ *   The name of the site to load.
+ * @return
+ *   An instantiated and configured \Fetcher\Site object.
+ */
+function fetcher_get_site($name = FALSE) {
+
+  $conf = array();
+
+  // If we have an alias or no name at all try to find a site_info.yml file.
+  if (!$name || strpos($name, '@') === 0) {
+    if ($site_info_path = fetcher_find_site_info_path_from_name_or_cwd($name)) {
+      $conf['site.info path'] = $site_info_path;
+    }
+  }
+
+  // Set drush appropriate configurators.
+  $conf['configurators'] = array(
+    '\Fetcher\Configurator\DrushPrompts',
+    '\Fetcher\Configurator\DefaultTaskStacks',
   );
-  drush_log(dt('@error on line @line of @file.', $args), 'error');
+
+  // TODO: Move this somewhere to detect configuration.
+  if (is_dir('/etc') && is_file('/etc/issue')) {
+    $issue = strtolower(file_get_contents('/etc/issue'));
+    if (strpos($issue, 'centos') !== FALSE || strpos($issue, 'red hat') !== FALSE) {
+      $conf['configurators'][] = '\Fetcher\Configurator\CentOS';
+    }
+  }
+
+  $site = new \Fetcher\Site($conf);
+  if ($name) {
+    $site['name.global'] = $name;
+  }
+
+  // Use conifgured defaults from drushrc files.
+  $site->configure(drush_fetcher_extract_keys_from_context());
+
+  // First we apply configuration from the global context
+  // because it could effect the behavior of the info fetcher.
+  drush_fetcher_extract_configuration_keys_from_drush_context($site);
+
+  // Next we fetch information specific to the site, that includes calls
+  // to the infoFetcher if no site_info.yaml was already found.
+  $site->fetchInfo();
+
+  // Now we re-apply configuration keys form the context because anything
+  // specified at the command line should override what was cached in the
+  // site_info.yml file.
+  drush_fetcher_extract_configuration_keys_from_drush_context($site);
+
+  // Scan all user space functions to allow simple task additions.
+  foreach ($site['task_loader']->scanAllUserSpaceFunctions() as $task) {
+    $site->addTask($task);
+  }
+
+  // Allow other modules to modify the site object.
+  drush_command_invoke_all('fetcher_site_alter', $site);
+
+  return $site;
 }
 
 /**
  * Print out information about a single site.
  */
 function drush_fetcher_info($site_name = NULL) {
-  $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
-  if (!$site_info) {
-    if ($site_name = drush_fetcher_prompt_for_site_name()) {
-      $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
-    }
-    else {
-      drush_log(dt('Site information could not be found', 'error'));
-      drush_set_error('FETCHER_INFO_FAILURE', dt('Site information could not be found'));
-      return;
-    }
-  }
-  if ($site_info) {
-    drush_print_r($site_info);
-  }
+  $site = fetcher_get_site($site_name);
+  drush_print_r($site->exportConfiguration());
 }
 
 /**
@@ -201,22 +268,21 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   }
 
   // Build a new site object.
-  $site_info = array();
-  $site_info['name'] = $site_name;
-  $site = drush_fetcher_get_site($site_info);
+  $site = fetcher_get_site($site_name);
 
   $site['version'] = $version;
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
-  $site['name'] = $site_name;
 
   try {
     drush_fetcher_ensure_site($site);
     // Install the site
+    // TODO: Move this part into a task.
     $commandline_args = array();
     $commandline_options = array(
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
+      'site' => 'site',
     );
     drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
     drush_log(dt('Admin user created with username `admin` and password `pass`.'));
@@ -231,38 +297,27 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 /**
  * Setup a local copy of a Fetcher site.
  *
- * Do all of the work to setup a local copy of a site tracked by Fetcher, 
+ * Do all of the work to setup a local copy of a site tracked by Fetcher,
  * optionally syncronizing the database and files with an environment
  * tracked by Fetcher.
  */
-function drush_fetcher_get($site_name = FALSE, $remote_environment = FALSE) {
+function drush_fetcher_fetch($site_name = FALSE) {
 
-  if (!$site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name)) {
-    drush_log(dt('The site @site could not be found.', array('@site' => $site_name)), 'error');
-    return FALSE;
-  }
-  // If a remote environment was set, use it here.
-  // TODO: Refactor this into a function that gets variables from the context.
-  if ($remote_environment) {
-    $site_info['environment.remote'] = $remote_environment;
-  }
-  // Instantiate the site object.
-  $site = drush_fetcher_get_site($site_info);
-  // TODO: Do this with drush_fetcher_get_config_from_options()?
-  if ($local_name = drush_get_option('local-name', FALSE)) {
-    $site['name'] = $local_name;
-  }
-  if (!drush_fetcher_ensure_site($site)) {
-    return FALSE;
-  }
+  $site = fetcher_get_site($site_name);
+  $site->configureFromEnvironment();
 
-  // If requested, sync the database.
   if (drush_get_option('sql-sync')) {
-    drush_log(dt('Attempting to sync database from remote...'), 'ok');
-    $site->syncDatabase();
-    drush_log(dt('The database was properly synchronized.'), 'success');
+    // Add the db sync task to the stack.
+    $site->addSubTask('ensure_site', 'sync_db');
+  }
+  // TODO: Deprecate this function all the task running function instead.
+  if (!drush_fetcher_ensure_site($site)) {
+    drush_set_error(dt('Provisioning and synchronizing the site has failed.'));
+    return FALSE;
   }
 
+  // TODO: This should be a task and should be as simple as adding the db
+  // synchronziing task above.
   // If requested, sync the files.
   if (drush_get_option('file-sync')) {
     $files = drush_get_option('file-sync', FALSE);
@@ -315,27 +370,15 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
 }
 
 /**
- * Use the configured info fetcher to retrieve a site's information by name.
- */
-function drush_fetcher_fetch_site_info($site_name) {
-  try {
-    $result = drush_fetcher_get_info_fetcher()->getInfo($site_name);
-    return $result;
-  }
-  catch (Exception $e) {
-    drush_fetcher_log_exception_information($e);
-    drush_log(dt('Site info loading failed - @message', array('@message' => $e->getMessage())), 'error');
-  }
-}
-
-/**
  * Get the conifugred siteInfoFetcher().
  *
+ * @return
+ *   An instantiated object implmeenting \Fetcher\InfoFetcherInterface().
  */
 function drush_fetcher_get_info_fetcher() {
-  $class = fetcher_drush_get_option('info-fetcher.class', 'Fetcher\InfoFetcher\DrushAlias');
-  $site = drush_fetcher_get_site();
-  return new $class($site);
+  $config = drush_fetcher_extract_keys_from_context();
+  $site = new \Fetcher\Site($config);
+  return $site['info_fetcher'];
 }
 
 
@@ -345,15 +388,12 @@ function drush_fetcher_get_info_fetcher() {
 function drush_fetcher_delete($site_name) {
   // TODO: Validate $site_name.
   // TODO: Allow deletion of other webroots (check site info?).
-  if (!drush_confirm("Are you sure you want to delete $site_name?")) {
+  if (!drush_confirm(dt("Are you sure you want to delete @site_name?", array('@site_name' => $site_name)))) {
     return;
   }
   try {
-    $site_info = array();
-    $site_info['name'] = $site_name;
-    $site = drush_fetcher_get_site($site_info);
+    $site = fetcher_get_site($site_name);
     $site->runTask('remove_site');
-    drush_log(dt('The site @site has been successfully removed.', array('@site' => $site_name)), 'success');
   }
   catch (Exception $e) {
     drush_fetcher_log_exception_information($e);
@@ -365,16 +405,25 @@ function drush_fetcher_delete($site_name) {
  * List and run tasks available on a fetcher site.
  */
 function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
-  $site_info = drush_fetcher_load_site_info_from_name_alias_or_context($site_name);
-  $site = drush_fetcher_get_site($site_info);
+  $site = fetcher_get_site($site_name);
+  $site->configureFromEnvironment();
+
   if (is_null($task_name)) {
     drush_fetcher_list_tasks($site);
   }
   else {
-    $site->runTask($task_name);
+    try {
+      $site->runTask($task_name);
+    }
+    catch (Exception $e) {
+      drush_fetcher_log_exception_information($e);
+    }
   }
 }
 
+/**
+ * Lists available tasks.
+ */
 function drush_fetcher_list_tasks($site) {
   if (!$site) {
     return drush_log('No site was found', 'error');
@@ -385,102 +434,66 @@ function drush_fetcher_list_tasks($site) {
     'Description',
   );
   $tasks = $site->getTasks();
+  ksort($tasks);
   foreach ($tasks as $name => $task) {
-    if (!empty($task['description'])) {
-      $rows[] = array($name, $task['description']);
+    if (!empty($task->description)) {
+      $rows[] = array($name, $task->description);
     }
   }
   drush_print_table($rows, TRUE);
 }
 
-function drush_fetcher_release() {
-  // Optionally create a MySQL backup.
-  // Checkout a new tag.
-  // Create settings.php and files symlinks.
-  // Put the site in offline mode.
-  // Update the webroot symlink.
-  // Optionally run update.php
-  // Take the site out of offline mode.
+/**
+ * Configure a site from drush context and options.
+ *
+ * @param $site
+ *   The site object, must implement \Fetcher\SiteInterface.
+ */
+function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\SiteInterface $site) {
+  $keys = drush_command_invoke_all('fetcher_option_key_mapping', $site);
+  drush_command_invoke_all('fetcher_option_key_mapping_alter', $keys);
+  // Load any config from the global context and set them on the site object.
+  if (!empty($keys['context'])) {
+    foreach ($keys['context'] as $drush_name => $config_name) {
+      if ($value = drush_get_context($drush_name)) {
+        $site[$config_name] = $value;
+      }
+    }
+  }
+  // Load any options from the cli parameters and configure them on the site object.
+  if (!empty($keys['options'])) {
+    foreach ($keys['options'] as $drush_name => $config_name) {
+      if ($value = drush_get_option($drush_name)) {
+        $site[$config_name] = $value;
+      }
+    }
+  }
 }
 
 /**
- * Factory function for instatiating a site object.
- *
- * @param $site_info
- *   An array of site information to start with.
- * @param $assemble_info
- *   Whether to load configuration from drush context and
- *   site info files to be merged in.
+ * Implements hook_fetcher_option_key_mapping().
  */
-function drush_fetcher_get_site($site_info = array(), $assemble_info = TRUE) {
-  $class = drush_get_option('fetcher-site-class', '\Fetcher\Site');
-  if ($assemble_info) {
-    $info = drush_fetcher_assemble_site_info($site_info);
-  }
-  else {
-    $info = $site_info;
-  }
-  $site = new $class($info);
-  drush_command_invoke_all('fetcher_site_alter', $site);
-  return $site;
-}
-
-/**
- * Merge configuration in to build the configuration.
- *
- * Defaults exist for all values but can be overridden by keys set in a drushrc
- * file, and those are overridden by a site's specific settings.
- *
- * TODO: This is getting unmaintainable, consider a refactor.
- */
-function drush_fetcher_assemble_site_info(Array $site_info) {
-  // Merge in drushrc settings.
-  $fetcher_config = drush_fetcher_extract_keys_from_context();
-  $site_info = _drush_fetcher_merge_configuration($site_info, $fetcher_config);
-  if (!empty($site_info)) {
-    if (!empty($site_info['environment.remote'])) {
-      $environment = $site_info['environment.remote'];
-    }
-    if (drush_get_option('environment-local', FALSE)) {
-      $site_info['environment.local'] = drush_get_option('environment-local', 'local');
-    }
-    if (!empty($site_info['environments']) && empty($site_info['environment.remote'])) {
-      if (count($site_info['environments']) == 1) {
-        $environment = array_pop(array_keys($site_info['environments']));
-      }
-      else {
-        // TODO: This probably shouldn't happen here, it should happen when the
-        // site is prompted (or something).
-        $args = array('@envs' => implode(', ', array_keys($site_info['environments'])));
-        if (empty($environment)) {
-          $environment = drush_prompt(dt('Please select an environment (@envs).', $args), array_pop(array_keys($site_info['environments'])));
-        }
-        if (!isset($site_info['environments'][trim($environment)])) {
-          drush_set_error('FETCHER_ERROR', dt('Invalid environment selected.'), 'error');
-          exit;
-        }
-      }
-      $site_info['environment.remote'] = $environment;
-      // TODO: This should probably be a method on the site object.
-      $site_info = _drush_fetcher_merge_configuration($site_info, $site_info['environments'][$environment]);
-    }
-    if (!empty($site_info['fetcher'])) {
-      $site_info = array_merge($site_info, $site_info['fetcher']);
-      unset($site_info['fetcher']);
-    }
-  }
-  // Merge in site_info.yaml
-  if (!empty($site_info['name']) || !empty($site_info['site.info path'])) {
-    $temp_site = drush_fetcher_get_site($site_info, FALSE);
-    if (is_file($temp_site['site.info path'])) {
-      $config = drush_fetcher_load_site_info_from_file($temp_site['site.info path']);
-      $site_info = _drush_fetcher_merge_configuration($site_info, drush_fetcher_load_site_info_from_file($temp_site['site.info path']));
-    }
-  }
-  $site_info = drush_fetcher_get_config_from_options($site_info);
-  $site_info['simulate'] = drush_get_context('DRUSH_SIMULATE');
-  $site_info['verbose'] = drush_get_context('DRUSH_VERBOSE');
-  return $site_info;
+function fetcher_fetcher_option_key_mapping() {
+  return array(
+    'context' => array(
+      'DRUSH_SIMULATE' => 'simulate',
+      'DRUSH_VERBOSE' => 'verbose',
+    ),
+    'options' => array(
+      'local-environment' => 'environment.local',
+      'remote-environment' => 'environment.remote',
+      'database-user-name' => 'database.user.name',
+      'database-user-password' => 'database.user.password',
+      'database' => 'database.database',
+      'database-hostname' => 'database.hostname',
+      'database-port' => 'database.port',
+      'database-admin-user-name' => 'database.admin.user.name',
+      'database-admin-user-password' => 'database.admin.user.password',
+      'hostname' => 'hostname',
+      'site' => 'site',
+      'local-name' => 'name',
+    ),
+  );
 }
 
 /**
@@ -493,7 +506,9 @@ function drush_fetcher_assemble_site_info(Array $site_info) {
  *   The hostname of the sites to filter for, must be an exact match.
  */
 function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
-  $site = drush_fetcher_get_site();
+  /*
+  // Needs a refactor...
+  $site = fetcher_get_site();
   if (is_null($server_hostname)) {
     $server_hostname = $site['system']->getHostname();
   }
@@ -537,33 +552,11 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     }
   }
   return $sites;
-}
-
-
-
-/**
- *
- * TODO: Make this somehow pluggable/extensible.
- */
-function drush_fetcher_get_config_from_options($site_info) {
-  $keys = array(
-    'database.admin.user.name',
-    'database.admin.user.password',
-    'hostname',
-    'site',
-  );
-  foreach ($keys as $key) {
-    $option = str_replace('.', '-', $key);
-    $option = str_replace(' ', '-', $option);
-    if (drush_get_option($option)) {
-      $site_info[$key] = drush_get_option($option);
-    }
-  }
-  return $site_info;
+  */
 }
 
 /**
- * Combine all settings inside the fetcher namespace.
+ * Combine all drushrc.php settings inside the fetcher namespace.
  */
 function drush_fetcher_extract_keys_from_context() {
   $context = array_reverse(drush_get_context());
@@ -577,37 +570,6 @@ function drush_fetcher_extract_keys_from_context() {
     $fetcher_settings = call_user_func_array('array_merge', $fetcher_settings);
   }
   return $fetcher_settings;
-}
-
-/**
- * This function merges configuration allowing the second parameter to override the first.
- *
- * It will perform a recursive merge exactly one level deep.
- */
-function _drush_fetcher_merge_configuration($site_info, $config) {
-  // Merge in global configuration.
-  foreach ($config as $name => $value) {
-    if (!empty($site_info[$name]) && is_array($site_info[$name]) && is_array($value)) {
-      $site_info[$name] = array_merge($site_info[$name], $value);
-    }
-    else {
-      $site_info[$name] = $value;
-    }
-  }
-  return $site_info;
-}
-
-/**
- * Prompt for a valid site name.
- */
-function drush_fetcher_prompt_for_site_name() {
-  $site_name = drush_prompt(dt('Please enter the site name you would like to work with or n to cancel'));
-  if ($site_name == 'n') {
-    return FALSE;
-  }
-  else {
-    return trim($site_name);
-  }
 }
 
 /**
@@ -694,106 +656,15 @@ function drush_fetcher_get_asset($asset_name, array $vars = array()) {
 }
 
 /**
- * Attempt to identify the site we are working with from the specified path.
- *
- * @return
- *   A stdClass object containing site information or FALSE on failure.
+ * Logs information in a standard way from an Exception that occured.
  */
-function drush_fetcher_find_site_by_directory($directory) {
-  $parts = explode(DIRECTORY_SEPARATOR, $directory);
-  $site_info = FALSE;
-  while (count($parts)) {
-    $path = implode(DIRECTORY_SEPARATOR, $parts) . DIRECTORY_SEPARATOR . 'site_info.yaml';
-    if (file_exists($path)) {
-      $site_info = drush_fetcher_load_site_info_from_file($path);
-      break;
-    }
-    array_pop($parts);
-  }
-  return $site_info;
+function drush_fetcher_log_exception_information(Exception $e) {
+  $args = array(
+    '@error' => $e->getMessage(),
+    '@line' => $e->getLine(),
+    '@file' => $e->getFile()
+  );
+  drush_log(dt('@error on line @line of @file.', $args), 'error');
 }
 
-/**
- * Find a site from a site name, drush alias or current path.
- *
- * @param $site_name
- *   An optional param representing a site name or drush alias to the site.
- * @return
- *   An array object containing site information.
- */
-function drush_fetcher_load_site_info_from_name_alias_or_context($site_name = FALSE) {
 
-  $site_info = FALSE;
-  try {
-    // If we have a drush alias starting with `@` then we look up the local
-    // alias and try to get the site info from the siteInfo file.
-    if (strpos($site_name, '@') === 0 && $specs = drush_sitealias_resolve_sitespecs($site_name)) {
-      // We may have multiple environments but if we wrote the aliases then the
-      // first one is the local one.
-      $spec = array_shift($specs);
-      $site_info = drush_fetcher_find_site_by_directory($spec['root']);
-      if (is_array($site_info)) {
-        $site_name = $site_info['name'];
-      }
-    }
-
-    // If a site was not selected, we may be loading the site information from
-    // the site info file in the current working directory.
-    if (!$site_name && !($site_info = drush_fetcher_find_site_by_directory(getcwd()))) {
-      $site_name = drush_fetcher_prompt_for_site_name();
-    }
-
-    // Otherwise load the site from the info fetcher based on the site name.
-    if (($site_name && !$site_info) || drush_get_option('fetch-info')) {
-      $site_info = drush_fetcher_fetch_site_info($site_name);
-    }
-    if ($site_info) {
-      $site_info = drush_fetcher_assemble_site_info($site_info);
-      return $site_info;
-    }
-    else {
-      drush_log(dt('This site information could not be loaded.'), 'error');
-      return FALSE;
-    }
-  }
-  catch (Exception $e) {
-    drush_fetcher_log_exception_information($e);
-    drush_set_error(dt('Fetching site information failed: @message', array('@message' => $e->getMessage())));
-  }
-}
-
-/**
- * Load site info from a specific file.
- *
- * @param $path
- *   The path of the yaml file where site info is stored.
- * @return
- *   A stdClass object with data about the site.
- */
-function drush_fetcher_load_site_info_from_file($path) {
-  $return = FALSE;
-  if (is_file($path) && $site_info = file_get_contents($path)) {
-    $class = drush_get_option('fetcher_site_class', '\Fetcher\Site');
-    $return = $class::parseSiteInfo($site_info);
-  }
-  return $return;
-}
-
-/**
- * Get an option from the configured Fetcher array.
- *
- * @param $option
- *   The name of the option.
- * @param $default
- *  The default to use if no value is specified.
- */
-function fetcher_drush_get_option($option, $default = NULL) {
-  $options = drush_fetcher_extract_keys_from_context();
-  if (isset($options[$option])) {
-    $return = $options[$option];
-  }
-  else {
-    $return = $default;
-  }
-  return $return;
-}

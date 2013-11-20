@@ -42,6 +42,7 @@ class Mysql {
     }
     $site->setDefaultConfigration('database.port', 3306);
     $site->setDefaultConfigration('mysql.binary', 'mysql');
+    $site->addEphemeralKey('data.admin.user.password');
   }
 
   /**
@@ -171,7 +172,7 @@ class Mysql {
   /**
    * Execute a MySQL query at the command line.
    */
-  protected function executeQuery($command, $setDatabase = TRUE, $config = NULL) {
+  public function executeQuery($command, $setDatabase = TRUE, $config = NULL) {
 
     if (is_null($config)) {
       $config = $this->getQueryConfig(TRUE);

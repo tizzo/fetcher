@@ -8,10 +8,17 @@ class Apache2 {
 
   public function __construct(\Pimple $site) {
     $site->setDefaultConfigration('server.user', 'www-data');
+    $site->setDefaultConfigration('server.port', 80);
     $site->setDefaultConfigration('server.webroot', '/var/www');
     $site->setDefaultConfigration('server.vhost_enabled_folder', '/etc/apache2/sites-enabled');
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
-    $this->site = $site;
+    $site->setDefaultConfigration('server.restart_command', 'sudo service apache2 reload');
+    $site->setDefaultConfigration('server.enable_site_command', function($c) {
+      return 'a2ensite ' . $c['name'];
+    });
+    $site->setDefaultConfigration('server.disable_site_command', function($c) {
+      return 'a2dissite ' . $c['name'];
+    });
     $this->site = $site;
   }
 
@@ -64,7 +71,8 @@ class Apache2 {
       $vars = array(
         'site_name' => $site['name'],
         'hostname' => $site['hostname'],
-        'site_folder' => $site['site.working_directory'],
+        'docroot' => $site['site.webroot'],
+        'port' => $site['server.port'],
       );
       $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
       $site['system']->writeFile($vhostPath, $content);
@@ -99,10 +107,14 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function ensureSiteEnabled() {
-    $command = 'a2ensite ' . $this->site['name'];
-    drush_log('Executing `' . $command . '`.');
-    if (!drush_shell_exec($command)) {
-      throw new \Fetcher\FetcherException(dt('The site @site could not be enabled.'), array('@site' => $this->site['name']));
+    $site = $this->site;
+    $site['log'](\sprintf('Executing `%s`.', $site['server.enable_site_command']));
+    if (!$site['simulate']) {
+      $process = $site['process']($site['server.enable_site_command']);
+      $process->run();
+      if (!$process->isSuccessful()) {
+        throw new \Fetcher\Exception\FetcherException(\sprintf('The site %s could not be enabled.', $this->site['name']));
+      }
     }
   }
 
@@ -127,8 +139,7 @@ class Apache2 {
    * TODO: This can vary based on the system.
    */
   public function restart() {
-    $command = 'sudo service apache2 reload';
-    if (!drush_shell_exec($command)) {
+    if (!drush_shell_exec($this->site['server.restart_command'])) {
       throw new \Fetcher\Exception\FetcherException(dt('Apache failed to restart, the server may be down.'));
     }
   }
