@@ -9,7 +9,12 @@ class DrushAlias implements InfoFetcherInterface {
    * Get all available sites from aliases.
    */
   public function getSitesFromAliases() {
-    $aliases = _drush_sitealias_find_and_load_all_aliases();
+    $aliases = array();
+    // Here we use the method used by drush_sitealias_print (the guts of `drush sa`).
+    foreach (_drush_sitealias_all_list() as $site => $aliasRecord) {
+      $siteName = substr($site, 1);
+      $aliases[$siteName] = _drush_sitealias_find_and_load_alias($siteName);
+    }
     $sites = array();
     foreach ($aliases as $name => $alias) {
       if (!empty($alias['fetcher'])) {
@@ -20,11 +25,37 @@ class DrushAlias implements InfoFetcherInterface {
       if (isset($alias['name'])) {
         $siteName = preg_replace('/(.*)\.(.*)/', '\1', $name);
         $environmentName = preg_replace('/(.*)\.(.*)/', '\2', $name);
-        if (empty($sites[$siteName])) {
-          $sites[$siteName] = $alias;
+        if (!isset($sites[$siteName])) {
+          $sites[$siteName] = array();
         }
+        // Build up the site data.
+        $sites[$siteName] = $sites[$siteName] + $alias;
         $sites[$siteName]['environments'][$environmentName] = $alias;
         $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
+        // We already have an alias for this site, so specify the file.
+        $sites[$siteName]['drush_alias.path'] = $alias['#file'];
+
+      }
+    }
+    foreach ($sites as $siteName => $site) {
+      // To keep our data clean we only want to add items that are actually different from environment to environment.
+      if (count($sites[$siteName]['environments']) > 1) {
+        // Find keys common to all aliases, remove the.
+        $environmentRedundancies = call_user_func_array('array_intersect_assoc', $sites[$siteName]['environments']);
+        foreach ($sites[$siteName] as $key => $value) {
+          // Remove drush private attributes.
+          if (strpos($key, '#') === 0) {
+            foreach ($sites[$siteName]['environments'] as &$environment) {
+              unset($environment[$key]);
+            }
+            unset($sites[$siteName][$key]);
+          }
+          if (!empty($environmentRedundancies) && in_array($key, array_keys($environmentRedundancies))) {
+            foreach ($sites[$siteName]['environments'] as &$environment) {
+              unset($environment[$key]);
+            }
+          }
+        }
       }
     }
     return $sites;
@@ -42,6 +73,7 @@ class DrushAlias implements InfoFetcherInterface {
         $list[$name] = $site;
       }
     }
+    ksort($list);
     return $list;
   }
 
