@@ -12,10 +12,10 @@
     "psr-0": {"Fetcher\\": "lib/"}
   },
   "require": {
-    "pimple/pimple": "1.1.*@dev",
+    "pimple/pimple": "v1.1.0",
     "symfony/yaml": "v2.3.5",
     "symfony/process": "v2.3.5",
-    "symfony/finder": "v2.3.5",
+    "sdboyer/gliph": "0.1.5",
     "phpspec/php-diff": "v1.0.1"
   },
   "require-dev": {
