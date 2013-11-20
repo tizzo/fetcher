@@ -17,7 +17,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
   /**
    * Drops the database before the import.
    */
-  public function dropDB($site) {
+  public function dropTables($site) {
     $commandline_options = array(
       '--yes',
     );
@@ -44,7 +44,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     }
 
     // Drop the database before import.
-    $this->dropDB($site);
+    $this->dropTables($site);
 
     // Don't hard code this and rework all of it to work properly with aliases.
     $commandline_options = array(
