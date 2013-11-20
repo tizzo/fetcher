@@ -434,6 +434,7 @@ function drush_fetcher_list_tasks($site) {
     'Description',
   );
   $tasks = $site->getTasks();
+  ksort($tasks);
   foreach ($tasks as $name => $task) {
     if (!empty($task->description)) {
       $rows[] = array($name, $task->description);
