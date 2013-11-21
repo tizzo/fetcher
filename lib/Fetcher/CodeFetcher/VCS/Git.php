@@ -66,10 +66,10 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
           drush_print_prompt('Git Output: '.$buffer, 4);
         }
       });
-    }
 
-    if (!$process->isSuccessful()) {
-      throw new \Exception('Executing Git command failed: `' . $command . '`.  Git responded with: ' . $process->getErrorOutput() . ' ' . $process->getOutput());
+      if (!$process->isSuccessful()) {
+        throw new \Exception('Executing Git command failed: `' . $command . '`.  Git responded with: ' . $process->getErrorOutput() . ' ' . $process->getOutput());
+      }
     }
 
     return $process->isSuccessful();

@@ -1,6 +1,7 @@
 <?php
 
 namespace Fetcher\DB;
+use Fetcher\Utility\MockProcess;
 
 /**
  * The class manages our MySQL databases and users.
@@ -203,7 +204,7 @@ class Mysql {
     $process = $this->site['process']($command);
 
     if ($site['simulate']) {
-      return $process;
+      return new MockProcess();
     }
 
     $process->run();
