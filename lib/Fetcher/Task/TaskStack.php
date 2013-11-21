@@ -75,6 +75,17 @@ class TaskStack extends Task implements TaskInterface {
   }
 
   /**
+   * Remove an existing task from the stack.
+   *
+   * @param $name
+   *    The task to remove.
+   */
+  public function remove($itemName) {
+    $position = array_search($itemName, array_keys($this->tasks));
+    array_splice($this->tasks, $position, 1);
+  }
+
+  /**
    * Splice a new task into the existing array.
    *
    * @param $taskToAdd

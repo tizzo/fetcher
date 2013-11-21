@@ -76,6 +76,32 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests TaskStack::remove().
+   */
+  public function testRemove() {
+    // Ensure we can remove an item from the middle of the task stack.
+    $stack = $this->getSimpleTaskStack();
+    $stack->remove('two');
+    $taskNames = array_keys($stack->getTasks());
+    $this->assertEquals(2, count($taskNames));
+    $this->assertEquals('one', $taskNames[0]);
+    $this->assertEquals('three', $taskNames[1]);
+    // Ensure we can remove an item from the middle of a task stack.
+    $stack = $this->getSimpleTaskStack();
+    $stack->remove('one');
+    $taskNames = array_keys($stack->getTasks());
+    $this->assertEquals(2, count($taskNames));
+    $this->assertEquals('two', $taskNames[0]);
+    $this->assertEquals('three', $taskNames[1]);
+    // Ensure we can remove an item from the end of a task stack.
+    $stack = $this->getSimpleTaskStack();
+    $stack->remove('three');
+    $taskNames = array_keys($stack->getTasks());
+    $this->assertEquals(2, count($taskNames));
+    $this->assertEquals('one', $taskNames[0]);
+    $this->assertEquals('two', $taskNames[1]);
+  }
+  /**
    * Get a configured task stack with 3 tasks.
    */
   private function getSimpleTaskStack() {
