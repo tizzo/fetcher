@@ -244,6 +244,10 @@ function fetcher_get_site($name = FALSE) {
     $site->addTask($task);
   }
 
+  // Configure from the remote environment (if remote environment is not set, and there are
+  // no environments this should take no action).
+  $site->configureFromEnvironment();
+
   // Allow other modules to modify the site object.
   drush_command_invoke_all('fetcher_site_alter', $site);
 
