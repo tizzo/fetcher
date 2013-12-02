@@ -18,13 +18,13 @@ class DrushPrompts implements ConfiguratorInterface {
     $site['environment.remote'] = function($c) {
       static $value = FALSE;
       if (!$value && !empty($c['environments'])) {
-        $environments = $c['environments']; 
+        $environments = $c['environments'];
         // If there is only 1 environment, use it.
         if (empty($environment)) {
           $value = FALSE;
         }
         if (count($environments) == 1) {
-          $value = $environments[0];
+          $value = array_pop(array_keys($environments));
         }
         else if (count($environments) > 1) {
           $args = array('@envs' => implode(',', array_keys($environments)));
@@ -40,4 +40,4 @@ class DrushPrompts implements ConfiguratorInterface {
     };
   }
 }
- 
+
