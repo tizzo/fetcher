@@ -31,6 +31,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $site['log'](sprintf('Executing: `%s`. ', $dropCommand), 'info');
     if (!$site['simulate']) {
       $process = $site['process']($dropCommand);
+      $process->setTimeout(NULL);
       $process->run();
       if (!$process->isSuccessful()) {
         throw new FetcherException(sprintf('Dropping old database `%s` FAILED!', $site['database.database']));
