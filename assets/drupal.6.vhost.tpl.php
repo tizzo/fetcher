@@ -1,4 +1,4 @@
-<Directory /var/www/<?php print $site_name; ?>/webroot/>
+<Directory <?php print $docroot; ?> >
   Options FollowSymLinks
   AllowOverride None
   # Protect files and directories from prying eyes.

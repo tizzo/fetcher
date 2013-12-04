@@ -1,4 +1,4 @@
-<Directory /var/www/<?php print $site_name; ?>/webroot/>
+<Directory <?php print $docroot; ?> >
   Options FollowSymLinks
   AllowOverride None
   # Protect files and directories from prying eyes.
@@ -24,18 +24,20 @@
     </FilesMatch>
   </IfModule>
 
-  RewriteEngine On
-  RewriteBase /
-        <Files "cron.php">
+  <Files "cron.php">
     Order Deny,Allow
     Deny from all
     Allow from localhost
     Allow from 127.0.0.1
   </Files>
+
   # Rewrite URLs of the form 'index.php?q=x'.
+  RewriteEngine On
+  RewriteBase /
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+
 </Directory>
 <VirtualHost *:<?php print $port; ?>>
   ServerName <?php print $hostname . PHP_EOL;  ?>
