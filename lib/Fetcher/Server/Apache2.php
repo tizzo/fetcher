@@ -2,7 +2,7 @@
 
 namespace Fetcher\Server;
 
-class Apache2 {
+class Apache2 implements ServerInterface {
 
   protected $site;
 
@@ -18,6 +18,9 @@ class Apache2 {
     });
     $site->setDefaultConfigration('server.disable_site_command', function($c) {
       return 'a2dissite ' . $c['name'];
+    });
+    $site->setDefaultConfigration('server.host_conf_path', function($c) {
+      return $c->site['server.vhost_available_folder'] . '/' . $c->site['name'];
     });
     $this->site = $site;
   }
@@ -66,8 +69,7 @@ class Apache2 {
    */
   public function ensureSiteConfigured() {
     $site = $this->site;
-    $vhostPath = $this->getVhostPath();
-    if (!is_file($vhostPath)) {
+    if (!is_file($site['server.host_conf_path'])) {
       $vars = array(
         'site_name' => $site['name'],
         'hostname' => $site['hostname'],
@@ -75,17 +77,8 @@ class Apache2 {
         'port' => $site['server.port'],
       );
       $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
-      $site['system']->writeFile($vhostPath, $content);
+      $site['system']->writeFile($site['server.host_conf_path'], $content);
     }
-  }
-
-  /**
-   * Get the path where vhost files should be placed.
-   *
-   * TODO: This can vary based on the system.
-   */
-  public function getVhostPath() {
-    return $this->site['server.vhost_available_folder'] . '/' . $this->site['name'];
   }
 
   /**
@@ -98,13 +91,13 @@ class Apache2 {
       $this->ensureSiteDisabled();
       $this->restart();
     }
-    $this->site['system']->ensureDeleted($this->getVhostPath());
+    $this->site['system']->ensureDeleted($site['server.host_conf_path']);
   }
 
   /**
    * Ensure that the configured site has been enabled.
    *
-   * TODO: This can vary based on the system.
+   * TODO: This does not exist by default on some systems.
    */
   public function ensureSiteEnabled() {
     $site = $this->site;
@@ -120,8 +113,6 @@ class Apache2 {
 
   /**
    * Ensure that the configured site has been disabled.
-   *
-   * TODO: This can vary based on the system.
    */
   public function ensureSiteDisabled() {
     $command = 'a2dissite ' . $this->site['name'];
@@ -135,8 +126,6 @@ class Apache2 {
    * Restart the server to load the configuration.
    *
    * Note this should be done cracefully if possible.
-   *
-   * TODO: This can vary based on the system.
    */
   public function restart() {
     if (!drush_shell_exec($this->site['server.restart_command'])) {
