@@ -132,7 +132,7 @@ class Site extends Pimple implements SiteInterface {
       $environment = $this['environment.remote'];
     }
     $environments = $this['environments'];
-    if (empty($environments[$environment])) {
+    if (!empty($environment) && !isset($environments[$environment])) {
       throw new FetcherException('Invalid environment specified.');
     }
     foreach ($environments[$environment]  as $key => $value) {
