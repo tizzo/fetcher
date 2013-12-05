@@ -28,7 +28,9 @@ class DrushPrompts implements ConfiguratorInterface {
         }
         else if (count($environments) > 1) {
           $args = array('@envs' => implode(',', array_keys($environments)));
-          $default = array_shift(array_keys($environments));
+          // We create a new variable to prevent PHP from complaining about passing a non-variable by reference.
+          $keys = array_keys($environments);
+          $default = array_shift($keys);
           $value = drush_prompt(dt('Please select an environment (@envs).', $args), $default);
           $value = trim($value);
         }
