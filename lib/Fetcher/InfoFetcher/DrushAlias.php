@@ -34,11 +34,11 @@ class DrushAlias implements InfoFetcherInterface {
         $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
         // We already have an alias for this site, so specify the file.
         $sites[$siteName]['drush_alias.path'] = $alias['#file'];
-
       }
     }
     foreach ($sites as $siteName => $site) {
-      // To keep our data clean we only want to add items that are actually different from environment to environment.
+      // To keep our data clean we only want to add items that are actually
+      // different from environment to environment.
       if (count($sites[$siteName]['environments']) > 1) {
         // Find keys common to all aliases, remove the.
         $environmentRedundancies = call_user_func_array('array_intersect_assoc', $sites[$siteName]['environments']);
@@ -50,6 +50,7 @@ class DrushAlias implements InfoFetcherInterface {
             }
             unset($sites[$siteName][$key]);
           }
+          // We also need to compare the actual values to see if they match.
           if (!empty($environmentRedundancies) && in_array($key, array_keys($environmentRedundancies))) {
             foreach ($sites[$siteName]['environments'] as &$environment) {
               unset($environment[$key]);
