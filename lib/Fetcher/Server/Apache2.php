@@ -104,6 +104,7 @@ class Apache2 implements ServerInterface {
     $site['log'](\sprintf('Executing `%s`.', $site['server.enable_site_command']));
     if (!$site['simulate']) {
       $process = $site['process']($site['server.enable_site_command']);
+      $process->setTimeout(NULL);
       $process->run();
       if (!$process->isSuccessful()) {
         throw new \Fetcher\Exception\FetcherException(\sprintf('The site %s could not be enabled.', $this->site['name']));

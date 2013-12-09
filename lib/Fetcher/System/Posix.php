@@ -121,6 +121,7 @@ class Posix {
     // Also git sets file permissions that require the -f.
     if (!$this->site['simulate']) {
       $process = new Process(sprintf('rm -rf %s', $path));
+      $process->setTimeout(NULL);
       $process->run();
       if ($process->isSuccessful()) {
         return $process->getOutput();
@@ -172,6 +173,7 @@ class Posix {
    */
   public function getHostname() {
     $process = new Process('hostname');
+    $process->setTimeout(NULL);
     $process->run();
     if (!$process->isSuccessful()) {
       throw new FetcherException('The hostname could not be found.');

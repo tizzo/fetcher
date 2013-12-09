@@ -202,6 +202,7 @@ class Mysql {
     $command = $base_command . ' -e ' . escapeshellarg($command);
     $site['log'](dt('Executing MySQL command `@command`', array('@command' => $command)));
     $process = $this->site['process']($command);
+    $process->setTimeout(NULL);
 
     if ($site['simulate']) {
       return new MockProcess();

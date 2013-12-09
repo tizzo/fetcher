@@ -31,6 +31,7 @@ class DrushSqlSync implements DBSynchronizerInterface {
     $site['log'](sprintf('Executing: `%s`. ', $dropCommand), 'info');
     if (!$site['simulate']) {
       $process = $site['process']($dropCommand);
+      // According to the process docs, this should be NULL for unlimited.
       $process->setTimeout(NULL);
       $process->run();
       if (!$process->isSuccessful()) {

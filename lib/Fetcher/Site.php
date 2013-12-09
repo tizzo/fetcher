@@ -470,6 +470,7 @@ class Site extends Pimple implements SiteInterface {
         }
         if (is_string($hook['action'])) {
           $process = $this['process']($hook['action']);
+          $process->setTimeout(NULL);
           $this['log'](dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
           $logger = NULL;
           if ($this['verbose']) {
@@ -632,6 +633,7 @@ class Site extends Pimple implements SiteInterface {
       // dynamic parameters.
       $reflection = new \ReflectionClass('Symfony\Component\Process\Process');
       $process = $reflection->newInstanceArgs(func_get_args());
+      $process->setTimeout(NULL);
       return $process;
     });
 
