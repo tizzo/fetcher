@@ -20,7 +20,7 @@ class DrushPrompts implements ConfiguratorInterface {
       if (!$value && !empty($c['environments'])) {
         $environments = $c['environments'];
         // If there is only 1 environment, use it.
-        if (empty($environment)) {
+        if (count($environments) == 0) {
           $value = FALSE;
         }
         if (count($environments) == 1) {

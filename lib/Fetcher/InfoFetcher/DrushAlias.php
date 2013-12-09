@@ -6,6 +6,32 @@ use Fetcher\InfoFetcher\InfoFetcherInterface;
 class DrushAlias implements InfoFetcherInterface {
 
   /**
+   * @param $site
+   *  An array of site information from drush aliases.
+   */
+  public function getEnvironmentRedundancies($site) {
+    $redundancies = array();
+    foreach ($site['environments'] as $environment) {
+      foreach ($environment as $key => $value) {
+        $redundant = TRUE;
+        $oldValue = $environment[$key];
+        foreach ($site['environments'] as $envToCheck) {
+          if ($envToCheck[$key] !== $oldValue) {
+            $redundant = FALSE;
+            $oldValue = $envToCheck[$key];
+            break;
+          }
+          $oldValue = $envToCheck[$key];
+        }
+        if ($redundant && !in_array($key, $redundancies)) {
+          $redundancies[] = $key;
+        }
+      }
+    }
+    return $redundancies;
+  }
+
+  /**
    * Get all available sites from aliases.
    */
   public function getSitesFromAliases() {
@@ -37,22 +63,23 @@ class DrushAlias implements InfoFetcherInterface {
       }
     }
     foreach ($sites as $siteName => $site) {
-      // To keep our data clean we only want to add items that are actually
-      // different from environment to environment.
+      // To keep our data clean we only want to set keys that are actually
+      // different from environment to environment on the environment level.
       if (count($sites[$siteName]['environments']) > 1) {
-        // Find keys common to all aliases, remove the.
-        $environmentRedundancies = call_user_func_array('array_intersect_assoc', $sites[$siteName]['environments']);
+        // Find keys/value pairs common to all aliases, for removal.
+        $environmentRedundancies = $this->getEnvironmentRedundancies($sites[$siteName]);
         foreach ($sites[$siteName] as $key => $value) {
           // Remove drush private attributes.
           if (strpos($key, '#') === 0) {
-            foreach ($sites[$siteName]['environments'] as &$environment) {
-              unset($environment[$key]);
-            }
             unset($sites[$siteName][$key]);
           }
-          // We also need to compare the actual values to see if they match.
-          if (!empty($environmentRedundancies) && in_array($key, array_keys($environmentRedundancies))) {
-            foreach ($sites[$siteName]['environments'] as &$environment) {
+          foreach ($sites[$siteName]['environments'] as &$environment) {
+            // Remove drush private attributes.
+            if (strpos($key, '#') === 0) {
+              unset($environment[$key]);
+            }
+            if (in_array($key, $environmentRedundancies)) {
+              //drush_print('unsetting ' .$key);
               unset($environment[$key]);
             }
           }
