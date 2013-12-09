@@ -65,7 +65,7 @@ class DrushAlias implements InfoFetcherInterface {
     foreach ($sites as $siteName => $site) {
       // To keep our data clean we only want to set keys that are actually
       // different from environment to environment on the environment level.
-      if (count($sites[$siteName]['environments']) > 1) {
+      if (!empty($sites[$siteName]['environments'])) {
         // Find keys/value pairs common to all aliases, for removal.
         $environmentRedundancies = $this->getEnvironmentRedundancies($sites[$siteName]);
         foreach ($sites[$siteName] as $key => $value) {
