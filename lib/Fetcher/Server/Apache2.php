@@ -20,7 +20,7 @@ class Apache2 implements ServerInterface {
       return 'a2dissite ' . $c['name'];
     });
     $site->setDefaultConfigration('server.host_conf_path', function($c) {
-      return $c->site['server.vhost_available_folder'] . '/' . $c->site['name'];
+      return $c['server.vhost_available_folder'] . '/' . $c['name'];
     });
     $this->site = $site;
   }
