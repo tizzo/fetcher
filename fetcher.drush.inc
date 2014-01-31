@@ -482,6 +482,9 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
         $site[$key] = $value;
       }
     }
+    else {
+      drush_log('Invalid JSON received for json-config parameter.', 'error');
+    }
   }
 }
 
