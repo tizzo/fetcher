@@ -34,7 +34,7 @@ function fetcher_drush_command() {
     'hostname' => 'The hostname to use in the server config (defaults to [site_name].[hostname]).',
     'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     'remote-environment' => 'The name of the environment to load from.',
-
+    'json-config' => 'Abitrary JSON that will be merged into the configuration of the site object.',
   );
 
   $items['fetcher-list'] = array(
@@ -55,6 +55,7 @@ function fetcher_drush_command() {
     'options' => array(
       'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
       'environment' => 'The name of the environment to load from.  Optional but required with database or file syncing.',
+      'json-config' => 'Abitrary JSON that will be merged into the configuration of the site object.',
     ),
   );
 
@@ -469,6 +470,16 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
     foreach ($keys['options'] as $drush_name => $config_name) {
       if ($value = drush_get_option($drush_name)) {
         $site[$config_name] = $value;
+      }
+    }
+  }
+  // We allow arbitrary injection of JSON overrides from the command line to
+  // allow for overrides of items that aren't exposed as native options.
+  $json_config = drush_get_option('json-config', FALSE);
+  if ($json_config) {
+    if ($config = json_decode($json_config)) {
+      foreach($config as $key => $value) {
+        $site[$key] = $value;
       }
     }
   }
