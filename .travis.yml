@@ -2,5 +2,14 @@ language: php
 php:
   - 5.3
   - 5.4
-before_script: composer install
-script: vendor/bin/phpunit tests
+  - 5.5
+before_script:
+  - composer self-update
+  - composer install --dev
+
+script:
+  - mkdir -p build/logs
+  - vendor/bin/phpunit -c phpunit.xml.dist
+
+after_script:
+  - php vendor/bin/coveralls -v
