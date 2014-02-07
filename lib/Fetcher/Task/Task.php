@@ -43,16 +43,23 @@ class Task implements TaskInterface {
    * Run this task.
    */
   public function run($site, $arguments = array()) {
-    if (empty($this->callable)) {
-      throw new TaskRunException('No callable was assigned to the task before running.');
-    }
     if (!empty($this->beforeMessage)) {
       $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
     }
-    \call_user_func_array($this->callable, array($site) + $arguments);
+    $this->performAction($site, $arguments);
     if (!empty($this->afterMessage)) {
       $site['log']($this->prepMessage($this->afterMessage, $site), 'ok');
     }
+  }
+
+  /**
+   * Run the internal logic for this task.
+   */
+  function performAction($site, $arguments) {
+    if (empty($this->callable)) {
+      throw new TaskRunException('No callable was assigned to the task before running.');
+    }
+    \call_user_func_array($this->callable, array($site) + $arguments);
   }
 
   /**
