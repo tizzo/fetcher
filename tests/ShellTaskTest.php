@@ -26,13 +26,24 @@ class ShellTaskTest extends PHPUnit_Framework_TestCase {
     $this->assertContains('    > ShellTaskTest.php', $history);
   }
 
+  public function testGetOutputWithoutRun() {
+    try {
+      $task = new ShellTask('foo', 'bar');
+      $task->getOutput();
+      throw new \Exception('Expected exception not thrown.');
+    }
+    catch (TaskRunException $e) {
+      $this->assertNotEmpty($e);
+    }
+  }
+
   public function testCommandFailureThowsException() {
     $task = new ShellTask('fetcher-not-a-real-command');
     try {
       $history = array();
       $site = $this->getSite($history);
       $task->run($site);
-      throw new \Exception('fail');
+      throw new \Exception('Expected exception not thrown.');
     }
     catch (TaskRunException $e) {
       $this->assertNotEmpty($e);

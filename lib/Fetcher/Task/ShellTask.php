@@ -53,7 +53,7 @@ class ShellTask extends Task implements TaskInterface {
    */
   public function getOutput() {
     if (empty($this->process)) {
-      throw new \Exception('Process was not run before output was requested.');
+      throw new TaskRunException('Process was not run before output was requested.');
     }
     return $this->process->getOutput();
   }
