@@ -1,6 +1,6 @@
 # Fetcher Drush #
 
-[![Build Status](https://travis-ci.org/tizzo/fetcher.png?branch=tasks-redux)](https://travis-ci.org/tizzo/fetcher)
+[![Build Status](https://travis-ci.org/tizzo/fetcher.png?branch=7.x-1.x)](https://travis-ci.org/tizzo/fetcher)
 
 Fetcher Drush is a command line client to interact wiht your Fetcher site and to do interesting things with the data retrieved from there.
 
