@@ -34,6 +34,7 @@ class TaskLoader {
     $reflection = new \ReflectionClass($class);
     foreach ($reflection->getMethods() as $method) {
       $annotations = $this->parseAnnotations($method->getDocComment());
+      $tasks = $tasks + $this->createTaskStacksFromAnnotations($annotations);
       if ($task = $this->parseTaskInfo($annotations)) {
         $tasks[$task->fetcherTask] = $task;
         if (!$method->isStatic() && !empty($instance)) {
@@ -84,12 +85,27 @@ class TaskLoader {
     foreach($functions as $functionName) {
       $function = new \ReflectionFunction('\\' . $functionName);
       $annotations = $this->parseAnnotations($function->getDocComment());
+      $tasks = $tasks + $this->createTaskStacksFromAnnotations($annotations);
       if ($task = $this->parseTaskInfo($annotations)) {
         $task->callable = $functionName;
         $tasks[$task->fetcherTask] = $task;
       }
     }
     return $tasks;
+  }
+
+  /**
+   *
+   */
+  public function createTaskStacksFromAnnotations(&$annotations) {
+    $stacks = array();
+    if (!empty($annotations['stacks'])) {
+      foreach ($annotations['stacks'] as $stack => $dependencies) {
+        $stacks[$stack] = new TaskStack($stack);
+      }
+      unset($annotations['stacks']);
+    }
+    return $stacks;
   }
 
   /**
@@ -122,7 +138,7 @@ class TaskLoader {
     $multiValueAttributes = array(
       'beforeTask',
       'afterTask',
-      'stacks',
+      'stack',
     );
     foreach ($multiValueAttributes as $attribute) {
       if (!empty($annotations[$attribute])) {
@@ -133,7 +149,7 @@ class TaskLoader {
   }
 
   /**
-   * Stolen from phpunit.
+   * Origintally stolen from phpunit.
    *
    * @param  string $docblock
    * @return array
@@ -142,8 +158,25 @@ class TaskLoader {
     $annotations = array();
     if (preg_match_all('/@(?P<name>[A-Za-z_-]+)(?:[ \t]+(?P<value>.*?))?[ \t]*\r?$/m', $docblock, $matches)) {
       $numMatches = count($matches[0]);
+      $currentStack = NULL;
       for ($i = 0; $i < $numMatches; ++$i) {
-        $annotations[$matches['name'][$i]][] = $matches['value'][$i];
+        $name = $matches['name'][$i];
+        $value = $matches['value'][$i];
+        switch ($name) {
+          case 'stack':
+            $annotations['stacks'][$value] = array();
+            $currentStack = $value;
+            break;
+          case 'beforeTask':
+          case 'afterTask':
+            if (!is_null($currentStack)) {
+              $annotations['stacks'][$value][$name][] = $value;
+            }
+            break;
+          default:
+            $annotations[$name][] = $matches['value'][$i];
+            break;
+        }
       }
     }
     return $annotations;
