@@ -888,37 +888,5 @@ class Site extends Pimple implements SiteInterface {
     $this->tasks = $this['task_loader']->scanObject($this) + $this->tasks;
   }
 
-  public function legacyRegisterDefaultTasks() {
-    $task = function ($site) {
-      if (is_file($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php')) {
-        require($site['site.code_directory'] . '/sites/' . $site['site'] . '/fetcher.make.php');
-      }
-    };
-    $this->registerTask('include_fetcher_make', $task);
-
-
-    // If there is an fetcher.make.php file, load it to allow build hooks to be
-    // registered.
-    $makeLoader = function($site) {
-      if (is_file($site['build_hook_file.path'])) {
-        require($site['build_hook_file.path']);
-      }
-    };
-    $this->registerTask('load_make_file', $makeLoader);
-
-    $options = array(
-      'starting_message' => 'Running before build hooks...',
-      'success_message' => 'Before build hooks completed.',
-      'arguments' => array('before'),
-    );
-    $this->registerTask('before_build_hooks', array($this, 'runOperationBuildHooks'), $options);
-
-    $options = array(
-      'starting_message' => 'Running after build hooks...',
-      'success_message' => 'After build hooks completed.',
-      'arguments' => array('after'),
-    );
-    $this->registerTask('after_build_hooks', array($this, 'runOperationBuildHooks'), $options);
-  }
 
 }
