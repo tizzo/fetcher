@@ -67,6 +67,7 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
 
   /**
    * Test the scanAllUserSpaceFunctions method.
+   *
    * This method also tests the scanFunctions() method.
    */
   public function testScanUserSpaceFunctions() {
@@ -117,9 +118,29 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $path = __DIR__ . '/../lib/Fetcher/Tests/Fixtures/Tasks/TaskStackAnnotation.php';
     $tasks = $loader->scanFunctionsInFile($path);
     $tasks = $loader->scanClass('\Fetcher\Tests\Fixtures\Tasks\TaskStackAnnotation');
+    $this->assertContains('first_stack_1', array_keys($tasks));
+    $this->assertContains('first_stack_2', array_keys($tasks));
     $this->assertContains('test_stack_1', array_keys($tasks));
-    $this->assertContains('some_task_name', array_keys($tasks));
-    $this->assertEquals(count($tasks), 2);
+    $this->assertEquals(3, count($tasks));
+  }
+
+  /**
+   * Set the tasks array before scanning for new tasks.
+   */
+  public function testSetTasks() {
+    $tasks = array(
+      new Task('task_one')
+    );
+    $loader = new TaskLoader();
+    $loader->setTasks($tasks);
+    $this->assertEquals(1, count($loader->getTasks()));
+    $tasks[] = new Task('task_two');
+    $message = 'The internal task array properly maintains a reference to the task array.';
+    $this->assertEquals(2, count($loader->getTasks()), $message);
+    $loader->scanClass('\Fetcher\Tests\Fixtures\Tasks\TaskStackAnnotation');
+    // Ensure references are properly maintained.
+    $this->assertEquals(5, count($loader->getTasks()));
+    $this->assertEquals(5, count($tasks));
   }
 
 }

@@ -112,5 +112,7 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
       ->addTask(new Task('three'));
     return $stack;
   }
+
+
 }
 

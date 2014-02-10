@@ -6,6 +6,28 @@ use Symfony\Process;
 class TaskLoader {
 
   /**
+   * Tasks that have been loaded.
+   */
+  private $tasks = array();
+
+  /**
+   * Set the array of currently available tasks.
+   *
+   * @param $tasks
+   *   An array of tasks implementing the TaskInterface taken by reference.
+   */
+  public function setTasks(&$tasks) {
+    $this->tasks =& $tasks;
+  }
+
+  /**
+   * Get the array of currently available tasks
+   */
+  public function getTasks() {
+    return $this->tasks;
+  }
+
+  /**
    * Scan an instantiated object for task methods.
    *
    * A convenience wrapper around TaskLoader::scanClass().
@@ -30,11 +52,11 @@ class TaskLoader {
    *   An array of tasks.
    */
   public function scanClass($class, $instance = NULL) {
-    $tasks = array();
+    $tasks =& $this->tasks;
     $reflection = new \ReflectionClass($class);
     foreach ($reflection->getMethods() as $method) {
       $annotations = $this->parseAnnotations($method->getDocComment());
-      $tasks = $tasks + $this->createTaskStacksFromAnnotations($annotations);
+      $this->createTaskStacksFromAnnotations($annotations);
       if ($task = $this->parseTaskInfo($annotations)) {
         $tasks[$task->fetcherTask] = $task;
         if (!$method->isStatic() && !empty($instance)) {
@@ -45,7 +67,8 @@ class TaskLoader {
         }
       }
     }
-    return $tasks;
+    $this->tasks = $tasks;
+    return $this->tasks;
   }
 
   /**
@@ -81,11 +104,11 @@ class TaskLoader {
    *  An array of loaded fetcher tasks.
    */
   public function scanFunctions(Array $functions) {
-    $tasks = array();
+    $tasks =& $this->tasks;
     foreach($functions as $functionName) {
       $function = new \ReflectionFunction('\\' . $functionName);
       $annotations = $this->parseAnnotations($function->getDocComment());
-      $tasks = $tasks + $this->createTaskStacksFromAnnotations($annotations);
+      $this->createTaskStacksFromAnnotations($annotations);
       if ($task = $this->parseTaskInfo($annotations)) {
         $task->callable = $functionName;
         $tasks[$task->fetcherTask] = $task;
@@ -98,14 +121,14 @@ class TaskLoader {
    *
    */
   public function createTaskStacksFromAnnotations(&$annotations) {
-    $stacks = array();
     if (!empty($annotations['stacks'])) {
       foreach ($annotations['stacks'] as $stack => $dependencies) {
-        $stacks[$stack] = new TaskStack($stack);
+        if (empty($this->tasks[$stack])) {
+          $this->tasks[$stack] = new TaskStack($stack);
+        }
       }
       unset($annotations['stacks']);
     }
-    return $stacks;
   }
 
   /**

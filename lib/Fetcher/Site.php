@@ -18,7 +18,7 @@ class Site extends Pimple implements SiteInterface {
   protected $buildHooks = array();
 
   // An array of callable tasks keyed by name.
-  protected $tasks = array();
+  public $tasks = array();
 
   /**
    * Constructor function to populate the dependency injection container.
@@ -805,9 +805,12 @@ class Site extends Pimple implements SiteInterface {
 
     $this['task_loader.class'] = '\Fetcher\Task\TaskLoader';
     // Load a plugin appropriate to the Task Loader.
-    $this['task_loader'] = $this->share(function($c) {
+    $self = $this;
+    $this['task_loader'] = $this->share(function($c) use ($self) {
       $class = $c['task_loader.class'];
-      return new $class($c);
+      $loader = new $class($c);
+      $loader->setTasks($self->tasks);
+      return $loader;
     });
   }
 
@@ -885,7 +888,9 @@ class Site extends Pimple implements SiteInterface {
    * TODO: Should this be named more intuitively?
    */
   public function registerDefaultTasks() {
-    $this->tasks = $this['task_loader']->scanObject($this) + $this->tasks;
+    // In the task loader we pass a reference to the tasks
+    // on this object.
+    $this['task_loader']->scanObject($this);
   }
 
 
