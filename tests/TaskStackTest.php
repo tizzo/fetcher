@@ -101,6 +101,28 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('one', $taskNames[0]);
     $this->assertEquals('two', $taskNames[1]);
   }
+
+  /**
+   * Run a task stack and ensure that the run works.
+   */
+  public function testRun() {
+    $stack = $this->getSimpleTaskStack();
+    $site = new Site();
+    foreach ($stack->getTasks() as $task) {
+      $task->callable = function($s) use ($site, $task) {
+        $site['log']($task->fetcherTask . ' has run');
+      };
+    }
+    $history = array();
+    $site['log'] = $site->protect(function($message) use (&$history) {
+      $history[] = $message;
+    });
+    $stack->run($site);
+    $this->assertEquals('one has run', $history[0]);
+    $this->assertEquals('two has run', $history[1]);
+    $this->assertEquals('three has run', $history[2]);
+  }
+
   /**
    * Get a configured task stack with 3 tasks.
    */
@@ -112,7 +134,6 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
       ->addTask(new Task('three'));
     return $stack;
   }
-
 
 }
 

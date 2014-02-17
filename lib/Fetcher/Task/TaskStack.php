@@ -2,11 +2,23 @@
 
 namespace Fetcher\Task;
 use Symfony\Process;
+use Gliph\Graph\DirectedAdjacencyList;
+use Gliph\Traversal\DepthFirst;
+
+require_once "vendor/autoload.php";
+
 
 class TaskStack extends Task implements TaskInterface {
 
   // An array of subtasks.
   public $tasks = array();
+
+  // The gliph dependency graph.
+  private $graph = null;
+
+  public function __construct() {
+    $this->graph = new DirectedAdjacencyList();
+  }
 
   /**
    * Run this task stack.
@@ -18,7 +30,7 @@ class TaskStack extends Task implements TaskInterface {
     if (!empty($this->beforeMessage)) {
       $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
     }
-    foreach ($this->tasks as $name => $task) {
+    foreach ($this->sortTasks() as $name => $task) {
       $task->run($site);
     }
     if (!empty($this->afterMessage)) {
@@ -31,9 +43,49 @@ class TaskStack extends Task implements TaskInterface {
    */
   public function addTask(TaskInterface $task) {
     $this->tasks[$task->fetcherTask] = $task;
+    $this->graph->addVertex($task);
+    // If the task announces that it goes before or after another task, set the
+    // dependecy and then reorder the graph here.
+    //  TODO: We can't really do ordering until all the tasks have been added.
+    /*
+    if (!empty($task->beforeTask) && $this->) {
+      $this->
+      // Here we add c as a dependency of a
+      $graph->addDirectedEdge($task, $this->getTask());
+    }
+    //*/
     return $this;
   }
 
+  /**
+   * Sort the tasks on this task stack based on their defined dependencies.
+   *
+   * @return
+   *   A linear array of topologically sorted tasks.
+   */
+  public function sortTasks() {
+    return DepthFirst::toposort($this->graph);
+  }
+
+  /**
+   * Get a task that is on this task stack by name.
+   *
+   * @param $taskName
+   *   The string representing the name of the task on this stack.
+   */
+  public function getTask($taskName) {
+    if (empty($this->tasks[$taskName])) {
+      return NULL;
+    }
+    return $this->tasks[$taskName];
+  }
+
+  /**
+   * Get all tasks in this stack.
+   *
+   * @return
+   *   An array of tasks.
+   */
   public function getTasks() {
     return $this->tasks;
   }
