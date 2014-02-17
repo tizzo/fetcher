@@ -135,8 +135,18 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('one has run', $history[0]);
     $this->assertEquals('two has run', $history[1]);
     $this->assertEquals('three has run', $history[2]);
-  }
 
+    $stack = new TaskStack('foo');
+    try {
+      $stack->run($site);
+      $this->assertEquals(FALSE, TRUE, 'Empty task stack threw an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertInstanceOf('Fetcher\Task\TaskRunException', $e);
+      $this->assertContains('foo', $e->getMessage());
+    }
+  }
+ 
   /**
    * Tests task weigthing
    */

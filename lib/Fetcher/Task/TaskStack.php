@@ -25,20 +25,14 @@ class TaskStack extends Task implements TaskInterface {
   }
 
   /**
-   * Run this task stack.
+   * Run the tasks in this task stack.
    */
-  public function run($site, $arguments = array()) {
+  function performAction($site, $arguments = array()) {
     if (empty($this->tasks)) {
-      throw new TaskRunException('No sub-tasks were added before running the task stack.');
-    }
-    if (!empty($this->beforeMessage)) {
-      $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
+      throw new TaskRunException(sprintf('No sub-tasks were added before running the task stack "%s".', $this->fetcherTask));
     }
     foreach ($this->sortTasks() as $name => $task) {
       $task->run($site);
-    }
-    if (!empty($this->afterMessage)) {
-      $site['log']($this->prepMessage($this->afterMessage, $site), 'success');
     }
   }
 
@@ -72,6 +66,9 @@ class TaskStack extends Task implements TaskInterface {
    *   A linear array of topologically sorted tasks.
    */
   public function sortTasks() {
+    if (empty($this->tasks)) {
+      return array();
+    }
     foreach ($this->tasks as $task) {
       if (!empty($task->beforeTask) && !is_null($this->getTask($task->beforeTask))) {
         // Here we add the task as a dependency of the task it wants to

@@ -1,7 +1,6 @@
 <?php
 
 namespace Fetcher\Task;
-use Symfony\Process;
 
 interface TaskInterface {
 

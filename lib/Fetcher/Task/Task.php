@@ -3,7 +3,7 @@
 namespace Fetcher\Task;
 use Symfony\Process;
 
-class Task implements TaskInterface {
+class Task extends AbstractTask implements TaskInterface {
 
   // The machine name of this task.
   public $fetcherTask = NULL;
@@ -28,29 +28,6 @@ class Task implements TaskInterface {
   public $afterTask = array();
 
   public $arguments = array();
-
-  /**
-   * Constructor.
-   *
-   * @param $fetcher_task
-   *   The machine name for this task.
-   */
-  public function __construct($fetcherTask = NULL) {
-    $this->fetcherTask = $fetcherTask;
-  }
-
-  /**
-   * Run this task.
-   */
-  public function run($site, $arguments = array()) {
-    if (!empty($this->beforeMessage)) {
-      $site['log']($this->prepMessage($this->beforeMessage, $site), 'ok');
-    }
-    $this->performAction($site, $arguments);
-    if (!empty($this->afterMessage)) {
-      $site['log']($this->prepMessage($this->afterMessage, $site), 'ok');
-    }
-  }
 
   /**
    * Run the internal logic for this task.
