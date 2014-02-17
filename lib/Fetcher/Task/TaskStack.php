@@ -15,6 +15,10 @@ class TaskStack extends Task implements TaskInterface {
   // The gliph dependency graph.
   private $graph = null;
 
+  // The vertex to start the sort with, note this is generally the *last*
+  // item that needs to run.
+  private $startTask = null;
+
   public function __construct() {
     $this->graph = new DirectedAdjacencyList();
   }
@@ -41,18 +45,22 @@ class TaskStack extends Task implements TaskInterface {
    * Add a task to this stack.
    */
   public function addTask(TaskInterface $task) {
-    $this->tasks[$task->fetcherTask] = $task;
-    $this->graph->addVertex($task);
-    // If the task announces that it goes before or after another task, set the
-    // dependecy and then reorder the graph here.
-    //  TODO: We can't really do ordering until all the tasks have been added.
-    /*
-    if (!empty($task->beforeTask) && $this->) {
-      $this->
-      // Here we add c as a dependency of a
-      $graph->addDirectedEdge($task, $this->getTask());
+    // By default we sort by the last task that gets added that we know does not
+    // come before something else.
+    if (empty($task->beforeTask)) {
+      $this->startTask = $task;
     }
-    //*/
+    if (count($this->tasks) == 0) {
+      $this->graph->addVertex($task);
+    }
+    else if (empty($task->beforeTask) && empty($task->afterTask)) {
+      $this->addAfter(end($this->tasks)->fetcherTask, $task);
+    }
+    else {
+      $this->graph->addVertex($task);
+    }
+    $this->tasks[$task->fetcherTask] = $task;
+
     return $this;
   }
 
@@ -67,12 +75,12 @@ class TaskStack extends Task implements TaskInterface {
       if (!empty($task->beforeTask) && !is_null($this->getTask($task->beforeTask))) {
         // Here we add the task as a dependency of the task it wants to
         // run before.
-        $this->graph->addDirectedEdge($this->getTask($task->beforeTask), $task);
+        $this->addBefore($task->beforeTask, $task);
       }
       if (!empty($task->afterTask) && !is_null($this->getTask($task->afterTask))) {
         // Here we add the task as a dependency of the task it wants to
         // run before.
-        $this->graph->addDirectedEdge($task, $this->getTask($task->afterTask));
+        $this->addAfter($task->afterTask, $task);
       }
     }
     $list = array();
@@ -102,7 +110,12 @@ class TaskStack extends Task implements TaskInterface {
    *   An array of tasks.
    */
   public function getTasks() {
-    return $this->sortTasks();
+    if (count($this->tasks)) {
+      return $this->sortTasks();
+    }
+    else {
+      return array();
+    }
   }
 
   /**

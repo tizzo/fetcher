@@ -26,11 +26,10 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
    */
   public function testGetTasks() {
     $stack = new TaskStack('foo');
-    $bar = new Task('bar');
-    $stack->addTask($bar);
+    $stack->addTask(new Task('bar'));
     $stack->addTask(new Task('baz'));
     $tasks = $stack->getTasks();
-    $this->assertEquals(count($tasks), 2);
+    $this->assertEquals(2, count($tasks));
     $this->assertEquals($tasks['bar']->fetcherTask, 'bar');
     $this->assertEquals($tasks['baz']->fetcherTask, 'baz');
   }
@@ -66,14 +65,14 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $stack->addAfter('two', new Task('two a'));
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals('two', $taskNames[1]);
-    $this->assertEquals('two a', $taskNames[2]);
+    $message = 'Task two a comes after its dependency, task two.';
+    $this->assertGreaterThan(array_search('two', $taskNames), array_search('two a', $taskNames), $message);
 
     // Ensure we can add an item to the very end of the stack.
     $stack = $this->getSimpleTaskStack();
     $stack->addAfter('three', new Task('three a'));
     $taskNames = array_keys($stack->getTasks());
-    $this->assertEquals('three', $taskNames[2]);
-    $this->assertEquals('three a', $taskNames[3]);
+    $this->assertGreaterThan(array_search('three', $taskNames), array_search('three a', $taskNames));
   }
 
   /**
