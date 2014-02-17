@@ -2,5 +2,5 @@
 
 namespace Fetcher\Task;
 
-class TaskLoaderException extends \Exception {
+class TaskLoaderException extends TaskException {
 }

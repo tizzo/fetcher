@@ -2,5 +2,5 @@
 
 namespace Fetcher\Task;
 
-class TaskRunException extends \Exception {
+class TaskRunException extends TaskException {
 }
