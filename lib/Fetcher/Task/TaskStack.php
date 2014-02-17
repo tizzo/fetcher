@@ -7,7 +7,6 @@ use Gliph\Traversal\DepthFirst;
 
 require_once "vendor/autoload.php";
 
-
 class TaskStack extends Task implements TaskInterface {
 
   // An array of subtasks.
@@ -147,10 +146,13 @@ class TaskStack extends Task implements TaskInterface {
    * @param $name
    *    The task to remove.
    */
-  public function remove($itemName) {
+  public function removeTask($itemName) {
+    if (is_null($this->getTask($itemName))) {
+      throw new TaskException(sprintf('Trying to remove non-existant task "%s".', $itemName));
+    }
+    $this->graph->removeVertex($this->getTask($itemName));
     $position = array_search($itemName, array_keys($this->tasks));
     array_splice($this->tasks, $position, 1);
-    $this->graph->removeVertex($itemName);
   }
 
   /**

@@ -77,30 +77,44 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests TaskStack::remove().
+   * Tests TaskStack::removeTask().
    */
-  public function testRemove() {
+  public function testRemoveTask() {
+
     // Ensure we can remove an item from the middle of the task stack.
     $stack = $this->getSimpleTaskStack();
-    $stack->remove('two');
+    $stack->removeTask('two');
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals(2, count($taskNames));
     $this->assertEquals('one', $taskNames[0]);
     $this->assertEquals('three', $taskNames[1]);
+
     // Ensure we can remove an item from the middle of a task stack.
     $stack = $this->getSimpleTaskStack();
-    $stack->remove('one');
+    $stack->removeTask('one');
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals(2, count($taskNames));
     $this->assertEquals('two', $taskNames[0]);
     $this->assertEquals('three', $taskNames[1]);
+
     // Ensure we can remove an item from the end of a task stack.
     $stack = $this->getSimpleTaskStack();
-    $stack->remove('three');
+    $stack->removeTask('three');
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals(2, count($taskNames));
     $this->assertEquals('one', $taskNames[0]);
     $this->assertEquals('two', $taskNames[1]);
+
+    // Ensure if we try to remove a non-existant task an exception is thrown.
+    $stack = $this->getSimpleTaskStack();
+    try {
+      $stack->removeTask('I do not exist');
+      $this->assertEquals(FALSE, TRUE, 'An exception is thrown trying to remove a non-existant task');
+    }
+    catch (Exception $exception) {
+      $this->assertInstanceOf('Fetcher\Task\TaskException', $exception);
+    }
+
   }
 
   /**
