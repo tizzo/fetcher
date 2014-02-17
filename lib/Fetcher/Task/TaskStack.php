@@ -19,7 +19,8 @@ class TaskStack extends Task implements TaskInterface {
   // item that needs to run.
   private $startTask = null;
 
-  public function __construct() {
+  public function __construct($name) {
+    parent::__construct($name);
     $this->graph = new DirectedAdjacencyList();
   }
 

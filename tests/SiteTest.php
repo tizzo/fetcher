@@ -84,9 +84,9 @@ class SiteTest extends PHPUnit_Framework_TestCase {
   public function testAddSubTask() {
     $site = new Site();
     $stack = new TaskStack('foo');
-    $task1 = new Task('bar');
     $site->addTask($stack);
     // Add a task object.
+    $task1 = new Task('bar');
     $site->addSubTask('foo', $task1);
     $this->assertContains($task1, $site->getTask('foo')->tasks, 'Subtask successfully added to task stack.');
     // Add a task by task name.
