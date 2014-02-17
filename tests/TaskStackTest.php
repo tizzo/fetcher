@@ -5,7 +5,8 @@ require_once "vendor/autoload.php";
 use \Fetcher\Task\Task,
   \Fetcher\Task\TaskStack,
   \Fetcher\Site,
-  \Fetcher\Task\TaskRunException;
+  \Fetcher\Task\TaskRunException,
+  \Fetcher\Task\TaskException;
 
 
 class TaskStackTest extends PHPUnit_Framework_TestCase {
@@ -107,6 +108,36 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
    */
   public function testRun() {
     $stack = $this->getSimpleTaskStack();
+    $site = new Site();
+    foreach ($stack->getTasks() as $task) {
+      $task->callable = function($s) use ($site, $task) {
+        $site['log']($task->fetcherTask . ' has run');
+      };
+    }
+    $history = array();
+    $site['log'] = $site->protect(function($message) use (&$history) {
+      $history[] = $message;
+    });
+    $stack->run($site);
+    $this->assertEquals('one has run', $history[0]);
+    $this->assertEquals('two has run', $history[1]);
+    $this->assertEquals('three has run', $history[2]);
+  }
+
+  /**
+   * Tests task weigthing
+   */
+  public function testTaskOrderingRun() {
+    $stack = new TaskStack('test');
+    $three = new Task('three');
+    $three->afterTask = 'two';
+    $one = new Task('one');
+    $one->beforeTask = 'two';
+    $two = new Task('two');
+    $stack
+      ->addTask($three)
+      ->addTask($one)
+      ->addTask($two);
     $site = new Site();
     foreach ($stack->getTasks() as $task) {
       $task->callable = function($s) use ($site, $task) {

@@ -64,7 +64,23 @@ class TaskStack extends Task implements TaskInterface {
    *   A linear array of topologically sorted tasks.
    */
   public function sortTasks() {
-    return DepthFirst::toposort($this->graph);
+    foreach ($this->tasks as $task) {
+      if (!empty($task->beforeTask) && !is_null($this->getTask($task->beforeTask))) {
+        // Here we add the task as a dependency of the task it wants to
+        // run before.
+        $this->graph->addDirectedEdge($this->getTask($task->beforeTask), $task);
+      }
+      if (!empty($task->afterTask) && !is_null($this->getTask($task->afterTask))) {
+        // Here we add the task as a dependency of the task it wants to
+        // run before.
+        $this->graph->addDirectedEdge($task, $this->getTask($task->afterTask));
+      }
+    }
+    $list = array();
+    foreach (DepthFirst::toposort($this->graph) as $task) {
+      $list[$task->fetcherTask] = $task;
+    }
+    return $list;
   }
 
   /**
@@ -87,7 +103,7 @@ class TaskStack extends Task implements TaskInterface {
    *   An array of tasks.
    */
   public function getTasks() {
-    return $this->tasks;
+    return $this->sortTasks();
   }
 
   /**
@@ -101,11 +117,10 @@ class TaskStack extends Task implements TaskInterface {
    *    The task stack itself.
    */
   public function addBefore($itemName, $task) {
-    if (!isset($this->tasks[$itemName])) {
+    if (is_null($this->getTask($itemName))) {
       return FALSE;
     }
-    $position = array_search($itemName, array_keys($this->tasks));
-    $this->taskSplice($task, $position);
+    $this->graph->addDirectedEdge($this->getTask($itemName), $task);
     return $this;
   }
 
@@ -117,12 +132,12 @@ class TaskStack extends Task implements TaskInterface {
    * @param $task
    *    A \Fetcher\TaskInterface implementing object. 
    */
+  // TODO: Reimplement this as a manipulation of the dependency graph.
   public function addAfter($itemName, $task) {
-    if (!isset($this->tasks[$itemName])) {
+    if (is_null($this->getTask($itemName))) {
       return FALSE;
     }
-    $position = array_search($itemName, array_keys($this->tasks));
-    $this->taskSplice($task, $position + 1);
+    $this->graph->addDirectedEdge($task, $this->getTask($itemName));
     return $this;
   }
 
@@ -135,6 +150,7 @@ class TaskStack extends Task implements TaskInterface {
   public function remove($itemName) {
     $position = array_search($itemName, array_keys($this->tasks));
     array_splice($this->tasks, $position, 1);
+    $this->graph->removeVertex($itemName);
   }
 
   /**
