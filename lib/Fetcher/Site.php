@@ -865,9 +865,9 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Add a task to an existing task stack.
    *
-   * @taskStack
+   * @param $taskStack
    *   The name of a configured TaskStack.
-   * @task
+   * @param $task
    *   The task to add, can be a task or an object implementing
    *   \Fetcher\Task\TaskInterface().
    */
