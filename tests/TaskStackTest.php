@@ -178,6 +178,17 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Test getting a list of task names in order.
+   */
+  public function testGetTaskNames() {
+    $stack = $this->getSimpleTaskStack();
+    $taskNames = $stack->getTaskNames();
+    $this->assertEquals('one', $taskNames[0]);
+    $this->assertEquals('two', $taskNames[1]);
+    $this->assertEquals('three', $taskNames[2]);
+  }
+
+  /**
    * Get a configured task stack with 3 tasks.
    */
   private function getSimpleTaskStack() {

@@ -117,6 +117,13 @@ class TaskStack extends Task implements TaskInterface {
   }
 
   /**
+   * Get the task names sorted in the appropriate order.
+   */
+  public function getTaskNames() {
+    return array_keys($this->getTasks());
+  }
+
+  /**
    * Add a subtask before an existing task.
    *
    * @param $name
