@@ -23,6 +23,7 @@ class TaskStackAnnotation {
    * @fetcherTask first_stack_2 
    * @description Provides a anther sample task for parsing.
    * @stack test_stack_1
+   * @beforeTask first_stack_1
    */
   public function simpleMethodTwo($site) {
     $site['log']('The second method from test_stack_1 has run.');

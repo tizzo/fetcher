@@ -67,7 +67,7 @@ class TaskLoader {
         }
       }
     }
-    $this->tasks = $tasks;
+    $this->addTasksToStacks();
     return $this->tasks;
   }
 
@@ -114,6 +114,8 @@ class TaskLoader {
         $tasks[$task->fetcherTask] = $task;
       }
     }
+
+    $this->addTasksToStacks();
     return $tasks;
   }
 
@@ -127,7 +129,35 @@ class TaskLoader {
           $this->tasks[$stack] = new TaskStack($stack);
         }
       }
-      unset($annotations['stacks']);
+    }
+  }
+
+  /**
+   * Add all tasks belonging on stacks to their stacks.
+   */
+  public function addTasksToStacks() {
+    foreach ($this->tasks as $task) {
+      foreach ($task->stacks as $stackName => $relations) {
+        if (empty($this->tasks[$stackName])) {
+          print 'failed to find ' . PHP_EOL;
+          continue;
+        }
+        if (!isset($relations['beforeTask']) && !isset($relations['afterTask'])) {
+          $this->tasks[$stackName]->addTask($task);
+        }
+        else {
+          if (isset($relations['beforeTask'])) {
+            foreach ($relations['beforeTask'] as $itemName) {
+              $this->tasks[$stackName]->addBefore($itemName, $task);
+            }
+          }
+          if (isset($relations['afterTask'])) {
+            foreach ($relations['afterTask'] as $itemName) {
+              $this->tasks[$stackName]->addAfter($itemName, $task);
+            }
+          }
+        }
+      }
     }
   }
 
@@ -158,15 +188,8 @@ class TaskLoader {
         $task->{$attribute} = $annotations[$attribute][0];
       }
     }
-    $multiValueAttributes = array(
-      'beforeTask',
-      'afterTask',
-      'stack',
-    );
-    foreach ($multiValueAttributes as $attribute) {
-      if (!empty($annotations[$attribute])) {
-        $task->{$attribute} = $annotations[$attribute];
-      }
+    if (!empty($annotations['stacks'])) {
+      $task->stacks = $annotations['stacks'];
     }
     return $task;
   }
@@ -193,7 +216,7 @@ class TaskLoader {
           case 'beforeTask':
           case 'afterTask':
             if (!is_null($currentStack)) {
-              $annotations['stacks'][$value][$name][] = $value;
+              $annotations['stacks'][$currentStack][$name][] = $value;
             }
             break;
           default:

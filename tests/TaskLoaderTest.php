@@ -121,7 +121,16 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $this->assertContains('first_stack_1', array_keys($tasks));
     $this->assertContains('first_stack_2', array_keys($tasks));
     $this->assertContains('test_stack_1', array_keys($tasks));
+    $first = $tasks['first_stack_1'];
+    $this->assertContains('test_stack_1', array_keys($tasks));
     $this->assertEquals(3, count($tasks));
+    $stack = $tasks['test_stack_1'];
+    $this->assertContains('first_stack_1', $stack->getTaskNames());
+    $this->assertContains('first_stack_2', $stack->getTaskNames());
+    // Verify that 2 came before one.
+    $onePosition = array_search('first_stack_1', $stack->getTaskNames());
+    $twoPosition = array_search('first_stack_2', $stack->getTaskNames());
+    $this->assertGreaterThan($twoPosition, $onePosition);
   }
 
   /**
@@ -129,12 +138,12 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
    */
   public function testSetTasks() {
     $tasks = array(
-      new Task('task_one')
+      'task_one' => new Task('task_one')
     );
     $loader = new TaskLoader();
     $loader->setTasks($tasks);
     $this->assertEquals(1, count($loader->getTasks()));
-    $tasks[] = new Task('task_two');
+    $tasks['task_two'] = new Task('task_two');
     $message = 'The internal task array properly maintains a reference to the task array.';
     $this->assertEquals(2, count($loader->getTasks()), $message);
     $loader->scanClass('\Fetcher\Tests\Fixtures\Tasks\TaskStackAnnotation');

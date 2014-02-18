@@ -21,12 +21,9 @@ class Task extends AbstractTask implements TaskInterface {
   public $callable = NULL;
 
   // Any defined task stacks to add this task to.
-  public $task_stack = array();
+  public $stacks = array();
 
-  public $beforeTask = array();
-
-  public $afterTask = array();
-
+  // Any configuration provided to this task.
   public $arguments = array();
 
   /**
