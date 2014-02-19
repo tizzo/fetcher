@@ -63,10 +63,11 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     // Ensure we can add an item after a task in the middle of the stack.
     $stack = $this->getSimpleTaskStack();
     $stack->addAfter('two', new Task('two a'));
-    $taskNames = array_keys($stack->getTasks());
-    $this->assertEquals('two', $taskNames[1]);
+    $this->assertContains('two', $stack->getTaskNames());
     $message = 'Task two a comes after its dependency, task two.';
-    $this->assertGreaterThan(array_search('two', $taskNames), array_search('two a', $taskNames), $message);
+    $twoPosition = array_search('two', $stack->getTaskNames());
+    $twoAPosition = array_search('two a', $stack->getTaskNames());
+    $this->assertGreaterThan($twoPosition, $twoAPosition, $message);
 
     // Ensure we can add an item to the very end of the stack.
     $stack = $this->getSimpleTaskStack();
@@ -153,9 +154,9 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   public function testTaskOrderingRun() {
     $stack = new TaskStack('test');
     $three = new Task('three');
-    $three->afterTask = 'two';
+    $three->addTaskStackDependency('test', 'two');
     $one = new Task('one');
-    $one->beforeTask = 'two';
+    $one->addTaskStackDependency('test', 'two', 'before');
     $two = new Task('two');
     $stack
       ->addTask($three)
