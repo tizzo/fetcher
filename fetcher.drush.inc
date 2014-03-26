@@ -92,7 +92,7 @@ function fetcher_drush_command() {
   );
 
   $environment_items['fetcher-delete'] = array(
-    'description' => 'Remove an Fetcher managed site from this server entirely.',
+    'description' => 'Remove a Fetcher managed site from this server entirely.',
     'aliases' => array('fed'),
     'arguments' => array(
       'site' => 'The name of the site to delete.',
@@ -102,7 +102,7 @@ function fetcher_drush_command() {
   );
 
   $environment_items['fetcher-task'] = array(
-    'description' => 'Remove an Fetcher managed site from this server entirely.',
+    'description' => 'Perform a specific Fetcher task.',
     'aliases' => array('fet'),
     'arguments' => array(
       'task' => 'The task to perform.',
