@@ -84,13 +84,6 @@ class TaskStack extends Task implements TaskInterface {
     // Ensure that we don't have any cyclical dependencies in sub-graphs
     // that could be missed by our topological sort.
     $cycles = ConnectedComponent::tarjan_scc($this->graph)->getComponents();
-    if (!empty($cycles)) {
-      //print_r(array_pop($cycles)); 
-      //$cycles = array_walk(array_pop($cycles), function(&$task) { return $task->fetcherTask; });
-      //print_r($cycles);
-      //$cycle = implode(', ', array_shift($cycles));
-      //throw new TaskDependencyException(sprintf('A circular dependency was detected in the following tasks: %s', $cycles));
-    }
     // Perform a topological sort of the graph.
     foreach (DepthFirst::toposort($this->graph) as $task) {
       $list[$task->fetcherTask] = $task;
@@ -147,7 +140,9 @@ class TaskStack extends Task implements TaskInterface {
     if (is_null($this->getTask($itemName))) {
       return FALSE;
     }
+    $task->addTaskStackDependency($this->fetcherTask, $itemName, 'before');
     $this->graph->addDirectedEdge($this->getTask($itemName), $task);
+    $this->tasks[$task->fetcherTask] = $task;
     return $this;
   }
 
@@ -161,10 +156,12 @@ class TaskStack extends Task implements TaskInterface {
    */
   // TODO: Reimplement this as a manipulation of the dependency graph.
   public function addAfter($itemName, $task) {
-    if (is_null($this->getTask($itemName))) {
-      return FALSE;
+    $this->startTask = $task;
+    $this->tasks[$task->fetcherTask] = $task;
+    $task->addTaskStackDependency($this->fetcherTask, $itemName, 'after');
+    if (!is_null($this->getTask($itemName))) {
+      $this->graph->addDirectedEdge($task, $this->getTask($itemName));
     }
-    $this->graph->addDirectedEdge($task, $this->getTask($itemName));
     return $this;
   }
 
@@ -181,22 +178,6 @@ class TaskStack extends Task implements TaskInterface {
     $this->graph->removeVertex($this->getTask($itemName));
     $position = array_search($itemName, array_keys($this->tasks));
     array_splice($this->tasks, $position, 1);
-  }
-
-  /**
-   * Splice a new task into the existing array.
-   *
-   * @param $taskToAdd
-   *   The \Fetcher\Task\TaskInterface task to add.
-   * @param $position
-   *   The position in the stack at which to add the task.
-   */
-  private function taskSplice($taskToAdd, $position) {
-    $oldArray = $this->tasks;
-    $oldSectionOne = array_slice($oldArray, 0, $position, true);
-    $newSection = array($taskToAdd->fetcherTask => $taskToAdd);
-    $oldSectionTwo = array_slice($oldArray, $position, NULL, true);
-    $this->tasks = $oldSectionOne + $newSection + $oldSectionTwo;
   }
 
 }

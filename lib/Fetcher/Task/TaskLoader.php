@@ -139,7 +139,6 @@ class TaskLoader {
     foreach ($this->tasks as $task) {
       foreach ($task->stacks as $stackName => $relations) {
         if (empty($this->tasks[$stackName])) {
-          print 'failed to find ' . PHP_EOL;
           continue;
         }
         if (!isset($relations['beforeTask']) && !isset($relations['afterTask'])) {
