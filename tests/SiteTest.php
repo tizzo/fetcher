@@ -69,13 +69,16 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $this->assertContains('foo', $site['configuration.ephemeral']);
     $site->configureFromEnvironment('stage');
     $this->assertEquals('baz', $site['foo'], 'Original value set successfully.');
-    try {
-      $site->configureFromEnvironment('nonsense');
-      $this->assertTrue('FALSE', 'An exception should have been thrown.');
-    }
-    catch(FetcherException $e) {
-      $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
-    }
+  }
+
+  /**
+   * Test that configure environment throws an exception with a bad environment.
+   *
+   * @expectedException Fetcher\Exception\FetcherException
+   */
+  public function testConfigureFromEnvironmentWithBadEnvironmentThrowsExcpetion() {
+    $site = new Site();
+    $site->configureFromEnvironment('nonsense');
   }
 
   /**
@@ -94,13 +97,16 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->addTask($task2);
     $site->addSubTask('foo', 'baz');
     $this->assertContains($task2, $site->getTask('foo')->tasks, 'Subtask successfully added to task stack.');
-    try {
-      $site->addSubtask('nonsense', $task1);
-      $this->assertTrue('FALSE', 'An exception should have been thrown.');
-    }
-    catch(FetcherException $e) {
-      $this->assertTrue(TRUE, 'Exception successfully thrown and caught.');
-    }
+  }
+
+  /**
+   * Test that addSubTask() throws an exception with a bad subtask specified.
+   *
+   * @expectedException Fetcher\Exception\FetcherException
+   */
+  public function testAddSubTaskThrowsAnExceptionWithABadSubtask() {
+    $site = new Site();
+    $site->addSubtask('nonsense', new Task('task1'));
   }
 
   /**
@@ -120,6 +126,27 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $staging = $site->getEnvironment('staging');
     $this->assertEquals('/foo', $dev['root']);
     $this->assertEquals('/bar', $staging['root']);
+  }
+
+  /**
+   * Test that the default tasks are defined in the appropriate order.
+   */
+  public function testDefaultSiteTasks() {
+    $site = new Site();
+    $tasks = $site->getTask('ensure_site')->getTaskNames();
+    $this->assertEquals('ensure_working_directory', $tasks[0]);
+    $this->assertEquals('ensure_code', $tasks[1]);
+    $this->assertEquals('ensure_settings_file', $tasks[2]);
+    $this->assertEquals('ensure_sym_links', $tasks[3]);
+    $this->assertEquals('ensure_drush_alias', $tasks[4]);
+    $this->assertEquals('ensure_database_connection', $tasks[5]);
+    $this->assertEquals('ensure_site_info_file', $tasks[6]);
+    $this->assertEquals('ensure_server_host_enabled', $tasks[7]);
+    $tasks = $site->getTask('remove_site')->getTaskNames();
+    $this->assertContains('remove_working_directory', $tasks);
+    $this->assertContains('remove_drush_aliases', $tasks);
+    $this->assertContains('remove_database', $tasks);
+    $this->assertContains('remove_vhost', $tasks);
   }
 
 }

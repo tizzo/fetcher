@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file
+ * Test the Task class.
+ */
+
 require_once "vendor/autoload.php";
 
-// Load domain classes
 use \Fetcher\Task\Task,
   \Fetcher\Site,
   \Fetcher\Task\TaskRunException;
@@ -17,7 +21,7 @@ class TaskTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($task->fetcherTask, 'foo');
     $options = array(
       'foo' => 'bar',
-      'baz' => 'bot'
+      'baz' => 'bot',
     );
     $message = 'This is a message about [[foo]] with info about [[baz]].';
     $prepared = $task->prepMessage($message, $options);
@@ -25,7 +29,7 @@ class TaskTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Test task runs with 
+   * Test task runs with messages.
    */
   public function testRun() {
     $site = new Site();
@@ -37,7 +41,7 @@ class TaskTest extends PHPUnit_Framework_TestCase {
     $ran = FALSE;
     $test = $this;
     $task->callable = function($site) use (&$ran, &$test) {
-      $ran = TRUE; 
+      $ran = TRUE;
       $test->assertInstanceOf('\Fetcher\Site', $site);
     };
     $task->beforeMessage = 'before message';
@@ -51,5 +55,14 @@ class TaskTest extends PHPUnit_Framework_TestCase {
     $this->assertContains('after message', $history);
   }
 
+  /**
+   * Test that an exception is thrown running a task without a callable.
+   *
+   * @expectedException Fetcher\Task\TaskRunException
+   */
+  public function testRunOnEmptyTaskThrowsException() {
+    $task = new Task('going_to_fail');
+    $task->run(new Site());
+  }
+
 }
- 

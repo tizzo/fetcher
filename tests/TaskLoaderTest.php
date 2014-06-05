@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file
+ * Test the TaskLoader class.
+ */
+
 require_once "vendor/autoload.php";
 
-// Load domain classes
 use \Fetcher\Task\TaskLoader,
     \Fetcher\Task\TaskLoaderException,
     \Fetcher\Task\Task,
@@ -40,13 +44,10 @@ class TaskLoaderTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($task->beforeMessage, 'We are about to run a task.');
     $this->assertEquals($task->afterMessage, 'We have just run a task.');
     $history = array();
-    $site = $this->getSite($history); 
+    $site = $this->getSite($history);
     $task->run($site);
     $this->assertEquals($history[0], 'We are about to run a task.');
     $this->assertEquals($history[1], 'We have just run a task.');
-    //$this->assertContains('foo', $task->beforeTask);
-    //$this->assertContains('bar', $task->beforeTask);
-    //$this->assertContains('baz', $task->afterTask);
   }
 
   /**

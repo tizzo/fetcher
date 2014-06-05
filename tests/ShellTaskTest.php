@@ -1,13 +1,19 @@
 <?php
 require_once "vendor/autoload.php";
+/**
+ * @File
+ *    Test shell task execution.
+ */
 
-// Load domain classes
 use \Fetcher\Task\ShellTask,
   \Fetcher\Site,
   \Fetcher\Task\TaskRunException;
 
 class ShellTaskTest extends PHPUnit_Framework_TestCase {
 
+  /**
+   * Get a site object.
+   */
   public function getSite(&$history) {
     $site = new Site();
     $site['log'] = $site->protect(function ($message) use (&$history) {
@@ -16,6 +22,9 @@ class ShellTaskTest extends PHPUnit_Framework_TestCase {
     return $site;
   }
 
+  /**
+   * Test running a test in child directory.
+   */
   public function testRunningTestInChildDirectory() {
     $task = new ShellTask('ls', 'tests');
     $history = array();
@@ -26,28 +35,26 @@ class ShellTaskTest extends PHPUnit_Framework_TestCase {
     $this->assertContains('    > ShellTaskTest.php', $history);
   }
 
+  /**
+   * Ensure getting output without running throws an excetion.
+   *
+   * @expectedException Exception
+   */
   public function testGetOutputWithoutRun() {
-    try {
-      $task = new ShellTask('foo', 'bar');
-      $task->getOutput();
-      throw new \Exception('Expected exception not thrown.');
-    }
-    catch (TaskRunException $e) {
-      $this->assertNotEmpty($e);
-    }
+    $task = new ShellTask('foo', 'bar');
+    $task->getOutput();
   }
 
+  /**
+   * Verify execution of a command fails.
+   *
+   * @expectedException \Fetcher\Task\TaskException
+   */
   public function testCommandFailureThowsException() {
     $task = new ShellTask('fetcher-not-a-real-command');
-    try {
-      $history = array();
-      $site = $this->getSite($history);
-      $task->run($site);
-      throw new \Exception('Expected exception not thrown.');
-    }
-    catch (TaskRunException $e) {
-      $this->assertNotEmpty($e);
-    }
+    $history = array();
+    $site = $this->getSite($history);
+    $task->run($site);
   }
-}
 
+}

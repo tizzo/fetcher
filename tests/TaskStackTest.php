@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file
+ * Test the TaskStack class.
+ */
+
 require_once "vendor/autoload.php";
 
-// Load domain classes
 use \Fetcher\Task\Task,
   \Fetcher\Task\TaskStack,
   \Fetcher\Site,
@@ -40,7 +44,7 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   public function testAddTaskBefore() {
 
     // Ensure we can add a task in the middle of the stack.
-    $stack = $this->getSimpleTaskStack();  
+    $stack = $this->getSimpleTaskStack();
     $stack->addBefore('two', new Task('one a'));
     $taskNames = array_keys($stack->getTasks());
     $this->assertEquals('one', $taskNames[0]);
@@ -105,16 +109,16 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('one', $taskNames[0]);
     $this->assertEquals('two', $taskNames[1]);
 
-    // Ensure if we try to remove a non-existant task an exception is thrown.
-    $stack = $this->getSimpleTaskStack();
-    try {
-      $stack->removeTask('I do not exist');
-      $this->assertEquals(FALSE, TRUE, 'An exception is thrown trying to remove a non-existant task');
-    }
-    catch (Exception $exception) {
-      $this->assertInstanceOf('Fetcher\Task\TaskException', $exception);
-    }
+  }
 
+  /**
+   * Tests that removing a nonexistent task throws an exception.
+   *
+   * @expectedException Fetcher\Task\TaskException
+   */
+  public function testRemoveNonExistantTaskThrowsException() {
+    $stack = $this->getSimpleTaskStack();
+    $stack->removeTask('I do not exist');
   }
 
   /**
@@ -136,20 +140,20 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('one has run', $history[0]);
     $this->assertEquals('two has run', $history[1]);
     $this->assertEquals('three has run', $history[2]);
-
-    $stack = new TaskStack('foo');
-    try {
-      $stack->run($site);
-      $this->assertEquals(FALSE, TRUE, 'Empty task stack threw an exception');
-    }
-    catch (\Exception $e) {
-      $this->assertInstanceOf('Fetcher\Task\TaskRunException', $e);
-      $this->assertContains('foo', $e->getMessage());
-    }
   }
- 
+
   /**
-   * Tests task weigthing
+   * Test that running an empty task stack throws an exception.
+   *
+   * @expectedException Fetcher\Task\TaskRunException
+   */
+  public function testRunOnEmptyTaskThrowsException() {
+    $stack = new TaskStack('foo');
+    $stack->run(new Site());
+  }
+
+  /**
+   * Tests task weigthing.
    */
   public function testTaskOrderingRun() {
     $stack = new TaskStack('test');
@@ -202,4 +206,3 @@ class TaskStackTest extends PHPUnit_Framework_TestCase {
   }
 
 }
-
