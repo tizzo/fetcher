@@ -4,6 +4,7 @@ namespace Fetcher\Task;
 use Symfony\Process;
 use Gliph\Graph\DirectedAdjacencyList;
 use Gliph\Traversal\DepthFirst;
+use Gliph\Algorithm\ConnectedComponent;
 
 require_once "vendor/autoload.php";
 
@@ -42,21 +43,15 @@ class TaskStack extends Task implements TaskInterface {
   public function addTask(TaskInterface $task) {
     // By default we sort by the last task that gets added that we know does not
     // come before something else.
-    if (empty($task->beforeTask)) {
-      $this->startTask = $task;
-    }
-    if (count($this->tasks) == 0) {
-      $this->graph->addVertex($task);
-    }
-    else if (empty($task->beforeTask) && empty($task->afterTask)) {
-      $this->addAfter(end($this->tasks)->fetcherTask, $task);
-    }
-    else {
-      $this->graph->addVertex($task);
-    }
+    $this->startTask = $task;
+    $this->graph->addVertex($task);
     $this->tasks[$task->fetcherTask] = $task;
 
     return $this;
+  }
+
+  public function getn() {
+    return $this->tasks;
   }
 
   /**
@@ -69,19 +64,34 @@ class TaskStack extends Task implements TaskInterface {
     if (empty($this->tasks)) {
       return array();
     }
+    // Our tasks may have been added before their dependencies,
+    // in that case we need to associate them in the graph.
     foreach ($this->tasks as $task) {
-      if (!empty($task->beforeTask) && !is_null($this->getTask($task->beforeTask))) {
-        // Here we add the task as a dependency of the task it wants to
-        // run before.
-        $this->addBefore($task->beforeTask, $task);
-      }
-      if (!empty($task->afterTask) && !is_null($this->getTask($task->afterTask))) {
-        // Here we add the task as a dependency of the task it wants to
-        // run before.
-        $this->addAfter($task->afterTask, $task);
+      foreach ($task->stacks as $stackName => $dependencies) {
+        if (!empty($dependencies['beforeTask'])) {
+          foreach ($dependencies['beforeTask'] as $item) {
+            $this->addBefore($item, $task);
+          }
+        }
+        if (!empty($dependencies['afterTask'])) {
+          foreach ($dependencies['afterTask'] as $item) {
+            $this->addAfter($item, $task);
+          }
+        }
       }
     }
     $list = array();
+    // Ensure that we don't have any cyclical dependencies in sub-graphs
+    // that could be missed by our topological sort.
+    $cycles = ConnectedComponent::tarjan_scc($this->graph)->getComponents();
+    if (!empty($cycles)) {
+      //print_r(array_pop($cycles)); 
+      //$cycles = array_walk(array_pop($cycles), function(&$task) { return $task->fetcherTask; });
+      //print_r($cycles);
+      //$cycle = implode(', ', array_shift($cycles));
+      //throw new TaskDependencyException(sprintf('A circular dependency was detected in the following tasks: %s', $cycles));
+    }
+    // Perform a topological sort of the graph.
     foreach (DepthFirst::toposort($this->graph) as $task) {
       $list[$task->fetcherTask] = $task;
     }

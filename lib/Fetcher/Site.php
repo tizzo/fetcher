@@ -8,7 +8,6 @@ use \Symfony\Component\Process\Process;
 use \Fetcher\Utility\PHPGenerator,
     \Fetcher\Task\TaskStack,
     \Fetcher\Task\Task,
-    \Fetcher\Configurator\DefaultTaskStacks,
     \Fetcher\Exception\FetcherException;
 
 class Site extends Pimple implements SiteInterface {
@@ -35,11 +34,6 @@ class Site extends Pimple implements SiteInterface {
     // Default tasks currently must be registered before task stacks that use them
     // are defined.
     $this->registerDefaultTasks();
-    if (empty($conf['configurators'])) {
-      $this['configurators'] = array(
-        '\Fetcher\Configurator\DefaultTaskStacks',
-      );
-    }
     // Configure with any settings passed into the constructor.
     if (!empty($conf)) {
       $this->configure($conf);
@@ -95,6 +89,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_database_connection
    * @description Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.
    * @afterMessage The database exists and the site user has successfully conntected to it.
+   * @stack ensure_site
+   * @afterTask ensure_drush_alias
    */
   public function ensureDatabase() {
     if (!$this['database']->canConnect()) {
@@ -159,6 +155,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_drush_alias
    * @description Create a drush alias for this site.
    * @afterMessage The alias [[name]].local exists and resides in the file [[drush_alias.path]].
+   * @stack ensure_site
+   * @afterTask ensure_sym_links
    */
   public function ensureDrushAlias() {
     // TODO: More of this should probably move into another class.
@@ -203,6 +201,7 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_working_directory
    * @description Setup the working directory by creating folders, files, and symlinks.
    * @afterMessage The working directory is properly setup.
+   * @stack ensure_site
    */
   public function ensureWorkingDirectory() {
     // TODO: Make this more dynamic, we should be able to support things like
@@ -244,6 +243,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_settings_file
    * @description Ensure the settings.php file is in place (and dynamically generate it if it is not).
    * @afterMessage The settings.php file is in place.
+   * @stack ensure_site
+   * @afterTask ensure_code
    */
   public function ensureSettingsFileExists() {
     $settingsFilePath = $this['site.directory'] . '/settings.php';
@@ -286,6 +287,8 @@ class Site extends Pimple implements SiteInterface {
    * @description Fetch the site's code from the appropriate place.
    * @beforeMessage Fetching code...
    * @afterMessage The code is in place.
+   * @stack ensure_site
+   * @afterTask ensure_working_directory
    */
   public function ensureCode() {
     if (!is_dir($this['site.code_directory'])) {
@@ -315,6 +318,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_sym_links
    * @description Ensure any configured symlinks have been created and point at the correct path.
    * @afterMessage All symlinks exist and point to the correct path.
+   * @stack ensure_site
+   * @afterTask ensure_settings_file
    */
   public function ensureSymLinks() {
     foreach ($this['symlinks'] as $realPath => $symLink) {
@@ -330,6 +335,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_server_host_enabled
    * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.
    * @afterMessage The site is enabled and is running at [[hostname]].
+   * @stack ensure_site
+   * @afterTask ensure_site_info_file
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
@@ -365,6 +372,7 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask remove_working_directory
    * @description Remove the working directory.
    * @afterMessage Removed `[[site.working_directory]]`.
+   * @stack remove_site
    */
   public function removeWorkingDirectory($site = NULL) {
     if (is_null($site)) {
@@ -379,6 +387,7 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask remove_drush_aliases
    * @description Remove the site's drush aliases.
    * @afterMessage Removed `[[drush_alias.path]]`.
+   * @stack remove_site
    */
   public function removeDrushAliases($site = NULL) {
     if (is_null($site)) {
@@ -393,6 +402,7 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask remove_database
    * @description Remove the site's database and user.
    * @afterMessage Removed database `[[database.database]]` and user `[[database.user.database]]@[[database.user.hostname]]`.
+   * @stack remove_site
    */
   public function removeDatabase($site = NULL) {
     if (is_null($site)) {
@@ -412,6 +422,7 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask remove_vhost
    * @description Remove the site's virtualhost (or server equivalent).
    * @afterMessage Removed virtual host for `[[hostname]]`.
+   * @stack remove_site
    */
   public function removeVirtualHost($site = NULL) {
     if (is_null($site)) {
@@ -533,6 +544,8 @@ class Site extends Pimple implements SiteInterface {
    * @fetcherTask ensure_site_info_file
    * @description Ensure that the configuration for this site has been captured in the site_info file for the site.
    * @afterMessage The site info file for this site has been created.
+   * @stack ensure_site
+   * @afterTask ensure_database_connection
    */
   public function ensureSiteInfoFileExists() {
     $conf = array();
