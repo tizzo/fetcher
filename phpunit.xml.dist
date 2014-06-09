@@ -5,7 +5,14 @@
           <directory>tests/</directory>
         </testsuite>
     </testsuites>
-
+    <!-- Filter out files for which we don't want to produce code coverage reports -->
+    <filter>
+      <blacklist>
+        <directory>vendor</directory>
+        <directory>tests</directory>
+        <directory>lib/Fetcher/Tests</directory>
+      </blacklist>
+    </filter>
     <logging>
         <log
             type="coverage-html"
