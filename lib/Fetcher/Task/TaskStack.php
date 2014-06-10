@@ -6,8 +6,6 @@ use Gliph\Graph\DirectedAdjacencyList;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Algorithm\ConnectedComponent;
 
-require_once "vendor/autoload.php";
-
 class TaskStack extends Task implements TaskInterface {
 
   // An array of subtasks.
