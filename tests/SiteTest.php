@@ -142,6 +142,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('ensure_database_connection', $tasks[5]);
     $this->assertEquals('ensure_site_info_file', $tasks[6]);
     $this->assertEquals('ensure_server_host_enabled', $tasks[7]);
+    // Remove site tasks can be performed in any order.
     $tasks = $site->getTask('remove_site')->getTaskNames();
     $this->assertContains('remove_working_directory', $tasks);
     $this->assertContains('remove_drush_aliases', $tasks);
