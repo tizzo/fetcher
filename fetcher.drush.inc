@@ -67,6 +67,7 @@ function fetcher_drush_command() {
       'name' => 'The name of a site to install on this server.',
     ),
     'options' => array(
+      'working-directory' => 'The diretory in which to create this site instance.',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       'file-sync' => array(
         'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
@@ -88,6 +89,8 @@ function fetcher_drush_command() {
       'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
       'host-name' => NULL,
       'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
+      'working-directory' => 'The diretory in which to create this site instance.',
+      'profile' => 'The profile to download. This is passed to `drush dl` and so version numbers can be specified in the normal drush package way. Defaults to `drupal`.',
     ),
   );
 
@@ -509,6 +512,8 @@ function fetcher_fetcher_option_key_mapping() {
       'hostname' => 'hostname',
       'site' => 'site',
       'local-name' => 'name',
+      'working-directory' => 'site.working_directory',
+      'profile' => 'profile',
     ),
   );
 }

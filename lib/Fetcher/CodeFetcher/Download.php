@@ -19,7 +19,7 @@ class Download implements \Fetcher\CodeFetcher\SetupInterface {
     $site = $this->site;
 
     $commandline_args = array(
-      'drupal-' . $site['version'],
+      $site['profile'],
     );
     $commandline_options = array(
       // Default our package hander to git_drupalorg.

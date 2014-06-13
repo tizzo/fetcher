@@ -745,6 +745,11 @@ class Site extends Pimple implements SiteInterface {
       return $c['system']->getHostname();
     };
 
+    // By defualt the profile for newly created sites is just Drupal core.
+    $this['profile'] = function($c) {
+      return 'drupal-' . $c['version'];
+    };
+
     // The URI of the site.
     // TODO: We have standardized on drush alias keys where possible, this is deprecated.
     $this['hostname'] = function($c) {
