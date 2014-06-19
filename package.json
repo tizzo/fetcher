@@ -1,0 +1,18 @@
+{
+  "name": "fetcher",
+  "version": "0.0.0",
+  "description": "Fetcher Drush is a command line client to interact wiht your Fetcher site and to do interesting things with the data retrieved from there.",
+  "repository": {
+    "type": "git",
+    "url": "git@git.drupal.org:/project/fetcher.git"
+  },
+  "author": "Howard Tyson",
+  "license": "GPL2",
+  "dependencies": {
+    "grunt-phpcs": "~0.2.2",
+    "grunt-contrib-watch": "~0.5.2",
+    "grunt-phplint": "0.0.5",
+    "grunt-phpunit": "~0.3.3",
+    "grunt-cli": "~0.1.13"
+  }
+}

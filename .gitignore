@@ -1,3 +1,4 @@
 vendor
 *.sw*
 build/*
+node_modules/*
