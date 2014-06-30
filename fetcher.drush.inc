@@ -284,7 +284,14 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
     drush_fetcher_ensure_site($site);
     // Install the site
     // TODO: Move this part into a task.
-    $commandline_args = array();
+
+    // The profile name specified may have release info in the string (e.g.
+    // bear-7.x-1.x-dev), filter that out leaving just the package name.
+    $pattern = '/([a-zA-Z0-9_-])-[0-9]\.x-(.*)/';
+    $profile_name = preg_replace($pattern, '$1', $site['profile']);
+    $commandline_args = array(
+      $profile_name,
+    );
     $commandline_options = array(
       'account-name' => 'admin',
       'account-pass' => 'pass',
