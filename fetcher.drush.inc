@@ -296,9 +296,18 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
-      'site' => 'site',
+      'site' => $site['site'],
     );
-    drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
+    $alias = $site['site.code_directory'] . '#' . $site['site'];
+    $human_readable_options = '';
+    foreach ($commandline_options as $key => $value) {
+      $human_readable_options .= " --$key=\"$value\"";
+    }
+    $human_readable_args = implode(' ', $commandline_args);
+    drush_log("Executing: `drush $alias site-install $human_readable_args $human_readable_options`", 'notice');
+    if (!$site['simulate']) {
+      drush_invoke_process($alias, 'site-install', $commandline_args, $commandline_options);
+    }
     drush_log(dt('Admin user created with username `admin` and password `pass`.'));
   }
   catch (Exception $e) {
