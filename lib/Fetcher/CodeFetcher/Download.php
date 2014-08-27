@@ -24,19 +24,20 @@ class Download implements \Fetcher\CodeFetcher\SetupInterface {
     $commandline_options = array(
       // Default our package hander to git_drupalorg.
       //'--package-handler=' . drush_get_option('package-handler', 'git_drupalorg'),
-      '--destination=' . $site['site.working_directory'],
-      '--drupal-project-rename=code',
+      'destination' => $site['site.working_directory'],
+      'drupal-project-rename' => 'code',
     );
     foreach ($commandline_options as $name => $value) {
       drush_set_option($name, $value);
     }
-
-    if ($this->container['verbose']) {
-      $commandline_options[] = '--verbose';
-      $command = 'drush dl ' . implode(' ', $commandline_args) . ' ' . implode(' ', $commandline_options);
+    if ($this->site['verbose']) {
+      $command = 'drush dl ' . implode(' ', $commandline_args) . ' --verbose';
+      foreach ($commandline_options as $key => $value) {
+        $command .= " --$key=\"$value\"";
+      }
       drush_log(dt('Executing: `!command`. ', array('!command' => $command)), 'ok');
     }
-    if (!drush_invoke_process('@none', 'dl', $commandline_args, $commandline_options)) {
+    if (!$this->site['simulate'] && !drush_invoke_process('@none', 'dl', $commandline_args, $commandline_options)) {
       throw new \Fetcher\Exception\FetcherException('Database syncronization FAILED!');
     }
   }

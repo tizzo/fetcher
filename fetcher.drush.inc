@@ -270,10 +270,6 @@ function drush_fetcher_info($site_name = NULL) {
  */
 function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
-  if (!$site_name && !$site_name = drush_fetcher_prompt_for_site_name()) {
-    return;
-  }
-
   // Build a new site object.
   $site = fetcher_get_site($site_name);
 
@@ -281,8 +277,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
 
   try {
-    drush_fetcher_ensure_site($site);
-    // Install the site
+    drush_fetcher_ensure_site($site); // Install the site
     // TODO: Move this part into a task.
 
     // The profile name specified may have release info in the string (e.g.
