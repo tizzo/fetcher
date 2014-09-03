@@ -270,10 +270,6 @@ function drush_fetcher_info($site_name = NULL) {
  */
 function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
-  if (!$site_name && !$site_name = drush_fetcher_prompt_for_site_name()) {
-    return;
-  }
-
   // Build a new site object.
   $site = fetcher_get_site($site_name);
 
@@ -281,17 +277,32 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
 
   try {
-    drush_fetcher_ensure_site($site);
-    // Install the site
+    drush_fetcher_ensure_site($site); // Install the site
     // TODO: Move this part into a task.
-    $commandline_args = array();
+
+    // The profile name specified may have release info in the string (e.g.
+    // bear-7.x-1.x-dev), filter that out leaving just the package name.
+    $pattern = '/([a-zA-Z0-9_-])-[0-9]\.x-(.*)/';
+    $profile_name = preg_replace($pattern, '$1', $site['profile']);
+    $commandline_args = array(
+      $profile_name,
+    );
     $commandline_options = array(
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
-      'site' => 'site',
+      'site' => $site['site'],
     );
-    drush_invoke_process($site['site.code_directory'] . '#' . $site['site'], 'site-install', $commandline_args, $commandline_options);
+    $alias = $site['site.code_directory'] . '#' . $site['site'];
+    $human_readable_options = '';
+    foreach ($commandline_options as $key => $value) {
+      $human_readable_options .= " --$key=\"$value\"";
+    }
+    $human_readable_args = implode(' ', $commandline_args);
+    drush_log("Executing: `drush $alias site-install $human_readable_args $human_readable_options`", 'notice');
+    if (!$site['simulate']) {
+      drush_invoke_process($alias, 'site-install', $commandline_args, $commandline_options);
+    }
     drush_log(dt('Admin user created with username `admin` and password `pass`.'));
   }
   catch (Exception $e) {
