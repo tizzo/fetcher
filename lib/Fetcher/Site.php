@@ -748,8 +748,15 @@ class Site extends Pimple implements SiteInterface {
     };
 
     // By defualt the profile for newly created sites is just Drupal core.
-    $this['profile'] = function($c) {
-      return 'drupal-' . $c['version'];
+    $this['profile'] = 'standard';
+
+    $this['profile.package'] = function($c) {
+      if (in_array($this['profile'], array('standard', 'minimal'))) {
+        return 'drupal-' . $c['version'];
+      }
+      else {
+        return $this['profile'];
+      }
     };
 
     // The URI of the site.
