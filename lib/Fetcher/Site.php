@@ -131,10 +131,12 @@ class Site extends Pimple implements SiteInterface {
     if (!empty($environment) && !isset($environments[$environment])) {
       throw new FetcherException('Invalid environment specified.');
     }
-    foreach ($environments[$environment]  as $key => $value) {
-      // Prevent environment specific settings from being persisted.
-      $this->addEphemeralKey($key);
-      $this[$key] = $value;
+    if (!empty($environments[$environment])) {
+      foreach ($environments[$environment]  as $key => $value) {
+        // Prevent environment specific settings from being persisted.
+        $this->addEphemeralKey($key);
+        $this[$key] = $value;
+      }
     }
   }
 
