@@ -751,11 +751,11 @@ class Site extends Pimple implements SiteInterface {
     $this['profile'] = 'standard';
 
     $this['profile.package'] = function($c) {
-      if (in_array($this['profile'], array('standard', 'minimal'))) {
+      if (in_array($c['profile'], array('standard', 'minimal'))) {
         return 'drupal-' . $c['version'];
       }
       else {
-        return $this['profile'];
+        return $c['profile'];
       }
     };
 
