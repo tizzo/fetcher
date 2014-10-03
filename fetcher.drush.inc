@@ -291,8 +291,10 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
-      'site' => $site['site'],
     );
+    if ($site['version'] != 8) {
+      $commandline_options['site'] = $site['site'];
+    }
     $alias = $site['site.code_directory'] . '#' . $site['site'];
     $human_readable_options = '';
     foreach ($commandline_options as $key => $value) {
@@ -595,7 +597,7 @@ function drush_fetcher_extract_keys_from_context() {
   $context = array_reverse(drush_get_context());
   $fetcher_settings = array();
   foreach ($context as $key => $value) {
-    if (isset($value['fetcher']) && is_array($value['fetcher'])) {
+    if (is_array($value) && isset($value['fetcher']) && is_array($value['fetcher'])) {
       $fetcher_settings[] = $value['fetcher'];
     }
   };
