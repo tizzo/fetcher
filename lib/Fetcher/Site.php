@@ -88,7 +88,7 @@ class Site extends Pimple implements SiteInterface {
    *
    * @fetcherTask ensure_database_connection
    * @description Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.
-   * @afterMessage The database exists and the site user has successfully conntected to it.
+   * @afterMessage The database exists and the site user has successfully connected to it.
    * @stack ensure_site
    * @afterTask ensure_drush_alias
    */
@@ -332,7 +332,7 @@ class Site extends Pimple implements SiteInterface {
   /**
    * Ensure the site has been added to the appropriate server.
    *
-   * On apache this invovles creating a vhost entry.
+   * On apache this involves creating a vhost entry.
    *
    * @fetcherTask ensure_server_host_enabled
    * @description Ensure that the server is configured with the appropriate virtualhost or equivalent.
