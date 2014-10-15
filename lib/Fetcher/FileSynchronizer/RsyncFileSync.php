@@ -98,7 +98,8 @@ class RsyncFileSync implements FileSynchronizerInterface {
     $remote_private_files = !empty($remote_status_result['object']['Private file directory path']) ? $remote_status_result['object']['Private file directory path'] : '';
 
     $site['log'](dt('Local file path information:'), 'ok');
-    $local_status_result = drush_invoke_process('@' . $site['name'] . '.local', 'status', $args, $commandline_options);
+    $localAlias = $site['site.code_directory'] . '#' . $site['site'];
+    $local_status_result = drush_invoke_process($localAlias, 'status', $args, $commandline_options);
     $local_root_path = $local_status_result['object']['Drupal root'];
     $local_public_files = $local_status_result['object']['File directory path'];
     $local_private_files = !empty($local_status_result['object']['Private file directory path']) ? $local_status_result['object']['Private file directory path'] : '';
