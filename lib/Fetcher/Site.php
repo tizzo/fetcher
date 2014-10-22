@@ -604,6 +604,9 @@ class Site extends Pimple implements SiteInterface {
       return $this->configureWithSiteInfoFile();
     }
     else {
+      if ($conf = $this['info_fetcher']->getInfo($this['name.global']) == false){
+        return false;
+      }
       if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {
         $this->configure($conf);
         return TRUE;
