@@ -232,7 +232,7 @@ function fetcher_get_site($name = FALSE) {
 
   // Next we fetch information specific to the site, that includes calls
   // to the infoFetcher if no site_info.yaml was already found.
-  if ( $site->fetchInfo() == false) {
+  if ($site->fetchInfo() == false) {
     drush_set_error("Site does not exist");
     exit();
  }

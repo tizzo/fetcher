@@ -604,10 +604,10 @@ class Site extends Pimple implements SiteInterface {
       return $this->configureWithSiteInfoFile();
     }
     else {
-      if ($conf = $this['info_fetcher']->getInfo($this['name.global']) == false){
+      if (!$conf = $this['info_fetcher']->getInfo($this['name.global'])) {
         return false;
       }
-      if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {
+      else {
         $this->configure($conf);
         return TRUE;
       }
