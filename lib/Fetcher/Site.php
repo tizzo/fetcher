@@ -255,30 +255,25 @@ class Site extends Pimple implements SiteInterface {
     $this['system']->ensureFolderExists($this['site.directory']);
     // If the settings file does not exist, create a new one.
     if (!is_file($settingsFilePath)) {
-      $conf = $this;
-      $vars = array();
-      // TODO: This is ugly, what we're doing with this container here...
-      // TODO: maybe evaluate all of the keys before running?
-      // Ensure defaults are set by the database handler.
-      $this['database'];
-      $vars =  array(
-        'database' => $conf['database.database'],
-        'hostname' => $conf['database.hostname'],
-        'username' => $conf['database.user.name'],
-        'password' => $conf['database.user.password'],
-        'driver' => $conf['database.driver'],
-        'environment_local' => $conf['environment.local'],
-      );
-      // TODO: Generate the settings.php file dynamically without a template.
-      $content = \drush_fetcher_get_asset('drupal.' . $this['version'] . '.settings.php', $vars);
 
-      // If we have a site-settings.php file for this site, add it here.
+      // We need to ensure any plugin that wants to add configuration has a chance to do so.
+      // Running this evaluates all plugin constructors.
+      $this->exportConfiguration();
+
+      $compiler = new SettingsPHPGenerator();
+      $compiler->set('iniSettings', $this['settings_php.ini_set']);
+      $compiler->set('variables', $this['settings_php.variables']);
+      $compiler->set('requires', $this['settings_php.requires']);    
+
+      // If we have a site-settings.php file for this site, add it.
       if (is_file($this['site.directory'] . '/site-settings.php')) {
-        $content .= PHP_EOL . "require_once('site-settings.php');" . PHP_EOL;
+        $requires = $compiler->get('requires');
+        $requires[] = $this['site.directory'] . '/site-settings.php';
+        $compiler->set('requires', $requires);
       }
 
       $this['system']->ensureFolderExists($this['site.directory']);
-      $this['system']->writeFile($settingsFilePath, $content);
+      $this['system']->writeFile($settingsFilePath, $compiler->compile());
     }
   }
 
@@ -640,6 +635,7 @@ class Site extends Pimple implements SiteInterface {
     $this['name'] = function($c) {
       return $c['name.global'];
     };
+
     // Symlinks that need to be created.
     $this['symlinks'] = function ($c) {
       return array(
@@ -769,6 +765,16 @@ class Site extends Pimple implements SiteInterface {
     $this['hostname'] = function($c) {
       return strtolower($c['name'] . '.' . $c['system hostname']);
     };
+
+    $this['settings_php.ini_set'] = array();
+    $this['settings_php.variables'] = function($c) {
+      return array(
+        'conf' => array(
+          'fetcher_environment' => $c['environment.local'],
+        ),
+      );
+    };
+    $this['settings_php.requires'] = array();
 
     // TODO: This is not the best way to do this:
     // TODO: Add optional webroot from siteInfo.
@@ -924,6 +930,5 @@ class Site extends Pimple implements SiteInterface {
     // on this object.
     $this['task_loader']->scanObject($this);
   }
-
 
 }

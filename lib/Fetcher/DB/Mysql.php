@@ -42,6 +42,7 @@ class Mysql {
       $site->setDefaultConfigration('database.user.hostname', function($c) { return $c['system hostname']; });
     }
     $site->setDefaultConfigration('database.port', 3306);
+    $site->setDefaultConfigration('database.prefix', '');
     $site->setDefaultConfigration('mysql.binary', 'mysql');
     $site->addEphemeralKey('data.admin.user.password');
   }
@@ -50,7 +51,7 @@ class Mysql {
    * Returns the drush driver for this database.
    */
   static public function getDriver() {
-    return 'mysql';
+    return 'mysqli';
   }
 
   /**

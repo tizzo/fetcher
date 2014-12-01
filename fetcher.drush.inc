@@ -240,13 +240,19 @@ function fetcher_get_site($name = FALSE) {
   // site_info.yml file.
   drush_fetcher_extract_configuration_keys_from_drush_context($site);
 
+  // Add any version specific configurators based on site info.
+  if (class_exists('\Fetcher\Configurator\Drupal' . $site['version'])) {
+    $version_class = '\Fetcher\Configurator\Drupal' . $site['version'];
+    $version_class::configure($site);
+  }
+
   // Scan all user space functions to allow simple task additions.
   foreach ($site['task_loader']->scanAllUserSpaceFunctions() as $task) {
     $site->addTask($task);
   }
 
-  // Configure from the remote environment (if remote environment is not set, and there are
-  // no environments this should take no action).
+  // Configure from the remote environment (if remote environment is not set,
+  // and there are no environments this should take no action).
   $site->configureFromEnvironment();
 
   // Allow other modules to modify the site object.

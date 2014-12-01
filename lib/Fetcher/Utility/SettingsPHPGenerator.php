@@ -74,9 +74,9 @@ class SettingsPHPGenerator {
           PHPGenerator::arrayExport($array, $value);
         }
         else {
-          $value = '\'' . \addslashes($value) . '\';';
+          $value = '\'' . \addslashes($value) . '\'';
         }
-        $output[] = '$' . $name . ' = ' . $value;
+        $output[] = '$' . $name . ' = ' . $value . ';';
       }
     }
 
