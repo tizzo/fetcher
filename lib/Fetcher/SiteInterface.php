@@ -105,34 +105,6 @@ interface SiteInterface {
   public function removeVirtualHost($site = NULL);
 
   /**
-   * Register a build hook that can be run before or after a site build.
-   *
-   * @param $operation
-   *   The operation upon which this hook will fire.
-   *    'initial' - TODO: Document this.
-   *    'before' - TODO: Document this.
-   *    'after' - TODO: Document this.
-   * @param $action
-   *   This can be either a string to be executed at the command line or a
-   *   Closure that accepts the site object as an argument.
-   * @param $directory
-   *   (Optional) Each hook is executed from inside the drupal code root.  If
-   *   necessary a directory can be specified to run the command from.  This can
-   *   either be a path relative to the Drupal root or an absolute path.
-   */
-  public function registerBuildHook($operation, $action, $directory = NULL);
-
-  /**
-   * Get the list of build hooks for this operation.
-   */
-  public function getOperationBuildHooks($operation);
-
-  /**
-   * Run all registered callbacks for an operation.
-   */
-  public function runOperationBuildHooks($operation);
-
-  /**
    * Write a site info file from our siteInfo if it doesn't already exist.
    */
   public function ensureSiteInfoFileExists();

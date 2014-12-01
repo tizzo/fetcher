@@ -13,10 +13,6 @@ use \Fetcher\Utility\PHPGenerator,
 
 class Site extends Pimple implements SiteInterface {
 
-  // A multi-dimensional array of build hooks.
-  // TODO: buildhooks should be a class of task.
-  protected $buildHooks = array();
-
   // An array of callable tasks keyed by name.
   public $tasks = array();
 
@@ -24,6 +20,7 @@ class Site extends Pimple implements SiteInterface {
    * Constructor function to populate the dependency injection container.
    */
   public function __construct($conf = NULL) {
+
     // Pimple explodes if you use isset() and you have not yet set any value.
     $this['initialized'] = TRUE;
     $this['log'] = $this->protect(function($message) {
@@ -32,13 +29,16 @@ class Site extends Pimple implements SiteInterface {
 
     // Populate defaults.
     $this->setDefaults();
+
     // Default tasks currently must be registered before task stacks that use them
     // are defined.
     $this->registerDefaultTasks();
+
     // Configure with any settings passed into the constructor.
     if (!empty($conf)) {
       $this->configure($conf);
     }
+
     // Apply any configurators.
     $this->runConfigurators();
   }
@@ -434,86 +434,6 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * Register a build hook that can be run before or after a site build.
-   *
-   * @param $operation
-   *   The operation upon which this hook will fire.
-   *    'initial' - TODO: Document this.
-   *    'before' - TODO: Document this.
-   *    'after' - TODO: Document this.
-   * @param $action
-   *   This can be either a string to be executed at the command line or a
-   *   Closure that accepts the site object as an argument.
-   * @param $directory
-   *   (Optional) Each hook is executed from inside the drupal code root.  If
-   *   necessary a directory can be specified to run the command from.  This can
-   *   either be a path relative to the Drupal root or an absolute path.
-   */
-  public function registerBuildHook($operation, $action, $directory = NULL) {
-    if (empty($this->buildHooks[$operation])) {
-      $this->buildHooks[$operation] = array();
-    }
-    $this->buildHooks[$operation] = array(
-      'action' => $action,
-      'directory' => $directory,
-    );
-  }
-
-  /**
-   * Get the list of build hooks for this operation.
-   */
-  public function getOperationBuildHooks($operation) {
-    if (!empty($this->buildHooks[$operation])) {
-      return $this->buildHooks[$operation];
-    }
-  }
-
-  /**
-   * Run all registered callbacks for an operation.
-   *
-   * TODO: Reimplement these as tasks, this function is bazonkers and gross.
-   */
-  public function runOperationBuildHooks($operation) {
-    if (!empty($this->buildHooks[$operation])) {
-      $startingDir = getcwd();
-      foreach ($this->buildHooks as $hook) {
-        chdir($this['site.code_directory']);
-        if (!empty($hook['directory'])) {
-          chdir($hook['directory']);
-        }
-        if (is_string($hook['action'])) {
-          $process = $this['process']($hook['action']);
-          $process->setTimeout(NULL);
-          $this['log'](dt('Executing command: `@command`', array('@command' => $hook['action']), 'info'));
-          $logger = NULL;
-          if ($this['verbose']) {
-            $logger = function ($type, $buffer) {
-              print $buffer;
-            };
-          }
-          $process->run($logger);
-          if (!$process->isSuccessful()) {
-            $message = 'Build hook failed: @hook';
-            if ($errorOutput = $process->getErrorOutput() && !empty($errorOutput)) {
-              $message .= 'and exited with "@error"';
-            }
-       #     throw new \Exception(dt($message, array('@hook' => $hook['action'], '@error' => $getErrorOutput)));
-          }
-        }
-        else if (is_object($hook['action']) && get_class($hook['action']) == 'Closure') {
-          try {
-            $hook['action']($this);
-          }
-          catch (\Exception $e) {
-            $this['log']('Build hook failed.', 'error');
-          }
-        }
-      }
-      chdir($startingDir);
-    }
-  }
-
-  /**
    * Export the configuration of the object to an array.
    */
   public function exportConfiguration() {
@@ -775,7 +695,7 @@ class Site extends Pimple implements SiteInterface {
       );
     };
     $this['settings_php.requires'] = array();
-
+    
     // TODO: This is not the best way to do this:
     // TODO: Add optional webroot from siteInfo.
     $this['site.working_directory'] = function($c) {
