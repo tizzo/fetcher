@@ -35,6 +35,7 @@ function fetcher_drush_command() {
     'local-environment' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
     'remote-environment' => 'The name of the environment to load from.',
     'json-config' => 'Abitrary JSON that will be merged into the configuration of the site object.',
+    'working-directory' => 'The diretory in which to create this site instance.',
   );
 
   $items['fetcher-list'] = array(
@@ -67,15 +68,15 @@ function fetcher_drush_command() {
       'name' => 'The name of a site to install on this server.',
     ),
     'options' => array(
-      'working-directory' => 'The diretory in which to create this site instance.',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       'file-sync' => array(
         'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
         'value' => 'optional',
         'example-value' => 'private',
       ),
+      // TODO: Implement this or refactor the way site_info works to cache info.
       //'fetch-info' => 'If set, do not load information about this site from the site\'s local cache, fetch it freshly from the info provider.',
-          ),
+    ),
   );
 
   $environment_items['fetcher-create'] =  array(
@@ -89,7 +90,6 @@ function fetcher_drush_command() {
       'package-handler' => 'The package handler to use for downloading drupal, defaults to drupalorg_git but any can be used that work with pm-download.',
       'host-name' => NULL,
       'environment-local' => "The environment you are on, e.g., 'prod', 'dev'. Defaults to 'local'.",
-      'working-directory' => 'The diretory in which to create this site instance.',
       'profile' => 'The profile to download. This is passed to `drush dl` and so version numbers can be specified in the normal drush package way. Defaults to `drupal`.',
     ),
   );
@@ -137,7 +137,6 @@ function fetcher_drush_command() {
 function drush_fetcher_list($name = '', $page = 0) {
   try {
     $result = drush_fetcher_get_info_fetcher()->listSites($name, $page);
-    // TODO: We should have one common error status to check.
     if (!empty($result)) {
       $rows[] = array(
         'Title',
@@ -157,7 +156,7 @@ function drush_fetcher_list($name = '', $page = 0) {
 /**
  * Attempt to identify the site we are working with from the specified path.
  *
- * Searches out from the site_info.yaml file.
+ * Searches up through the cwd to find a site_info.yaml file in a parent folder.
  *
  * @return
  *   A stdClass object containing site information or FALSE on failure.
@@ -184,7 +183,7 @@ function fetcher_find_site_info_path_from_name_or_cwd($name) {
     $path = $specs['root'];
   }
   if (!$name && !$path) {
-    $path = getcwd();
+    $path = drush_get_option('working-directory', FALSE) ? drush_get_option('working-directory') : getcwd();
   }
   return fetcher_find_site_info_from_path($path);
 }
@@ -213,7 +212,6 @@ function fetcher_get_site($name = FALSE) {
     '\Fetcher\Configurator\Drush',
   );
 
-  // TODO: Move this somewhere to detect configuration.
   if (is_dir('/etc') && is_file('/etc/issue')) {
     $issue = strtolower(file_get_contents('/etc/issue'));
     if (strpos($issue, 'centos') !== FALSE || strpos($issue, 'red hat') !== FALSE) {
