@@ -210,7 +210,7 @@ function fetcher_get_site($name = FALSE) {
 
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
-    '\Fetcher\Configurator\DrushPrompts',
+    '\Fetcher\Configurator\Drush',
   );
 
   // TODO: Move this somewhere to detect configuration.

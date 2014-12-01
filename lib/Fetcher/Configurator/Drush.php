@@ -5,7 +5,7 @@ namespace Fetcher\Configurator;
 use \Fetcher\SiteInterface,
     \Fetcher\Task\TaskStack;
 
-class DrushPrompts implements ConfiguratorInterface {
+class Drush implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
     // Note, this conifgurator is only intended for use with drush.
