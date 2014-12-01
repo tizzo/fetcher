@@ -61,7 +61,7 @@ class SettingsPHPGenerator {
     if (!empty($this->iniSettings)) {
       $output[] = '';
       foreach ($this->iniSettings as $name => $value) {
-        $output[] = 'ini_set(\'' . $name . '\', ' . $value . ');';
+        $output[] = 'ini_set(\'' . $name . '\', \'' . \addslashes($value) . '\');';
       }
     }
 

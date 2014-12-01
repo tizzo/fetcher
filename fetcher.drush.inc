@@ -193,12 +193,12 @@ function fetcher_find_site_info_path_from_name_or_cwd($name) {
  *
  * @param $name
  *   The name of the site to load.
+ * @param $conf
+ *   An array of configuration with which to populate the site.
  * @return
  *   An instantiated and configured \Fetcher\Site object.
  */
-function fetcher_get_site($name = FALSE) {
-
-  $conf = array();
+function fetcher_get_site($name = FALSE, $conf = array()) {
 
   // If we have an alias or no name at all try to find a site_info.yml file.
   if (!$name || strpos($name, '@') === 0) {
@@ -210,6 +210,7 @@ function fetcher_get_site($name = FALSE) {
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
     '\Fetcher\Configurator\Drush',
+    '\Fetcher\Configurator\DrupalVersions',
   );
 
   if (is_dir('/etc') && is_file('/etc/issue')) {
@@ -240,12 +241,6 @@ function fetcher_get_site($name = FALSE) {
   // site_info.yml file.
   drush_fetcher_extract_configuration_keys_from_drush_context($site);
 
-  // Add any version specific configurators based on site info.
-  if (class_exists('\Fetcher\Configurator\Drupal' . $site['version'])) {
-    $version_class = '\Fetcher\Configurator\Drupal' . $site['version'];
-    $version_class::configure($site);
-  }
-
   // Scan all user space functions to allow simple task additions.
   foreach ($site['task_loader']->scanAllUserSpaceFunctions() as $task) {
     $site->addTask($task);
@@ -254,6 +249,9 @@ function fetcher_get_site($name = FALSE) {
   // Configure from the remote environment (if remote environment is not set,
   // and there are no environments this should take no action).
   $site->configureFromEnvironment();
+
+
+  $site->configure($conf);
 
   // Allow other modules to modify the site object.
   drush_command_invoke_all('fetcher_site_alter', $site);
@@ -274,11 +272,12 @@ function drush_fetcher_info($site_name = NULL) {
  */
 function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
-  // Build a new site object.
-  $site = fetcher_get_site($site_name);
 
-  $site['version'] = $version;
-  $site['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
+  $conf['version'] = $version;
+  $conf['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
+
+  // Build a new site object.
+  $site = fetcher_get_site($site_name, $conf);
 
   try {
     drush_fetcher_ensure_site($site); // Install the site
@@ -295,10 +294,11 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
       'account-name' => 'admin',
       'account-pass' => 'pass',
       'site-name' => $site['name'],
+      'uri' => 'http://' . $site['site'],
+      'db-su' => $site['database.admin.user.name'],
+      'db-su-pw' => $site['database.admin.user.password'],
+      'yes' => TRUE,
     );
-    if ($site['version'] != 8) {
-      $commandline_options['site'] = $site['site'];
-    }
     $alias = $site['site.code_directory'] . '#' . $site['site'];
     $human_readable_options = '';
     foreach ($commandline_options as $key => $value) {

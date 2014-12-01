@@ -1,14 +1,14 @@
 <?php
 
-namespace Fetcher\Configurator;
+namespace Fetcher\Configurator\DrupalVersion;
 
-use \Fetcher\SiteInterface,
-    \Fetcher\Task\TaskStack;
+use Fetcher\Configurator\ConfiguratorInterface,
+    Fetcher\SiteInterface;
 
 class Drupal8 implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
- 
+
     $site['settings_php.ini_set'] = array(
       'arg_separator.output' => '&amp;',
       'magic_quotes_runtime' => 0,
@@ -29,7 +29,7 @@ class Drupal8 implements ConfiguratorInterface {
     $variables = $site['settings_php.variables'];
     $site['settings_php.variables'] = function($c) use ($variables) {
       return $variables + array(
-        'database' => array(
+        'databases' => array(
           'default' => array(
             'default' => array(
               'database' => $c['database.database'],
@@ -43,7 +43,7 @@ class Drupal8 implements ConfiguratorInterface {
             ),
           ),
         ),
-        'install_profile' = $c['profile'],
+        'install_profile' => $c['profile'],
       );
     };
   }

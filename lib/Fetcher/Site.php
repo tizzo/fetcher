@@ -513,10 +513,8 @@ class Site extends Pimple implements SiteInterface {
    */
   public function runConfigurators() {
     // Set default configuration from configrator list.
-    if (isset($this['configurators'])) {
-      foreach ($this['configurators'] as $configurator) {
-        $configurator::configure($this);
-      }
+    foreach ($this['configurators'] as $configurator) {
+      $configurator::configure($this);
     }
   }
 
@@ -602,6 +600,11 @@ class Site extends Pimple implements SiteInterface {
       return new $c['server class']($c);
     });
 
+    // An array of classes implementing Fetcher\Configurator\ConfiguratorInterface().
+    $this['configurators'] = array(
+      '\Fetcher\Configurator\DrupalVersion',
+    );
+
     // Set our default database to MySQL.
     $this['database class'] = '\Fetcher\DB\Mysql';
 
@@ -672,7 +675,7 @@ class Site extends Pimple implements SiteInterface {
     $this['profile'] = 'standard';
 
     $this['profile.package'] = function($c) {
-      if (in_array($c['profile'], array('standard', 'minimal'))) {
+      if (in_array($c['profile'], array('default', 'standard', 'minimal'))) {
         return 'drupal-' . $c['version'];
       }
       else {

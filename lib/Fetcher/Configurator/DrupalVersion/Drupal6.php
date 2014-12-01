@@ -1,13 +1,17 @@
 <?php
 
-namespace Fetcher\Configurator;
+namespace Fetcher\Configurator\DrupalVersion;
 
-use \Fetcher\SiteInterface,
-    \Fetcher\Task\TaskStack;
+use Fetcher\Configurator\ConfiguratorInterface,
+    Fetcher\SiteInterface;
 
 class Drupal6 implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
+
+    // Drupal 6 only came with `default` profile.
+    $site['profile'] = 'default';
+
     $site['settings_php.ini_set'] = array(
       'arg_separator.output' => '&amp;',
       'magic_quotes_runtime' => 0,
@@ -22,14 +26,12 @@ class Drupal6 implements ConfiguratorInterface {
       'session.use_trans_sid' => 0,
       'url_rewriter.tags' => '',
     );
-    $site['settings_php.database_variable'] = function($c) {
-      return 'mysqli://' . $c['database.user.name'] . ':' . $c['database.user.password'] . '@' . $c['database.hostname'] . '/' . $c['database.database'];
+
+    $variables = $site['settings_php.variables'];
+    $site['settings_php.variables'] = function($c) use ($variables) {
+      $db_url = 'mysqli://' . $c['database.user.name'] . ':' . $c['database.user.password'] . '@' . $c['database.hostname'] . '/' . $c['database.database'];
+      return $variables + array('db_url' => $db_url);
     };
-  }
-
-$db_url = 
-
-$conf['fetcher_environment'] = '<?php print $environment_local; ?>';
   }
 }
  
