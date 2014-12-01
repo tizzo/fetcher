@@ -20,7 +20,7 @@ class PHPGenerator {
    * @param (int) $indentLevel
    *  The level of indentation this should be run at.
    */
-  static public function arrayExport(Array $data, &$string, $indentLevel) {
+  static public function arrayExport(Array $data, &$string, $indentLevel = 0) {
     $i = 0;
     $indent = '';
     while ($i < $indentLevel) {

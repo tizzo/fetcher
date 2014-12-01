@@ -8,6 +8,7 @@ use \Symfony\Component\Process\Process;
 use \Fetcher\Utility\PHPGenerator,
     \Fetcher\Task\TaskStack,
     \Fetcher\Task\Task,
+    \Fetcher\Utility\SettingsPHPGenerator,
     \Fetcher\Exception\FetcherException;
 
 class Site extends Pimple implements SiteInterface {
