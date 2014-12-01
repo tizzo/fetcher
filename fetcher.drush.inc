@@ -210,7 +210,7 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
     '\Fetcher\Configurator\Drush',
-    '\Fetcher\Configurator\DrupalVersions',
+    '\Fetcher\Configurator\DrupalVersion',
   );
 
   if (is_dir('/etc') && is_file('/etc/issue')) {
