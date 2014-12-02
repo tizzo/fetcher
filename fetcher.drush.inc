@@ -225,7 +225,7 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
     $site['name.global'] = $name;
   }
 
-  // Use conifgured defaults from drushrc files.
+  // Use configured defaults from drushrc files.
   $site->configure(drush_fetcher_extract_keys_from_context());
 
   // First we apply configuration from the global context
@@ -250,7 +250,10 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   // and there are no environments this should take no action).
   $site->configureFromEnvironment();
 
+  // Ensure JSON parameters are not overridden (except by the calling function).
+  $site->configure(fetcher_get_json_configuration());
 
+  // Reapply any configuration specified by the calling function.
   $site->configure($conf);
 
   // Allow other modules to modify the site object.
@@ -272,7 +275,6 @@ function drush_fetcher_info($site_name = NULL) {
  */
 function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
-
   $conf['version'] = $version;
   $conf['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
 
@@ -280,41 +282,50 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   $site = fetcher_get_site($site_name, $conf);
 
   try {
-    drush_fetcher_ensure_site($site); // Install the site
-    // TODO: Move this part into a task.
-
-    // The profile name specified may have release info in the string (e.g.
-    // bear-7.x-1.x-dev), filter that out leaving just the package name.
-    $pattern = '/([a-zA-Z0-9_-])-[0-9]\.x-(.*)/';
-    $profile_name = preg_replace($pattern, '$1', $site['profile']);
-    $commandline_args = array(
-      $profile_name,
-    );
-    $commandline_options = array(
-      'account-name' => 'admin',
-      'account-pass' => 'pass',
-      'site-name' => $site['name'],
-      'uri' => 'http://' . $site['site'],
-      'db-su' => $site['database.admin.user.name'],
-      'db-su-pw' => $site['database.admin.user.password'],
-      'yes' => TRUE,
-    );
-    $alias = $site['site.code_directory'] . '#' . $site['site'];
-    $human_readable_options = '';
-    foreach ($commandline_options as $key => $value) {
-      $human_readable_options .= " --$key=\"$value\"";
-    }
-    $human_readable_args = implode(' ', $commandline_args);
-    drush_log("Executing: `drush $alias site-install $human_readable_args $human_readable_options`", 'notice');
-    if (!$site['simulate']) {
-      drush_invoke_process($alias, 'site-install', $commandline_args, $commandline_options);
-    }
-    drush_log(dt('Admin user created with username `admin` and password `pass`.'));
+    // Add the `install_site` task.
+    $site->addTask($site->getTask('install_site'));
+    drush_fetcher_ensure_site($site);
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
     drush_fetcher_log_exception_information($e);
     drush_log(dt('Something failed in site creation, consider running `drush fetcher-delete @site_name.', array('@site_name', $site_name)), 'error');
+  }
+}
+
+/**
+ * Ensure the database exists, the user exists, and the user can connect.
+ *
+ * @fetcherTask install_site
+ * @description Install the drupal site.
+ * @afterMessage Admin user created with username `admin` and password `pass`.
+ */
+function fetcher_install_site(\Fetcher\SiteInterface $site) {
+  // The profile name specified may have release info in the string (e.g.
+  // bear-7.x-1.x-dev), filter that out leaving just the package name.
+  $pattern = '/([a-zA-Z0-9_-])-[0-9]\.x-(.*)/';
+  $profile_name = preg_replace($pattern, '$1', $site['profile']);
+  $commandline_args = array(
+    $profile_name,
+  );
+  $commandline_options = array(
+    'account-name' => 'admin',
+    'account-pass' => 'pass',
+    'site-name' => $site['name'],
+    'uri' => 'http://' . $site['site'],
+    'db-su' => $site['database.admin.user.name'],
+    'db-su-pw' => $site['database.admin.user.password'],
+    'yes' => TRUE,
+  );
+  $alias = $site['site.code_directory'] . '#' . $site['site'];
+  $human_readable_options = '';
+  foreach ($commandline_options as $key => $value) {
+    $human_readable_options .= " --$key=\"$value\"";
+  }
+  $human_readable_args = implode(' ', $commandline_args);
+  drush_log("Executing: `drush $alias site-install $human_readable_args $human_readable_options`", 'notice');
+  if (!$site['simulate']) {
+    drush_invoke_process($alias, 'site-install', $commandline_args, $commandline_options);
   }
 }
 
@@ -484,7 +495,7 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
       }
     }
   }
-  // Load any options from the cli parameters and configure them on the site object.
+  // Load any options from the cli parameters and configure them on the site.
   if (!empty($keys['options'])) {
     foreach ($keys['options'] as $drush_name => $config_name) {
       if ($value = drush_get_option($drush_name)) {
@@ -492,19 +503,33 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
       }
     }
   }
+
+  // Apply any configuration specified via CLI params.
+  $site->configure(fetcher_get_json_configuration());
+}
+
+/**
+ * Get a configuration array from a JSON parameter if specified.
+ */
+function fetcher_get_json_configuration() {
+  static $output = array();
+  if (!empty($output)) {
+    return $output;
+  }
   // We allow arbitrary injection of JSON overrides from the command line to
   // allow for overrides of items that aren't exposed as native options.
   $json_config = drush_get_option('json-config', FALSE);
   if ($json_config) {
     if ($config = json_decode($json_config)) {
       foreach($config as $key => $value) {
-        $site[$key] = $value;
+        $output[$key] = $value;
       }
     }
     else {
       drush_log('Invalid JSON received for json-config parameter.', 'error');
     }
   }
+  return $output;
 }
 
 /**
