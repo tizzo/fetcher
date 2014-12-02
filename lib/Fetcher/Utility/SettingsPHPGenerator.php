@@ -61,22 +61,14 @@ class SettingsPHPGenerator {
     if (!empty($this->iniSettings)) {
       $output[] = '';
       foreach ($this->iniSettings as $name => $value) {
-        $output[] = 'ini_set(\'' . $name . '\', \'' . \addslashes($value) . '\');';
+        $output[] = 'ini_set(\'' . $name . '\', ' . $this->getString($value) . ');';
       }
     }
 
     if (!empty($this->variables)) {
       $output[] = '';
       foreach ($this->variables as $name => $value) {
-        if (is_array($value)) {
-          $array = $value;
-          $value = '';
-          PHPGenerator::arrayExport($array, $value);
-        }
-        else {
-          $value = '\'' . \addslashes($value) . '\'';
-        }
-        $output[] = '$' . $name . ' = ' . $value . ';';
+        $output[] = '$' . $name . ' = ' . $this->getString($value) . ';';
       }
     }
 
@@ -88,6 +80,33 @@ class SettingsPHPGenerator {
     }
 
     return implode(PHP_EOL, $output);
+  }
+
+  /**
+   * Get a string representation of php data.
+   *
+   * @param $data
+   *   Data to be converted into a php code string representation.
+   * @return
+   *   A string representation of the data to be embedded in php code.
+   */
+  public function getString($data) {
+    $output = '';
+    if (is_object($data)) {
+      throw new \Exception('Object values not supported in settings.php generation.');
+    }
+    else if (is_array($data)) {
+      $array = $data;
+      $output = '';
+      PHPGenerator::arrayExport($array, $output);
+    }
+    else if (is_numeric($data)) {
+      $output = $data;
+    }
+    else {
+      $output = '\'' . \addslashes($data) . '\'';
+    }
+    return $output;
   }
 
   /**
