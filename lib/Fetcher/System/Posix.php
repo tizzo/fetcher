@@ -162,7 +162,7 @@ class Posix {
           $diff = new Diff(explode(PHP_EOL, $currentContent), explode(PHP_EOL, $content), $options);
           $site['print']($diff->render(new DiffRenderer(array(), $site)));
         }
-        if (!$site['user confirm']('Overwrite existing file with new content?')) {
+        if ($currentContent !== $content && !$site['user confirm']('Overwrite existing file with new content?')) {
           $site['log']('File overwriting canceled', 'ok');
           return;
         }
