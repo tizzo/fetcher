@@ -40,7 +40,9 @@ class DiffRenderer extends Diff_Renderer_Abstract {
     if ($this->site['system']->isTTY()) {
       return $this->renderColorText();
     }
-    //return $this->unified->render();
+    // Pass the diff into the child renderer.
+    $this->unified->diff = $this->diff;
+    return $this->unified->render();
   }
 
   /**
