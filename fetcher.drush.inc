@@ -731,7 +731,7 @@ function drush_fetcher_log_exception_information(Exception $e) {
     '@line' => $e->getLine(),
     '@file' => $e->getFile()
   );
-  drush_log(dt('@error on line @line of @file.', $args), 'error');
+  drush_set_error(1, dt('@error on line @line of @file.', $args));
 }
 
 
