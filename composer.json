@@ -16,7 +16,8 @@
     "symfony/yaml": "v2.3.5",
     "symfony/process": "v2.3.5",
     "sdboyer/gliph": "0.1.5",
-    "phpspec/php-diff": "v1.0.1"
+    "phpspec/php-diff": "v1.0.1",
+    "kevinlebrun/colors.php": "0.*"
   },
   "require-dev": {
     "phpunit/phpunit": "3.7.*",

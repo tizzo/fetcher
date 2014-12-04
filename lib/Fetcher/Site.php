@@ -253,28 +253,25 @@ class Site extends Pimple implements SiteInterface {
     $settingsFilePath = $this['site.directory'] . '/settings.php';
     // Ensure the site folder exists.
     $this['system']->ensureFolderExists($this['site.directory']);
-    // If the settings file does not exist, create a new one.
-    if (!is_file($settingsFilePath)) {
 
-      // We need to ensure any plugin that wants to add configuration has a chance to do so.
-      // Running this evaluates all plugin constructors.
-      $this->exportConfiguration();
+    // We need to ensure any plugin that wants to add configuration has a chance to do so.
+    // Running this evaluates all plugin constructors.
+    $this->exportConfiguration();
 
-      $compiler = new SettingsPHPGenerator();
-      $compiler->set('iniSettings', $this['settings_php.ini_set']);
-      $compiler->set('variables', $this['settings_php.variables']);
-      $compiler->set('requires', $this['settings_php.requires']);    
+    $compiler = new SettingsPHPGenerator();
+    $compiler->set('iniSettings', $this['settings_php.ini_set']);
+    $compiler->set('variables', $this['settings_php.variables']);
+    $compiler->set('requires', $this['settings_php.requires']);
 
-      // If we have a site-settings.php file for this site, add it.
-      if (is_file($this['site.directory'] . '/site-settings.php')) {
-        $requires = $compiler->get('requires');
-        $requires[] = $this['site.directory'] . '/site-settings.php';
-        $compiler->set('requires', $requires);
-      }
-
-      $this['system']->ensureFolderExists($this['site.directory']);
-      $this['system']->writeFile($settingsFilePath, $compiler->compile());
+    // If we have a site-settings.php file for this site, add it.
+    if (is_file($this['site.directory'] . '/site-settings.php')) {
+      $requires = $compiler->get('requires');
+      $requires[] = $this['site.directory'] . '/site-settings.php';
+      $compiler->set('requires', $requires);
     }
+
+    $this['system']->ensureFolderExists($this['site.directory']);
+    $this['system']->writeFile($settingsFilePath, $compiler->compile());
   }
 
 
@@ -549,6 +546,9 @@ class Site extends Pimple implements SiteInterface {
    */
   public function setDefaults() {
 
+    // We need a copy of site to close over in our closures.
+    $site = $this;
+
     // Defaults to the local name.
     $this['name'] = function($c) {
       return $c['name.global'];
@@ -571,13 +571,25 @@ class Site extends Pimple implements SiteInterface {
       return $process;
     });
 
+    $this['user prompt'] = $this->protect(function($message) use ($site) {
+      $site['log']($message);
+      return '';
+    });
+
+    $this['user confirm'] = $this->protect(function($message) use ($site) {
+      $site['log']($message . ' (Y/N) Y');
+      return TRUE;
+    });
+
+    $this['print'] = $this->protect(function($message) {
+      print $message;
+    });
+
     // If the log.function is changed it must have the same function signature.
     $this['log.function'] = $this->protect(function($message) {
       print $message . PHP_EOL;
     });;
 
-    // We need a copy of site to close over in our closure.
-    $site = $this;
     $this['log'] = $this->protect(function() use ($site) {
       $args = func_get_args();
       return call_user_func_array($site['log.function'], $args);

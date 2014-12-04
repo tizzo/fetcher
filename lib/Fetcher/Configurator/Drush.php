@@ -14,6 +14,18 @@ class Drush implements ConfiguratorInterface {
     });
     $site['log.function'] = 'drush_log';
 
+    $site['user prompt'] = $site->protect(function($message) {
+      return \drush_prompt(\dt($message));
+    });
+
+    $site['user confirm'] = $site->protect(function($message) {
+      return \drush_confirm(\dt($message));
+    });
+
+    $site['print'] = $site->protect(function($message) {
+      \drush_print($message);
+    });
+
     // Get the environment for this operation.
     $site['environment.remote'] = function($c) {
       static $value = FALSE;

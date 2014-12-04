@@ -1,8 +1,10 @@
 <?php
 
 namespace Fetcher\System;
-use Fetcher\Exception\FetcherException;
-use Symfony\Component\Process\Process;
+use Fetcher\Exception\FetcherException,
+    Fetcher\Utility\DiffRenderer,
+    Symfony\Component\Process\Process,
+    Diff;
 
 class Posix {
 
@@ -144,18 +146,34 @@ class Posix {
    *   The content to write into the file.
    */
   public function writeFile($path, $content) {
+    $site = $this->site;
     $path_parts = explode('/', $path);
     array_pop($path_parts);
     $containing_path = implode('/', $path_parts);
     if (is_dir($containing_path)) {
       drush_log("Writing file to $path");
-      if (!$this->site['simulate']) {
+      if (is_file($path)) {
+        $currentContent = file_get_contents($path);
+        if ($currentContent !== $content) {
+          $options = array(
+            'ignoreWhitespace' => FALSE,
+            'ignoreCase' => FALSE,
+          );
+          $diff = new Diff(explode(PHP_EOL, $currentContent), explode(PHP_EOL, $content), $options);
+          $site['print']($diff->render(new DiffRenderer(array(), $site)));
+        }
+        if (!$site['user confirm']('Overwrite existing file with new content?')) {
+          $site['log']('File overwriting canceled', 'ok');
+          return;
+        }
+      }
+      if (!$site['simulate']) {
         if (file_put_contents($path, $content) === FALSE) {
           throw new FetcherException(sprintf('Writing file %s failed.', $path));
         }
       }
     }
-    else if (!$this->site['simulate']) {
+    else if (!$site['simulate']) {
       throw new FetcherException(sprintf('Writing file %s failed because containing folder %s does not exist.', $path, $containing_path));
     }
   }
@@ -179,6 +197,16 @@ class Posix {
       throw new FetcherException('The hostname could not be found.');
     }
     return trim($process->getOutput());
+  }
+
+  /**
+   * Check whether this is a TTY style interface.
+   *
+   * @param $fileDescriptor
+   *   The file descriptor to check, see posix_isatty() documentation.
+   */
+  public function isTTY($fileDescriptor = \STDOUT) {
+    return \posix_isatty($fileDescriptor);
   }
 
 }
