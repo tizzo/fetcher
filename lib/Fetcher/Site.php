@@ -188,10 +188,8 @@ class Site extends Pimple implements SiteInterface {
         $environment['fetcher'] = $copy;
       }
       $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
-      $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
     }
     $this['system']->writeFile($drushFilePath, trim($content));
-    $this['system']->writeFile($drushFilePath, $content);
   }
 
   /**
@@ -260,7 +258,7 @@ class Site extends Pimple implements SiteInterface {
     $compiler->set('requires', $this['settings_php.requires']);
 
     // If we have a site-settings.php file for this site, add it.
-    if (is_file($this['site.directory'] . '/site-settings.php')) {
+    if ($this['system']->isFile($this['site.directory'] . '/site-settings.php')) {
       $requires = $compiler->get('requires');
       $requires[] = $this['site.directory'] . '/site-settings.php';
       $compiler->set('requires', $requires);
