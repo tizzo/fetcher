@@ -23,9 +23,6 @@ class Site extends Pimple implements SiteInterface {
 
     // Pimple explodes if you use isset() and you have not yet set any value.
     $this['initialized'] = TRUE;
-    $this['log'] = $this->protect(function($message) {
-      print $message . PHP_EOL;
-    });
 
     // Populate defaults.
     $this->setDefaults();
