@@ -176,18 +176,18 @@ class Site extends Pimple implements SiteInterface {
       'root' => $this['site.webroot'],
     );
     foreach ($environments as $name =>  $environment) {
-      $environment = (array) $environment;
       $string = '';
       if (isset($environment['fetcher'])) {
         $copy = (array) $environment['fetcher'];
         array_walk_recursive($copy, function(&$value) {
           if (is_object($value) && get_class($value) == 'stdClass') {
-            return (array) $value;
+            return $value = (array) $value;
           }
           return $value;
         });
         $environment['fetcher'] = $copy;
       }
+      $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
       $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
     }
     $this['system']->writeFile($drushFilePath, trim($content));
