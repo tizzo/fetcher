@@ -548,6 +548,8 @@ class Site extends Pimple implements SiteInterface {
     // We need a copy of site to close over in our closures.
     $site = $this;
 
+    $this['name.global'] = FALSE;
+
     // Defaults to the local name.
     $this['name'] = function($c) {
       return $c['name.global'];
@@ -622,10 +624,6 @@ class Site extends Pimple implements SiteInterface {
     // Load a plugin appropriate to the database.
     $this['database'] = $this->share(function($c) {
       return new $c['database class']($c);
-    });
-
-    $this['database.driver'] = $this->share(function($c) {
-      return $c['database class']::getDriver();
     });
 
     // Map the version control system specified to the handler.

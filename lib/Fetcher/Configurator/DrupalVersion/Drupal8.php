@@ -37,7 +37,7 @@ class Drupal8 implements ConfiguratorInterface {
               'password' => $c['database.user.password'],
               'host' => $c['database.hostname'],
               'port' => $c['database.port'],
-              'driver' => $c['database']->getDriver(),
+              'driver' => $c['database.driver'],
               'prefix' => $c['database.prefix'],
               'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
             ),

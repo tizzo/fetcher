@@ -28,6 +28,7 @@ class Mysql {
     );
 
     // Setup the administrative db credentials ().
+    $site->setDefaultConfigration('database.driver', 'mysql');
     $site->setDefaultConfigration('database.admin.user.name', NULL);
     $site->setDefaultConfigration('database.admin.user.password', NULL);
     $site->setDefaultConfigration('database.admin.port', NULL);
@@ -45,13 +46,6 @@ class Mysql {
     $site->setDefaultConfigration('database.prefix', '');
     $site->setDefaultConfigration('mysql.binary', 'mysql');
     $site->addEphemeralKey('data.admin.user.password');
-  }
-
-  /**
-   * Returns the drush driver for this database.
-   */
-  static public function getDriver() {
-    return 'mysql';
   }
 
   /**
