@@ -370,7 +370,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function removeWorkingDirectory($site = NULL) {
     if (is_null($site)) {
-      $site = $this->site;
+      $site = $this;
     }
     $site['system']->ensureDeleted($site['site.working_directory']);
   }
@@ -385,7 +385,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function removeDrushAliases($site = NULL) {
     if (is_null($site)) {
-      $site = $this->site;
+      $site = $this;
     }
     $site['system']->ensureDeleted($site['drush_alias.path']);
   }
@@ -400,7 +400,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function removeDatabase($site = NULL) {
     if (is_null($site)) {
-      $site = $this->site;
+      $site = $this;
     }
     if ($site['database']->exists()) {
       $site['database']->removeDatabase();
@@ -420,7 +420,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function removeVirtualHost($site = NULL) {
     if (is_null($site)) {
-      $site = $this->site;
+      $site = $this;
     }
     $site['server']->ensureSiteRemoved();
   }
@@ -521,7 +521,7 @@ class Site extends Pimple implements SiteInterface {
    *   TRUE on success NULL if information could not be loaded.
    */
   public function fetchInfo($force_remote = FALSE) {
-    if (!isset($this['name'])) {
+    if (!$this['name']) {
       return FALSE;
     }
     // We don't go looking for an info file if `name` isn't set.
@@ -531,9 +531,10 @@ class Site extends Pimple implements SiteInterface {
     else {
       if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {
         $this->configure($conf);
-        return TRUE;
+        $return = TRUE;
       }
     }
+    return $return;
   }
 
   /**
