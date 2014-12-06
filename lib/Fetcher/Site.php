@@ -193,6 +193,7 @@ class Site extends Pimple implements SiteInterface {
       }
       $content .= "\$aliases['$name'] = " . PHPGenerator::arrayExport($environment, $string, 0) . ";" . PHP_EOL;
     }
+    $this['system']->writeFile($drushFilePath, trim($content));
     $this['system']->writeFile($drushFilePath, $content);
   }
 
@@ -284,7 +285,7 @@ class Site extends Pimple implements SiteInterface {
    * @afterTask ensure_working_directory
    */
   public function ensureCode() {
-    if (!is_dir($this['site.code_directory'])) {
+    if (!$this['system']->isDir($this['site.code_directory'])) {
       $this['code_fetcher']->setup();
     }
     else {
@@ -295,7 +296,7 @@ class Site extends Pimple implements SiteInterface {
       }
     }
     // If our webroot is in a configured subdirectory, use that for the root.
-    if (is_dir($this['site.code_directory'] . '/' . $this['webroot_subdirectory'])) {
+    if ($this['system']->isDir($this['site.code_directory'] . '/' . $this['webroot_subdirectory'])) {
       $this['site.code_directory'] = $this['site.code_directory'] . '/' . $this['webroot_subdirectory'];
     }
     else {
@@ -483,8 +484,8 @@ class Site extends Pimple implements SiteInterface {
    * Load the site_info array from the YAML file.
    */
   public function getSiteInfoFromInfoFile() {
-    if (is_file($this['site.info path'])) {
-      $yaml = file_get_contents($this['site.info path']);
+    if ($this['system']->isFile($this['site.info path'])) {
+      $yaml = $this['system']->fileGetContents($this['site.info path']);
       $info = $this->parseSiteInfo($yaml);
       return $info;
     }
@@ -528,8 +529,8 @@ class Site extends Pimple implements SiteInterface {
       return FALSE;
     }
     // We don't go looking for an info file if `name` isn't set.
-    if (!$force_remote && is_file($this['site.info path'])) {
-      return $this->configureWithSiteInfoFile();
+    if (!$force_remote && $this['system']->isFile($this['site.info path'])) {
+      $return = $this->configureWithSiteInfoFile();
     }
     else {
       if ($conf = $this['info_fetcher']->getInfo($this['name.global'])) {

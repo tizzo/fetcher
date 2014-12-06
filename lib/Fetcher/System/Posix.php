@@ -209,4 +209,25 @@ class Posix {
     return \posix_isatty($fileDescriptor);
   }
 
+  /**
+   * A wrapper around is_dir for testing.
+   */
+  public function isDir($path) {
+    return \is_dir($path);
+  }
+
+  /**
+   * A wrapper around is_file for testing.
+   */
+  public function isFile($path) {
+    return \is_file($path);
+  }
+
+  /**
+   * A wrapper around file_get_contents() for testing.
+   */
+  public function fileGetContents($path) {
+    return \file_get_contents($path);
+  }
+
 }
