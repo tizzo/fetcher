@@ -334,6 +334,18 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site['log']('test output');
     $this->assertEquals('test output' . PHP_EOL, ob_get_contents());
     ob_end_clean();
+    ob_start();
+    $site['user prompt']('Does this work?');
+    $this->assertEquals('Does this work?' . PHP_EOL, ob_get_contents());
+    ob_end_clean();
+    ob_start();
+    $site['user confirm']('Does this work?');
+    $this->assertEquals('Does this work? (Y/N) Y' . PHP_EOL, ob_get_contents());
+    ob_end_clean();
+    ob_start();
+    $site['print']('output');
+    $this->assertEquals('output', ob_get_contents());
+    ob_end_clean();
     $site['code_fetcher.vcs_mapping'] = array(
       'foo' => 'bar',
     );
