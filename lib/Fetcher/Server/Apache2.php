@@ -58,7 +58,7 @@ class Apache2 implements ServerInterface {
    *
    * TODO: This can vary based on the system.
    */
-  public function siteEnabled() {
+  public function siteIsEnabled() {
     return is_link($this->site['server.vhost_enabled_folder'] . '/' . $this->site['name']);
   }
 

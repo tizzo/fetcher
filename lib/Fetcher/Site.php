@@ -334,7 +334,7 @@ class Site extends Pimple implements SiteInterface {
    */
   public function ensureSiteEnabled() {
     $server = $this['server'];
-    if (!$server->siteEnabled()) {
+    if (!$server->siteIsEnabled()) {
       $server->ensureSiteConfigured();
       $server->ensureSiteEnabled();
       $server->restart();

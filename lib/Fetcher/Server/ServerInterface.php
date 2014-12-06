@@ -3,6 +3,12 @@
 namespace Fetcher\Server;
 
 interface ServerInterface {
+
+
+  /**
+   * Check to see if the site is enabled.
+   */
+  public function siteIsEnabled();
   /**
    * Check whether this site appears to be configured and configure it if not.
    */
@@ -24,6 +30,12 @@ interface ServerInterface {
    * Note this should be done cracefully if possible.
    */
   public function restart();
+
+
+  /**
+   * Ensure that the site is removed.
+   */
+  public function ensureSiteRemoved();
 
 }
 
