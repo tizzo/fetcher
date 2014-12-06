@@ -266,7 +266,6 @@ class Site extends Pimple implements SiteInterface {
       $compiler->set('requires', $requires);
     }
 
-    $this['system']->ensureFolderExists($this['site.directory']);
     $this['system']->writeFile($settingsFilePath, $compiler->compile());
   }
 
