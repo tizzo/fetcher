@@ -27,10 +27,10 @@ class Drupal6 implements ConfiguratorInterface {
       'url_rewriter.tags' => '',
     );
 
-    $variables = $site['settings_php.variables'];
-    $site['settings_php.variables'] = function($c) use ($variables) {
+    $originalVariables = $site->raw('settings_php.variables');
+    $site['settings_php.variables'] = function($c) use ($originalVariables) {
       $db_url = 'mysqli://' . $c['database.user.name'] . ':' . $c['database.user.password'] . '@' . $c['database.hostname'] . '/' . $c['database.database'];
-      return $variables + array('db_url' => $db_url);
+      return $originalVariables($c) + array('db_url' => $db_url);
     };
   }
 }

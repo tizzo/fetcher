@@ -26,9 +26,9 @@ class Drupal8 implements ConfiguratorInterface {
       'url_rewriter.tags' => '',
     );
 
-    $variables = $site['settings_php.variables'];
-    $site['settings_php.variables'] = function($c) use ($variables) {
-      return $variables + array(
+    $originalVariables = $site->raw('settings_php.variables');
+    $site['settings_php.variables'] = function($c) use ($originalVariables) {
+      return $originalVariables($c) + array(
         'databases' => array(
           'default' => array(
             'default' => array(

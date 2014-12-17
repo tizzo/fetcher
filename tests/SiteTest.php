@@ -235,7 +235,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site = $this->getMockSite();
     $site->ensureSiteFolder();
     $system = $site['system'];
-    Phake::verify($site['system'])->ensureFolderExists('/var/www/Test/code/sites/default', null, 'apache');
+    Phake::verify($site['system'])->ensureFolderExists('/var/www/test/code/sites/default', null, 'apache');
   }
 
   /**
@@ -245,13 +245,13 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site = $this->getMockSite();
     $system = $site['system'];
     $site->ensureWorkingDirectory();
-    Phake::verify($system)->ensureFolderExists('/var/www/Test');
-    Phake::verify($system)->ensureFolderExists('/var/www/Test/logs');
-    Phake::verify($system)->ensureFolderExists('/var/www/Test/public_files', NULL, 'apache');
-    Phake::verify($system)->ensureFolderExists('/var/www/Test/private_files', NULL, 'apache');
-    Phake::verify($system)->ensureFileExists('/var/www/Test/logs/access.log');
-    Phake::verify($system)->ensureFileExists('/var/www/Test/logs/mail.log');
-    Phake::verify($system)->ensureFileExists('/var/www/Test/logs/watchdog.log');
+    Phake::verify($system)->ensureFolderExists('/var/www/test');
+    Phake::verify($system)->ensureFolderExists('/var/www/test/logs');
+    Phake::verify($system)->ensureFolderExists('/var/www/test/public_files', NULL, 'apache');
+    Phake::verify($system)->ensureFolderExists('/var/www/test/private_files', NULL, 'apache');
+    Phake::verify($system)->ensureFileExists('/var/www/test/logs/access.log');
+    Phake::verify($system)->ensureFileExists('/var/www/test/logs/mail.log');
+    Phake::verify($system)->ensureFileExists('/var/www/test/logs/watchdog.log');
   }
 
   /**
@@ -264,7 +264,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
       ->isFile($site['site.directory'] . '/site-settings.php')
       ->thenReturn(TRUE);
     $site->ensureSettingsFileExists();
-    $siteFolder = '/var/www/Test/code/sites/default';
+    $siteFolder = '/var/www/test/code/sites/default';
     Phake::verify($site['system'])->ensureFolderExists($siteFolder);
     Phake::verify($site['system'])->writeFile($siteFolder . '/settings.php', $this->getSampleData('example_settings.php'));
   }
@@ -280,7 +280,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->ensureCode();
     Phake::verify($site['code_fetcher'])->setup();
     $message = 'Properly detect a named subdirectory that holds index.php';
-    $this->assertEquals('/var/www/Test/code/webroot', $site['site.code_directory'], $message);
+    $this->assertEquals('/var/www/test/code/webroot', $site['site.code_directory'], $message);
     $site = $this->getMockSite();
     Phake::when($site['system'])
       ->isDir($site['site.code_directory'])
@@ -291,7 +291,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->ensureCode();
     Phake::verify($site['code_fetcher'])->update();
     $message = 'Detect a properly named subdirectory that holds index.php.';
-    $this->assertEquals('/var/www/Test/code', $site['site.code_directory'], $message);
+    $this->assertEquals('/var/www/test/code', $site['site.code_directory'], $message);
   }
 
   /**
@@ -318,7 +318,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
       ->isFile($site['site.code_directory'])
       ->thenReturn(TRUE);
     Phake::when($site['info_fetcher'])
-      ->getInfo('Test')
+      ->getInfo('test')
       ->thenReturn(array('foo' => 'bar'));
     $site->fetchInfo();
     $this->assertEquals('bar', $site['foo']);
@@ -409,7 +409,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     // Ensure $site will initialize environments.
     unset($site['environments']);
     $site->ensureDrushAlias();
-    Phake::verify($site['system'])->writeFile('/.drush/Test.aliases.drushrc.php', $this->getSampleData('simple_alias.php'));
+    Phake::verify($site['system'])->writeFile('/.drush/test.aliases.drushrc.php', $this->getSampleData('simple_alias.php'));
     $site = $this->getMockSite();
     $item = new stdClass();
     $item->objectValue = 'bar';
@@ -428,7 +428,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
       )
     );
     $site->ensureDrushAlias();
-    Phake::verify($site['system'])->writeFile('/.drush/Test.aliases.drushrc.php', $this->getSampleData('complex_alias.php'));
+    Phake::verify($site['system'])->writeFile('/.drush/test.aliases.drushrc.php', $this->getSampleData('complex_alias.php'));
   }
 
 
@@ -476,11 +476,11 @@ class SiteTest extends PHPUnit_Framework_TestCase {
   public function testRemoveWorkingDirectory() {
     $site = $this->getMockSite();
     $site->removeWorkingDirectory();
-    Phake::verify($site['system'])->ensureDeleted('/var/www/Test');
+    Phake::verify($site['system'])->ensureDeleted('/var/www/test');
     $site1 = $this->getMockSite();
     $site2 = $this->getMockSite();
     $site2->removeWorkingDirectory($site1);
-    Phake::verify($site1['system'])->ensureDeleted('/var/www/Test');
+    Phake::verify($site1['system'])->ensureDeleted('/var/www/test');
   }
 
   /**
@@ -489,11 +489,11 @@ class SiteTest extends PHPUnit_Framework_TestCase {
   public function testRemoveDrushAliases() {
     $site = $this->getMockSite();
     $site->removeDrushAliases();
-    Phake::verify($site['system'])->ensureDeleted('/.drush/Test.aliases.drushrc.php');
+    Phake::verify($site['system'])->ensureDeleted('/.drush/test.aliases.drushrc.php');
     $site1 = $this->getMockSite();
     $site2 = $this->getMockSite();
     $site2->removeDrushAliases($site1);
-    Phake::verify($site1['system'])->ensureDeleted('/.drush/Test.aliases.drushrc.php');
+    Phake::verify($site1['system'])->ensureDeleted('/.drush/test.aliases.drushrc.php');
   }
 
   /**
@@ -532,7 +532,10 @@ class SiteTest extends PHPUnit_Framework_TestCase {
    */
   public function getMockSite() {
     $site = new Site();
-    $site['name.global'] = 'Test';
+    $site['name'] = 'test';
+    $site['name.global'] = 'test';
+    $site['hostname'] = 'test.local';
+    $site['system hostname'] = 'local';
     $site['server.webroot'] = '/var/www';
     $site['server.user'] = 'apache';
     $site['database.admin.user.name'] = NULL;
@@ -542,7 +545,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site['database.driver'] = 'mysql';
     $site['database.hostname'] = 'localhost';
     $site['database.user.password'] = 'foo';
-    $site['database.user.name'] = 'Test';
+    $site['database.user.name'] = 'test';
     $site['database.port'] = '';
     $site['database.prefix'] = '';
     $site['mysql.binary'] = 'mysql';
@@ -556,8 +559,12 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     Phake::when($site['system'])
       ->getHostname()
       ->thenReturn('local');
+    Phake::when($site['system'])
+      ->getHostname()
+      ->thenReturn('local');
+    Phake::when($site['system'])
+      ->getHostname()
+      ->thenReturn('local');
     return $site;
   }
 }
-
-class TestClass {}

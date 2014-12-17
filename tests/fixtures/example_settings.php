@@ -13,14 +13,15 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 ini_set('url_rewriter.tags', '');
 
+$base_url = 'test.local';
 $conf = array(
   'fetcher_environment' => 'local',
 );
 $databases = array(
   'default' => array(
     'default' => array(
-      'database' => 'Test',
-      'username' => 'Test',
+      'database' => 'test',
+      'username' => 'test',
       'password' => 'foo',
       'host' => 'localhost',
       'port' => '',
@@ -30,4 +31,4 @@ $databases = array(
   ),
 );
 
-require_once('/var/www/Test/code/sites/default/site-settings.php');
+require_once('/var/www/test/code/sites/default/site-settings.php');

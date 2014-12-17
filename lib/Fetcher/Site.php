@@ -696,6 +696,7 @@ class Site extends Pimple implements SiteInterface {
     $this['settings_php.ini_set'] = array();
     $this['settings_php.variables'] = function($c) {
       return array(
+        'base_url' => $c['hostname'],
         'conf' => array(
           'fetcher_environment' => $c['environment.local'],
         ),
