@@ -19,9 +19,6 @@ class CentOS implements ConfiguratorInterface {
     };
     // TODO: Make this lie less
     $site['server.enable_site_command'] = 'echo "not functional on centos"';
-    $site['server.host_conf_path'] = function($c) {
-      return $c['server.vhost_available_folder'] . '/' . $c['name'] . '.conf';
-    };
 
   }
 }
