@@ -14,10 +14,10 @@ class Apache2 implements ServerInterface {
     $site->setDefaultConfigration('server.vhost_available_folder', '/etc/apache2/sites-available');
     $site->setDefaultConfigration('server.restart_command', 'sudo service apache2 reload');
     $site->setDefaultConfigration('server.enable_site_command', function($c) {
-      return 'a2ensite ' . $c['name'];
+      return 'a2ensite ' . $c['name'] . '.conf';
     });
     $site->setDefaultConfigration('server.disable_site_command', function($c) {
-      return 'a2dissite ' . $c['name'];
+      return 'a2dissite ' . $c['name'] . '.conf';
     });
     $site->setDefaultConfigration('server.host_conf_path', function($c) {
       return $c['server.vhost_available_folder'] . '/' . $c['name'] . '.conf';
