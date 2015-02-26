@@ -255,6 +255,7 @@ class Site extends Pimple implements SiteInterface {
     $compiler = new SettingsPHPGenerator();
     $compiler->set('iniSettings', $this['settings_php.ini_set']);
     $compiler->set('variables', $this['settings_php.variables']);
+    $compiler->set('snippets', $this['settings_php.snippets']);
     $compiler->set('requires', $this['settings_php.requires']);
 
     // If we have a site-settings.php file for this site, add it.
@@ -694,6 +695,12 @@ class Site extends Pimple implements SiteInterface {
     };
 
     $this['settings_php.ini_set'] = array();
+    $this['settings_php.snippets'] = function($c) {
+      return array(
+        '$protocol = ($_SERVER[\'https\'] === \'on\') ? \'https://\' : \'http://\';',
+        '$base_url = $protocol . \'' . $c['hostname'] . '\';',
+      );
+    };
     $this['settings_php.variables'] = function($c) {
       return array(
         'base_url' => $c['hostname'],
@@ -703,9 +710,7 @@ class Site extends Pimple implements SiteInterface {
       );
     };
     $this['settings_php.requires'] = array();
-    
-    // TODO: This is not the best way to do this:
-    // TODO: Add optional webroot from siteInfo.
+
     $this['site.working_directory'] = function($c) {
       // Ensure the server class has been instantiated.
       $c['server'];

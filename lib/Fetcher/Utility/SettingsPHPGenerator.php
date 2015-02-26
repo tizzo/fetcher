@@ -10,6 +10,9 @@ namespace Fetcher\Utility;
 
 class SettingsPHPGenerator {
 
+  // A linar array of raw PHP snippets to include in the output.
+  private $snippets = array();
+
   // An associative array of setting => value.
   private $iniSettings = array();
 
@@ -65,6 +68,13 @@ class SettingsPHPGenerator {
       }
     }
 
+    if (!empty($this->snippets)) {
+      $output[] = '';
+      foreach ($this->snippets as $snippet) {
+        $output[] = $snippet;
+      }
+    }
+
     if (!empty($this->variables)) {
       $output[] = '';
       foreach ($this->variables as $name => $value) {
@@ -116,6 +126,6 @@ class SettingsPHPGenerator {
    *   A bucket name for which to test validity.
    */
   private function bucketNameIsValid($name) {
-    return in_array($name, array('iniSettings', 'requires', 'variables'));
+    return in_array($name, array('iniSettings', 'snippets', 'requires', 'variables'));
   }
 }
