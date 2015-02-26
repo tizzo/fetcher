@@ -171,7 +171,7 @@ class Site extends Pimple implements SiteInterface {
     else {
       $environments = array();
     }
-    $environments['local'] = array(
+    $environments[$this['environment.local']] = array(
       'uri' => $this['hostname'],
       'root' => $this['site.webroot'],
     );
