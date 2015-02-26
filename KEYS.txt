@@ -41,10 +41,11 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'server' - The server handler object for interfacing with the application server that runs Drupal (likely Apache or nginx).
   - 'server.webroot' - The folder that should contain the working directory of any fetcher working directories on an app server.
   - 'server class' - The handler class for server operations.
-  - 'server.user' - The user that the webserver runs as (e.g. `apache2` runs as `www-data` on Ubuntu).
-  - 'server.restart_command' - The command to run to reload configuration (e.g. `service apache2 restart`).
   - 'server.disable_site_command' - The command to run to disable a site on the server (e.g. `a2dissite sitename` on ubutnu.
-  - 'server.restart_command' - The command to run to enable a site on the server (e.g. `a2ensite sitename` on ubutnu.
+  - 'server.enable_site_command' - The command to run to enable a site on the server (e.g. `a2ensite sitename` on ubutnu.
+  - 'server.port' - The port to listen on for this virtualhost.
+  - 'server.restart_command' - The command to run to reload configuration (e.g. `service apache2 restart`).
+  - 'server.user' - The user that the webserver runs as (e.g. `apache2` runs as `www-data` on Ubuntu).
   - 'settings_file.path' - The path to the site's settings.php file.
   - 'settings_php.ini_set' - An associative arrays of ini_set() values keyed by setting name to be included in settings.php.
   - 'settings_php.variables' - An associative array of variables to create keyed by setting name to be included in settings.php (may contain arrays).
