@@ -64,4 +64,4 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'title' - The human readible title of the site.
   - 'verbose' - Whether to perform verbose logging.  Generally triggered by drush's global verbose option.
   - 'version' - The version of Drupal this site is on specified as an integer.
-  - 'webroot_subdirectory' - If there is a path within the code directory (usually for version control) that contains the actual webroot, this setting specifies that path.
+  - 'webroot_subdirectory' - If there is a path within the code directory (usually for version control) that contains the actual webroot, this setting specifies that path.  Defaults to `docroot`.
