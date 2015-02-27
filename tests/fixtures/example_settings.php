@@ -13,10 +13,9 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 ini_set('url_rewriter.tags', '');
 
-$protocol = ($_SERVER['https'] === 'on') ? 'https://' : 'http://';
+$protocol = ($_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
 $base_url = $protocol . 'test.local';
 
-$base_url = 'test.local';
 $conf = array(
   'fetcher_environment' => 'local',
 );
@@ -34,4 +33,4 @@ $databases = array(
   ),
 );
 
-require_once('/var/www/test/code/sites/default/site-settings.php');
+require_once('sites/default/site-settings.php');
