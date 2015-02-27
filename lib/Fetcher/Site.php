@@ -696,13 +696,12 @@ class Site extends Pimple implements SiteInterface {
     $this['settings_php.ini_set'] = array();
     $this['settings_php.snippets'] = function($c) {
       return array(
-        '$protocol = ($_SERVER[\'https\'] === \'on\') ? \'https://\' : \'http://\';',
+        '$protocol = ($_SERVER[\'HTTPS\'] === \'on\') ? \'https://\' : \'http://\';',
         '$base_url = $protocol . \'' . $c['hostname'] . '\';',
       );
     };
     $this['settings_php.variables'] = function($c) {
       return array(
-        'base_url' => $c['hostname'],
         'conf' => array(
           'fetcher_environment' => $c['environment.local'],
         ),
