@@ -280,7 +280,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->ensureCode();
     Phake::verify($site['code_fetcher'])->setup();
     $message = 'Properly detect a named subdirectory that holds index.php';
-    $this->assertEquals('/var/www/test/code/webroot', $site['site.code_directory'], $message);
+    $this->assertEquals('/var/www/test/code/docroot', $site['site.code_directory'], $message);
     $site = $this->getMockSite();
     Phake::when($site['system'])
       ->isDir($site['site.code_directory'])
