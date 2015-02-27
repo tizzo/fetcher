@@ -510,8 +510,7 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
-   * TODO: fetchInfo() should be a method on the site object that can load
-   * from a file or load from site_info.yaml.
+   * Load site info from a file or load from site_info.yaml.
    *
    * @param $force_remote
    *   Whether to ignore the potential location of a site_info.yaml file and
