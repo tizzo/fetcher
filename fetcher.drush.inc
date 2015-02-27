@@ -225,6 +225,10 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
     $site['name.global'] = $name;
   }
 
+  if (isset($conf['site.info path'])) {
+    $site->configureWithSiteInfoFile();
+  }
+
   // Use configured defaults from drushrc files.
   $site->configure(drush_fetcher_extract_keys_from_context());
 
