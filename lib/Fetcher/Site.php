@@ -261,7 +261,7 @@ class Site extends Pimple implements SiteInterface {
     // If we have a site-settings.php file for this site, add it.
     if ($this['system']->isFile($this['site.directory'] . '/site-settings.php')) {
       $requires = $compiler->get('requires');
-      $requires[] = $this['site.directory'] . '/site-settings.php';
+      $requires[] = 'sites/' . $this['site'] . '/site-settings.php';
       $compiler->set('requires', $requires);
     }
 
