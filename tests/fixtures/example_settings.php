@@ -16,7 +16,6 @@ ini_set('url_rewriter.tags', '');
 $protocol = ($_SERVER['https'] === 'on') ? 'https://' : 'http://';
 $base_url = $protocol . 'test.local';
 
-$base_url = 'test.local';
 $conf = array(
   'fetcher_environment' => 'local',
 );
