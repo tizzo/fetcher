@@ -34,4 +34,4 @@ $databases = array(
   ),
 );
 
-require_once('/var/www/test/code/sites/default/site-settings.php');
+require_once('sites/default/site-settings.php');
