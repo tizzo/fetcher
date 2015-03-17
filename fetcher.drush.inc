@@ -139,11 +139,11 @@ function drush_fetcher_list($name = '', $page = 0) {
     $result = drush_fetcher_get_info_fetcher()->listSites($name, $page);
     if (!empty($result)) {
       $rows[] = array(
-        'Title',
         'Name',
+        'Title',
       );
       foreach($result as $name => $info) {
-        $rows[] = array($info['title'], $name);
+        $rows[] = array($name, $info['title']);
       }
       drush_print_table($rows, TRUE);
     }
