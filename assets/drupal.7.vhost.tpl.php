@@ -6,6 +6,12 @@
     Order allow,deny
   </FilesMatch>
 
+  # Not a part of Drupal's stock .htaccess but added as a measure of security.
+  <FilesMatch "(^LICENSE|CHANGELOG|MAINTAINERS|INSTALL|UPGRADE|API|README).*\.txt$">
+    Order deny,allow
+    Deny from all
+  </FilesMatch>
+
   # Don't show directory listings for URLs which map to a directory.
   Options -Indexes
 
