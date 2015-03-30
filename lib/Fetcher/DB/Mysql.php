@@ -72,6 +72,8 @@ class Mysql {
     if (!$result) {
       throw new \Fetcher\Exception\FetcherException(sprintf('The database %s could not be created.', $database));
     }
+    $this->site->addEphemeralKey('database.newly_created');
+    $this->site['database.newly_created'] = TRUE;
   }
 
   /**

@@ -16,6 +16,7 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'database class' - The class used when the database handler is instantiated in the 'database' key.
   - 'database.database' - The database (if applicable) that this site is installed in. Defaults to the value of 'name'.
   - 'database.hostname' - The hostname of the database on which Drupal is or will be installed.
+  - 'database.newly_created' - If set and TRUE this specifies that this database was created during the execution of this process.
   - 'database.port' - The port of the database on which Drupal is or will be installed.
   - 'database_synchronizer' - The handler used to syncronize our database.
   - 'database_synchronizer.class' - The class used to when the 'database synchronizer' is instantiated.

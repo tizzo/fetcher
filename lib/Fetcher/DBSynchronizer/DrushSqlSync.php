@@ -46,7 +46,9 @@ class DrushSqlSync implements DBSynchronizerInterface {
     }
 
     // Drop the database before import.
-    $this->dropTables($site);
+    if (isset($this->site['database.newly_created']) && !$this->site['database.newly_created']) {
+      $this->dropTables($site);
+    }
 
     // Don't hard code this and rework all of it to work properly with aliases.
     $commandline_options = array(
