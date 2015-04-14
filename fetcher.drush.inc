@@ -45,6 +45,9 @@ function fetcher_drush_command() {
       'search' => 'Any part of the name of a site to search for.',
       'page' => 'The page of listings starting from zero.  Necessary only if there are too many results to display on a page of 100.',
     ),
+    'options' => array(
+      'json-config' => 'Abitrary JSON that will be merged into the configuration of the site object.',
+    ),
   );
 
   $items['fetcher-info'] = array(
@@ -415,8 +418,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
  *   An instantiated object implmeenting \Fetcher\InfoFetcherInterface().
  */
 function drush_fetcher_get_info_fetcher() {
-  $config = drush_fetcher_extract_keys_from_context();
-  $site = new \Fetcher\Site($config);
+  $site = fetcher_get_site(null);
   return $site['info_fetcher'];
 }
 
@@ -524,13 +526,9 @@ function fetcher_get_json_configuration() {
   // allow for overrides of items that aren't exposed as native options.
   $json_config = drush_get_option('json-config', FALSE);
   if ($json_config) {
-    if ($config = json_decode($json_config)) {
-      foreach($config as $key => $value) {
-        $output[$key] = $value;
-      }
-    }
-    else {
-      drush_log('Invalid JSON received for json-config parameter.', 'error');
+    if (!($output = json_decode($json_config, TRUE))) {
+      drush_error('Invalid JSON received for json-config parameter.');
+      return array();
     }
   }
   return $output;
