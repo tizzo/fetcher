@@ -87,7 +87,7 @@ class Apache2 implements ServerInterface {
    * TODO: Vhost deletion can vary based on the system.
    */
   public function ensureSiteRemoved() {
-    if ($this->siteEnabled()) {
+    if ($this->siteIsEnabled()) {
       $this->ensureSiteDisabled();
       $this->restart();
     }

@@ -440,7 +440,7 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->ensureSiteEnabled();
     $server = $site['server'];
     Phake::when($server)
-      ->siteEnabled()
+      ->siteIsEnabled()
       ->thenReturn(TRUE);
     Phake::verify($server)->siteIsEnabled();
     $site = $this->getMockSite();
