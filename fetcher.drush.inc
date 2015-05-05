@@ -23,7 +23,7 @@ function fetcher_drush_command() {
   $environment_options = array(
     'database-user-name' => 'The user name of the database user the site should use, defaults to site name.',
     'database-user-password' => 'The password of the database user the site should use.',
-    'database' => 'The name of the databse the site sould use, defaults to site name.',
+    'database' => 'The name of the database the site sould use, defaults to site name.',
     'database-port' => 'The port the database runs on.',
     'database-hostname' => 'The hostname of the server the database runs on.',
     'database-admin-user-name' => 'The database username to use for administration commands.',

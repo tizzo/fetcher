@@ -85,7 +85,7 @@ class Site extends Pimple implements SiteInterface {
    * Ensure the database exists, the user exists, and the user can connect.
    *
    * @fetcherTask ensure_database_connection
-   * @description Ensure the drupal database and database user exist creating the requisite databse, user, and grants if necessary.
+   * @description Ensure the drupal database and database user exist creating the requisite database, user, and grants if necessary.
    * @afterMessage The database exists and the site user has successfully connected to it.
    * @stack ensure_site
    * @afterTask ensure_drush_alias
