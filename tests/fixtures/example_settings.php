@@ -13,7 +13,7 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid', 0);
 ini_set('url_rewriter.tags', '');
 
-$protocol = ($_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
 $base_url = $protocol . 'test.local';
 
 $conf = array(
