@@ -290,8 +290,8 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
 
   try {
     // Add the `install_site` task.
-    $site->addTask($site->getTask('install_site'));
     drush_fetcher_ensure_site($site);
+    $site->runTask('install_site');
   }
   catch (Exception $e) {
     drush_log($e->getMessage(), 'error');
