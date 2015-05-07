@@ -43,7 +43,7 @@ class Drupal8 implements ConfiguratorInterface {
             ),
           ),
         ),
-        'install_profile' => $c['profile'],
+        'settings' => array('container_yamls' => array(__DIR__ . '/services.yml')),
       );
     };
   }
