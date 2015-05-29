@@ -241,7 +241,10 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
 
   // Next we fetch information specific to the site, that includes calls
   // to the infoFetcher if no site_info.yaml was already found.
-  $site->fetchInfo();
+  // This only make sense if we have a name to call with.
+  if ($name) {
+    $site->fetchInfo();
+  }
 
   // Now we re-apply configuration keys form the context because anything
   // specified at the command line should override what was cached in the
@@ -418,7 +421,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
  *   An instantiated object implmeenting \Fetcher\InfoFetcherInterface().
  */
 function drush_fetcher_get_info_fetcher() {
-  $site = fetcher_get_site(null);
+  $site = fetcher_get_site();
   return $site['info_fetcher'];
 }
 
@@ -518,16 +521,13 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
  * Get a configuration array from a JSON parameter if specified.
  */
 function fetcher_get_json_configuration() {
-  static $output = array();
-  if (!empty($output)) {
-    return $output;
-  }
   // We allow arbitrary injection of JSON overrides from the command line to
   // allow for overrides of items that aren't exposed as native options.
   $json_config = drush_get_option('json-config', FALSE);
   if ($json_config) {
-    if (!($output = json_decode($json_config, TRUE))) {
-      drush_error('Invalid JSON received for json-config parameter.');
+    $output = json_decode($json_config, TRUE);
+    if (!$output) {
+      drush_set_error('Invalid JSON received for json-config parameter.');
       return array();
     }
   }
