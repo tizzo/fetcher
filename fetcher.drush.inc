@@ -640,13 +640,14 @@ function fetcher_fetcher_option_key_mapping() {
  *
  * This will return only sites that appear on a server with a given hostname
  * and of for those sites only environments that are on that host.
- *
- * @param $server_hostname
- *   The hostname of the sites to filter for, must be an exact match.
  */
 function drush_fetcher_get_sites_for_host() {
-  // TODO: How do we tell fetcher to do the filtering?
-  $site_info_list = drush_fetcher_get_info_fetcher()->listSites();
+
+  if (!$site_info_list = drush_cache_get('fetcher_site_info_list_for_host')->data) {
+    // TODO: How do we tell fetcher to do the filtering?
+    $site_info_list = drush_fetcher_get_info_fetcher()->listSites();
+    drush_cache_set('fetcher_site_info_list_for_host', $site_info_list);
+  }
 
   $sites = array();
   if (!empty($site_info_list)) {
