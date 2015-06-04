@@ -454,8 +454,15 @@ function drush_fetcher_delete($site_name) {
   }
 }
 
+/**
+ * Command callback to run a command on all sites on this host.
+ */
 function drush_fetcher_run_command($command) {
+
+  $process_exit_code = 0;
+
   $sites = drush_fetcher_get_sites_for_host();
+
   $failures = array();
   foreach ($sites as $site) {
     drush_log("Now executing: `drush {$command} --root={$site['site.webroot']} --uri={$site['hostname']}`", 'info');
@@ -470,11 +477,33 @@ function drush_fetcher_run_command($command) {
       '@uri' => $site['hostname'],
       '@command' => $command,
     );
-    drush_log(dt('Processing `@command` on @name in environment @environment at path `@webroot` with uri `@uri`.', $keys), 'ok');
-    $output = drush_invoke_process($site['site.webroot'] . '#' . $site['hostname'], $command, array(), $command_options);
-    if ($output['error_status']) {
+    drush_log(dt('Processing `@command` on @name in environment `@environment` at path `@webroot` with uri `@uri`.', $keys), 'ok');
+    $process_command = 'drush ' . $site['site.webroot'] . '#' . $site['hostname'] . ' ' . $command . ' ' . implode(' ', $command_options);
+
+    // We use Process() rather than drush_invoke_process() because it won't let us capture exit codes
+    // other than 1 and 0.
+    $process = new \Symfony\Component\Process\Process($process_command);
+
+    $std_err = fopen('php://stderr', 'w');
+    $std_out = fopen('php://stdout', 'w');
+
+    $process->run(function ($type, $buffer) use ($std_err, $std_out) {
+      if ($type === 'err') {
+        fputs($std_err, ' > ' . $buffer);
+      }
+      else {
+        fputs($std_out, ' > ' . $buffer);
+      }
+    });
+
+    if (!$process->isSuccessful()) {
+      $process_exit_code = $process->getExitCode();
+      $exit_code = ($process_exit_code > $exit_code) ? $process_exit_code : $exit_code;
       $failures[] = $site['name'] . '.' . $site['environment.local'];
       drush_log(dt('Failure processing @command on @name.@environment at @webroot#@uri.', $keys), 'error');
+    }
+    else {
+      drush_log(dt('Successfully processed @command on @name.@environment at @webroot#@uri.', $keys), 'ok');
     }
   }
   if (!empty($failures)) {
@@ -483,8 +512,8 @@ function drush_fetcher_run_command($command) {
       '@sites' => implode($failures, ', ')
     );
     $message = dt('Error running @command for sites: @sites', $params);
-    drush_log('error', $message);
-    drush_set_error('CRON_FAILURE', $message);
+    drush_set_error('fetcher-command-error', $message);
+    drush_set_context('DRUSH_EXIT_CODE', $exit_code);
   }
 }
 
