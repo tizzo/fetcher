@@ -53,14 +53,16 @@ class Site extends Pimple implements SiteInterface {
    *   as a set of defaults or whether it should override exising cofniguration.
    */
   public function configure(Array $conf, $overrideExisting = TRUE) {
-    foreach ($conf as $key => $value) {
-      if (!isset($this[$key]) || $overrideExisting) {
-        if (is_string($value)) {
-          // Conf files often end up with trailing whitespace, trim it.
-          $this[$key] = trim($value);
-        }
-        else {
-          $this[$key] = $value;
+    if (count($conf)) {
+      foreach ($conf as $key => $value) {
+        if (!isset($this[$key]) || $overrideExisting) {
+          if (is_string($value)) {
+            // Conf files often end up with trailing whitespace, trim it.
+            $this[$key] = trim($value);
+          }
+          else {
+            $this[$key] = $value;
+          }
         }
       }
     }

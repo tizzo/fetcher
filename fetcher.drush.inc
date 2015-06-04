@@ -107,6 +107,15 @@ function fetcher_drush_command() {
     ),
   );
 
+  $environment_items['fetcher-run-command'] = array(
+    'description' => 'Run a drush command on all sites on this host known to fetcher.',
+    'arguments' => array(
+      'command' => 'The drush command to run on all sites on this host.',
+    ),
+    'options' => array(
+    ),
+  );
+
   $environment_items['fetcher-task'] = array(
     'description' => 'Perform a specific Fetcher task.',
     'aliases' => array('fet'),
@@ -418,7 +427,7 @@ function drush_fetcher_ensure_site(Fetcher\SiteInterface $site) {
  * Get the conifugred siteInfoFetcher().
  *
  * @return
- *   An instantiated object implmeenting \Fetcher\InfoFetcherInterface().
+ *   An instantiated object implementing \Fetcher\InfoFetcherInterface().
  */
 function drush_fetcher_get_info_fetcher() {
   $site = fetcher_get_site();
@@ -442,6 +451,40 @@ function drush_fetcher_delete($site_name) {
   catch (Exception $e) {
     drush_fetcher_log_exception_information($e);
     drush_log($e->getMessage(), 'error');
+  }
+}
+
+function drush_fetcher_run_command($command) {
+  $sites = drush_fetcher_get_sites_for_host();
+  $failures = array();
+  foreach ($sites as $site) {
+    drush_log("Now executing: `drush {$command} --root={$site['site.webroot']} --uri={$site['hostname']}`", 'info');
+    $command_options = array(
+      "--root={$site['site.webroot']}",
+      "--uri={$site['hostname']}",
+    );
+    $keys = array(
+      '@name' => $site['name'],
+      '@environment' => $site['environment.local'],
+      '@webroot' => $site['site.webroot'],
+      '@uri' => $site['hostname'],
+      '@command' => $command,
+    );
+    drush_log(dt('Processing `@command` on @name in environment @environment at path `@webroot` with uri `@uri`.', $keys), 'ok');
+    $output = drush_invoke_process($site['site.webroot'] . '#' . $site['hostname'], $command, array(), $command_options);
+    if ($output['error_status']) {
+      $failures[] = $site['name'] . '.' . $site['environment.local'];
+      drush_log(dt('Failure processing @command on @name.@environment at @webroot#@uri.', $keys), 'error');
+    }
+  }
+  if (!empty($failures)) {
+    $params = array(
+      '@command' => $command,
+      '@sites' => implode($failures, ', ')
+    );
+    $message = dt('Error running @command for sites: @sites', $params);
+    drush_log('error', $message);
+    drush_set_error('CRON_FAILURE', $message);
   }
 }
 
@@ -521,6 +564,7 @@ function drush_fetcher_extract_configuration_keys_from_drush_context(\Fetcher\Si
  * Get a configuration array from a JSON parameter if specified.
  */
 function fetcher_get_json_configuration() {
+  $output = array();
   // We allow arbitrary injection of JSON overrides from the command line to
   // allow for overrides of items that aren't exposed as native options.
   $json_config = drush_get_option('json-config', FALSE);
@@ -571,45 +615,25 @@ function fetcher_fetcher_option_key_mapping() {
  * @param $server_hostname
  *   The hostname of the sites to filter for, must be an exact match.
  */
-function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
-  /*
-  // Needs a refactor...
-  $site = fetcher_get_site();
-  if (is_null($server_hostname)) {
-    $server_hostname = $site['system']->getHostname();
-  }
-  $options = array(
-    'detail' => 'true',
-    'server-hostname' => $server_hostname,
-  );
-  $site_info_list = drush_fetcher_get_info_fetcher()
-    ->listSites('', 0, $options);
-  $arrayify = function ($object) use (&$arrayify) {
-    if (is_object($object)) {
-      foreach ($object as &$item) {
-        if (is_object($item)) {
-          $item = $arrayify($item);
-        }
-      }
-    }
-    return (array) $object;
-  };
+function drush_fetcher_get_sites_for_host() {
+  // TODO: How do we tell fetcher to do the filtering?
+  $site_info_list = drush_fetcher_get_info_fetcher()->listSites();
+
   $sites = array();
   if (!empty($site_info_list)) {
     foreach ($site_info_list as $site_info) {
-      $site_info = $arrayify($site_info);
       foreach ($site_info['environments'] as $name => $environment) {
-        $local_site_info = array_merge($site_info, $environment);
-        // We do this twice because otherwise we will be prompted below.
-        $local_site_info['environment.local'] = $name;
-        $local_site_info['environment.remote'] = $name;
+        $info = array_merge($site_info, $environment);
 
         // For some reason the local site info data is being overwritten
         // getting the site and causing errors if there is more than one
         // environment, so we are 'cloning' the array before passing it.
-        $get_site_info = unserialize(serialize($local_site_info));
+        $info = unserialize(serialize($info));
 
-        $site = drush_fetcher_get_site($get_site_info);
+        // This is a hack but our environment handling isn't right...
+        $info['environments'] = array();
+
+        $site = fetcher_get_site($site_info['name'], $info);
         $site['environment.local'] = $name;
         $site['environment.remote'] = $name;
         $site['site.webroot'] = $environment['root'];
@@ -618,7 +642,6 @@ function drush_fetcher_get_sites_for_host($server_hostname = NULL) {
     }
   }
   return $sites;
-  */
 }
 
 /**

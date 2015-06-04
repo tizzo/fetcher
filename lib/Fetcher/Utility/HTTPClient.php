@@ -84,7 +84,7 @@ class HTTPClient {
 
     // Register our json decoding.
     $jsonDecode = function($jsonString) {
-      $response = json_decode($jsonString);
+      $response = json_decode($jsonString, TRUE);
       if ($response === null) {
         $response = FALSE;
       }
