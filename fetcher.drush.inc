@@ -265,10 +265,6 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
     $site->addTask($task);
   }
 
-  // Configure from the remote environment (if remote environment is not set,
-  // and there are no environments this should take no action).
-  $site->configureFromEnvironment();
-
   // Ensure JSON parameters are not overridden (except by the calling function).
   $site->configure(fetcher_get_json_configuration());
 
