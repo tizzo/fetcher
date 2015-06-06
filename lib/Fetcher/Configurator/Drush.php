@@ -9,25 +9,25 @@ class Drush implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
     // Note, this conifgurator is only intended for use with drush.
-    $site['name.global'] = $site->share(function($c) {
+    $conf['name.global'] = $site->share(function($c) {
       return \drush_prompt(\dt('Please specify a site name'));
     });
-    $site['log.function'] = 'drush_log';
+    $conf['log.function'] = 'drush_log';
 
-    $site['user prompt'] = $site->protect(function($message) {
+    $conf['user prompt'] = $site->protect(function($message) {
       return \drush_prompt(\dt($message));
     });
 
-    $site['user confirm'] = $site->protect(function($message) {
+    $conf['user confirm'] = $site->protect(function($message) {
       return \drush_confirm(\dt($message));
     });
 
-    $site['print'] = $site->protect(function($message) {
+    $conf['print'] = $site->protect(function($message) {
       \drush_print($message);
     });
 
     // Get the environment for this operation.
-    $site['environment.remote'] = function($c) {
+    $conf['environment.remote'] = function($c) {
       static $value = FALSE;
       if (!$value && !empty($c['environments'])) {
         $environments = $c['environments'];
@@ -53,7 +53,8 @@ class Drush implements ConfiguratorInterface {
       return $value;
     };
     // TODO: This should move or we should retitle this class drush - this isn't a prompt.
-    $site['log function'] = 'drush_log';
+    $conf['log function'] = 'drush_log';
+    $site->setDefaultConfigurations($conf);
   }
 }
 
