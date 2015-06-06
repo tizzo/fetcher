@@ -79,7 +79,6 @@ class DrushAlias implements InfoFetcherInterface {
               unset($environment[$key]);
             }
             if (in_array($key, $environmentRedundancies)) {
-              //drush_print('unsetting ' .$key);
               unset($environment[$key]);
             }
           }
