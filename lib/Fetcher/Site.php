@@ -70,6 +70,15 @@ class Site extends Pimple implements SiteInterface {
   }
 
   /**
+   * Set default configuration from an array.
+   */
+  public function setDefaultConfigurations(Array $conf) {
+    foreach ($conf as $key => $value) {
+      $this->setDefaultConfigration($key, $value);
+    }
+  }
+
+  /**
    * Sets the default for a key if it is not already set.
    *
    * @param $key
