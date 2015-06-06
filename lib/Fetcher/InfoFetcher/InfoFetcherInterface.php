@@ -25,4 +25,9 @@ interface InfoFetcherInterface {
    */
   public function listSites($name = '', $page = 0, $options = array());
 
+  /**
+   * List only sites and their environments that are on this physical host.
+   */
+  public function listLocalSites($options = array());
+
 }

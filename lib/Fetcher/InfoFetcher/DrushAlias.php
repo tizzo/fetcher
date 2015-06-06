@@ -60,6 +60,9 @@ class DrushAlias implements InfoFetcherInterface {
         $sites[$siteName]['environments'][$environmentName]['environment.remote'] = $environmentName;
         // We already have an alias for this site, so specify the file.
         $sites[$siteName]['drush_alias.path'] = $alias['#file'];
+        if (isset($alias['root'])) {
+          $sites[$siteName]['environments'][$environmentName]['site.webroot'] = $alias['root'];
+        }
       }
     }
     foreach ($sites as $siteName => $site) {
@@ -101,6 +104,22 @@ class DrushAlias implements InfoFetcherInterface {
       }
     }
     ksort($list);
+    return $list;
+  }
+
+
+  /**
+   * List only sites and their environments that are on this physical host.
+   */
+  public function listLocalSites($options = array()) {
+    $list = $this->listSites();
+    foreach ($list as $name => $site) {
+      foreach ($site['environments'] as $environment_name => $environment) {
+        if (isset($environment['remote-host'])) {
+          unset($list[$name]['environments'][$environment_name]);
+        }
+      }
+    }
     return $list;
   }
 

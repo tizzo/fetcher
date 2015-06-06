@@ -113,6 +113,7 @@ function fetcher_drush_command() {
       'command' => 'The drush command to run on all sites on this host.',
     ),
     'options' => array(
+      'suppress' => 'Suppress output from subcommand.',
     ),
   );
 
@@ -483,7 +484,11 @@ function drush_fetcher_run_command($command) {
     $std_err = fopen('php://stderr', 'w');
     $std_out = fopen('php://stdout', 'w');
 
-    $process->run(function ($type, $buffer) use ($std_err, $std_out) {
+    $suppress = drush_get_option('suppress', FALSE);
+    $process->run(function ($type, $buffer) use ($std_err, $std_out, $suppress) {
+      if ($suppress) {
+        return;
+      }
       if ($type === 'err') {
         fputs($std_err, ' > ' . $buffer);
       }
@@ -641,7 +646,7 @@ function drush_fetcher_get_sites_for_host() {
 
   if (!$site_info_list = drush_cache_get('fetcher_site_info_list_for_host')->data) {
     // TODO: How do we tell fetcher to do the filtering?
-    $site_info_list = drush_fetcher_get_info_fetcher()->listSites();
+    $site_info_list = drush_fetcher_get_info_fetcher()->listLocalSites();
     drush_cache_set('fetcher_site_info_list_for_host', $site_info_list);
   }
 
@@ -662,7 +667,6 @@ function drush_fetcher_get_sites_for_host() {
         $site = fetcher_get_site($site_info['name'], $info);
         $site['environment.local'] = $name;
         $site['environment.remote'] = $name;
-        $site['site.webroot'] = $environment['root'];
         $sites[] = $site;
       }
     }
