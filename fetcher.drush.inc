@@ -107,13 +107,14 @@ function fetcher_drush_command() {
     ),
   );
 
-  $environment_items['fetcher-run-command'] = array(
+  $items['fetcher-run-command'] = array(
     'description' => 'Run a drush command on all sites on this host known to fetcher.',
     'arguments' => array(
       'command' => 'The drush command to run on all sites on this host.',
     ),
     'options' => array(
       'suppress' => 'Suppress output from subcommand.',
+      'timeout' => 'The amount of time (in seconds) to allow the command to run before declaring it a failure, defaults to 3600.',
     ),
   );
 
@@ -480,6 +481,7 @@ function drush_fetcher_run_command($command) {
     // We use Process() rather than drush_invoke_process() because it won't let us capture exit codes
     // other than 1 and 0.
     $process = new \Symfony\Component\Process\Process($process_command);
+    $process->setTimeout(drush_get_option('timeout', 3600));
 
     $std_err = fopen('php://stderr', 'w');
     $std_out = fopen('php://stdout', 'w');
