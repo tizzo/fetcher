@@ -232,8 +232,8 @@ class Site extends Pimple implements SiteInterface {
     // We do this because the server creates the server.user config key.
     $this['server'];
     // Ensure we have our files folders.
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user']);
-    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server.user']);
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/public_files', NULL, $this['server.user'], 0775);
+    $this['system']->ensureFolderExists($this['site.working_directory'] . '/private_files', NULL, $this['server.user'], 0775);
   }
 
   /**

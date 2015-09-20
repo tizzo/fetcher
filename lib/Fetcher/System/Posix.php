@@ -36,8 +36,11 @@ class Posix {
       if ($success && !is_dir($path)) {
         drush_log("Creating folder $path");
         if (!$this->site['simulate']) {
-          // TODO: Support owning user and group.
           $success = mkdir($path, $permission);
+          // TODO: Support owning user.
+          if (isset($owning_group)) {
+            chgrp($path, $owning_group);
+          }
         }
       }
     }
