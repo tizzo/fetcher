@@ -31,7 +31,7 @@ class Download implements \Fetcher\CodeFetcher\SetupInterface {
       drush_set_option($name, $value);
     }
     if ($this->site['verbose']) {
-      $command = 'drush dl ' . implode(' ', $commandline_args) . '--cache=0' . ' --verbose';
+      $command = 'drush dl ' . implode(' ', $commandline_args) . '--cache=0 --verbose';
       foreach ($commandline_options as $key => $value) {
         $command .= " --$key=\"$value\"";
       }
