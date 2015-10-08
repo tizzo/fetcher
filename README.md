@@ -1,9 +1,9 @@
-# Fetcher Drush #
+# Fetcher Drush#
 
 [![Build Status](https://travis-ci.org/tizzo/fetcher.png?branch=7.x-1.x)](https://travis-ci.org/tizzo/fetcher)
 [![Coverage Status](https://coveralls.io/repos/tizzo/fetcher/badge.png?branch=7.x-1.x)](https://coveralls.io/r/tizzo/fetcher?branch=7.x-1.x)
 
-Fetcher Drush is a command line client to interact wiht your Fetcher site and to do interesting things with the data retrieved from there.
+Fetcher Drush is a command line client to interact with your Fetcher site and to do interesting things with the data retrieved from there.
 
 This is the drush command to interact with sites managed by Fetcher.  All `\Fetcher\Site` class (the main, top level, class) methods are
 intended to work in a declaritive, rather than imperitive, way.  This means that generally Fetcher Drush commands are intended to be capable
@@ -12,7 +12,7 @@ existence of that folder is first tested and the path to that folder is created 
 
 ## Folder layout ##
 
-Fetcher creates a "working diredctory" with a specific layout for its uses.  That directory is laid 
+Fetcher creates a "working directory" with a specific layout for its uses.  That directory is laid 
 out as follows:
 
   - public_files - The drupal pubic files directory which will be symlinked to `sites/default/files` by default.  Generally group writable and group owned by the webserver.
