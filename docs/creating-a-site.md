@@ -9,7 +9,7 @@
     drush fec bar 8
     
 ### Create a fresh site using an install profile
-    drush fec baz --profile=panopoly 7
+    drush fec baz --profile=panopoly-7.x-1.x
     
 Use `drush help fec` to view all options to fetcher-create.
 
