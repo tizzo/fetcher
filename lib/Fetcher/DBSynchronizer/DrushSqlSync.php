@@ -52,17 +52,15 @@ class DrushSqlSync implements DBSynchronizerInterface {
 
     // Don't hard code this and rework all of it to work properly with aliases.
     $commandline_options = array(
-      '--no-ordered-dump',
       '--yes',
     );
     if ($site['verbose']) {
       $commandline_options[] = '--verbose';
     }
     $remote = $site->getEnvironment($site['environment.remote']);
-    $localAlias = $site['site.code_directory'] . '#' . $site['site'];
     $commandline_args = array(
-      $remote['remote-user'] . '@' . $remote['remote-host'] . ':' . $remote['root'] . '#' . $remote['uri'],
-      $localAlias,
+      '@' . $this->site['name'] . '.' . $this->site['environment.remote'],
+      '@' . $this->site['name'] . '.' . $this->site['environment.local'],
     );
     $syncCommand = sprintf('drush sql-sync %s %s', implode(' ', $commandline_args), implode(' ', $commandline_options));
     $site['log'](sprintf('Executing: `%s`. ', $syncCommand), 'info');
