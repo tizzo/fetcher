@@ -224,7 +224,6 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   // Set drush appropriate configurators.
   $conf['configurators'] = array(
     '\Fetcher\Configurator\Drush',
-    '\Fetcher\Configurator\DrupalVersion',
   );
 
   if (is_dir('/etc') && is_file('/etc/issue')) {
@@ -238,7 +237,6 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   if ($name) {
     $site['name.global'] = $name;
   }
-
   if (isset($conf['site.info path'])) {
     $site->configureWithSiteInfoFile();
   }
@@ -357,6 +355,10 @@ function drush_fetcher_fetch($site_name = FALSE) {
 
   $site = fetcher_get_site($site_name);
   $site->configureFromEnvironment();
+
+  // lets try reconfiguring now for version.
+  $site['configurators'] = array_merge($site['configurators'], array('\Fetcher\Configurator\DrupalVersion'));
+  $site->runConfigurators();
 
   if (drush_get_option('sql-sync')) {
     // Add the db sync task to the stack.

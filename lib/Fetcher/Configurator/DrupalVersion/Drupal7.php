@@ -5,7 +5,7 @@ namespace Fetcher\Configurator\DrupalVersion;
 use Fetcher\Configurator\ConfiguratorInterface,
     Fetcher\SiteInterface;
 
-class Drupal7 implements ConfiguratorInterface {
+class Drupal7 extends DrupalVersionBase implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
 
@@ -24,7 +24,7 @@ class Drupal7 implements ConfiguratorInterface {
       'url_rewriter.tags' => '',
     );
 
-    $originalVariables = $site->raw('settings_php.variables');
+    $originalVariables = self::normalizeConfigArrayToClosure($site->raw('settings_php.variables'));
     $site['settings_php.variables'] = function($c) use ($originalVariables) {
       return $originalVariables($c) + array(
         'databases' => array(
