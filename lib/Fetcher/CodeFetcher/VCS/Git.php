@@ -59,14 +59,13 @@ class Git implements \Fetcher\CodeFetcher\SetupInterface, \Fetcher\CodeFetcher\U
     if (!$site['simulate']) {
       // Git operations can run long, set our timeout to an hour.
       $process->setTimeout(3600);
-      $std_err = fopen('php://stderr', 'w+');
-      $std_out = fopen('php://stdout', 'w+');
-      $process->run(function ($type, $buffer) {
+      $shortCommand = implode(' ', array_splice(explode(' ', $command), 0, 2));
+      $process->run(function ($type, $buffer) use ($shortCommand) {
         if ($type === 'err') {
-          fwrite($std_err, '  ' . $command . ': ' . $buffer);
+          fwrite(STDERR, '  ' . $shortCommand . ' stderr: ' . $buffer);
         }
         else {
-          fwrite($std_out, '  ' . $command . ': ' . $buffer);
+          fwrite(STDOUT, '  ' . $shortCommand . ' stdout: ' . $buffer);
         }
       });
 
