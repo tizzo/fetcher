@@ -146,6 +146,7 @@ class Site extends Pimple implements SiteInterface {
         $this->addEphemeralKey($key);
         $this[$key] = $value;
       }
+
     }
   }
 

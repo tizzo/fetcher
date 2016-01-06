@@ -5,7 +5,7 @@ namespace Fetcher\Configurator\DrupalVersion;
 use Fetcher\Configurator\ConfiguratorInterface,
     Fetcher\SiteInterface;
 
-class Drupal6 implements ConfiguratorInterface {
+class Drupal6 extends DrupalVersionBase implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
 
@@ -27,7 +27,7 @@ class Drupal6 implements ConfiguratorInterface {
       'url_rewriter.tags' => '',
     );
 
-    $originalVariables = $site->raw('settings_php.variables');
+    $originalVariables = self::normalizeConfigArrayToClosure($site->raw('settings_php.variables'));
     $site['settings_php.variables'] = function($c) use ($originalVariables) {
       $db_url = 'mysqli://' . $c['database.user.name'] . ':' . $c['database.user.password'] . '@' . $c['database.hostname'] . '/' . $c['database.database'];
       return $originalVariables($c) + array('db_url' => $db_url);
