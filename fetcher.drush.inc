@@ -529,6 +529,9 @@ function drush_fetcher_task($task_name = NULL, $site_name = FALSE) {
   $site = fetcher_get_site($site_name);
   $site->configureFromEnvironment();
 
+  $site['configurators'] = array_merge($site['configurators'], array('\Fetcher\Configurator\DrupalVersion'));
+  $site->runConfigurators();
+
   if (is_null($task_name)) {
     drush_fetcher_list_tasks($site);
   }
