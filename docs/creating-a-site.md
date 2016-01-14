@@ -28,7 +28,7 @@ If you are creating a site on your local machine, be sure to add an entry to you
 Fetcher creates a "working directory" with a specific layout for its uses.  That directory is laid 
 out as follows:
 
-  - public_files - The Drupal pubic files directory which will be symlinked to `sites/default/files` by default.  Generally group writable and group owned by the webserver.
+  - public_files - The Drupal public files directory which will be symlinked to `sites/default/files` by default.  Generally group writable and group owned by the webserver.
   - private_files - (Optional) A private file directory to be used by drupal.  Generally group writable and group owned by the webserver.
   - logs - A folder for logs with files created for `mail.log`, `access.log` and `watchdog.log`.  Logs used in development, not recommended for production.
   - code - A folder containing the actual checkout from the VCS repository.
