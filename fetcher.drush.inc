@@ -296,6 +296,9 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   // Build a new site object.
   $site = fetcher_get_site($site_name, $conf);
 
+  $site['configurators'] = array_merge($site['configurators'], array('\Fetcher\Configurator\DrupalVersion'));
+  $site->runConfigurators();
+
   try {
     // Add the `install_site` task.
     drush_fetcher_ensure_site($site);
