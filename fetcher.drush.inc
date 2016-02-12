@@ -449,8 +449,7 @@ function drush_fetcher_delete($site_name) {
   }
   try {
     $site = fetcher_get_site($site_name);
-    $default_dir = $site['site.webroot'] . '/sites/default';
-    chmod($default_dir, 0777);
+    $site['system']->setPermissions($site['site.directory'], 0755);
     $site->runTask('remove_site');
   }
   catch (Exception $e) {

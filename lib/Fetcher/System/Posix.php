@@ -233,4 +233,15 @@ class Posix {
     return \file_get_contents($path);
   }
 
+  /**
+   * Set file permissions on directory
+   *
+   * @param $directory
+   *
+   * @param $mode
+   *
+   */
+  public function setPermissions($directory, $mode) {
+    chmod($directory, $mode);
+  }
 }
