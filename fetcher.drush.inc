@@ -197,7 +197,10 @@ function fetcher_find_site_info_path_from_name_or_cwd($name) {
     $path = $specs['root'];
   }
   if (!$name && !$path) {
-    $path = drush_get_option('working-directory', FALSE) ? drush_get_option('working-directory') : getcwd();
+    $path = drush_get_option('root', FALSE);
+    if (empty($path)) {
+      $path = drush_get_option('working-directory', FALSE) ? drush_get_option('working-directory') : getcwd();
+    }
   }
   return fetcher_find_site_info_from_path($path);
 }
