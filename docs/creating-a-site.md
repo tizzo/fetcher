@@ -7,7 +7,11 @@
 
 ### Create a fresh Drupal 8 site 'bar'
     drush fec bar 8
-    
+
+### Asking for a specific release.
+You can use any release of Drupal like drush dl supports.
+    drush fec baz 8.1.1
+
 ### Create a fresh site using an install profile
     drush fec baz --profile=panopoly-7.x-1.x
     
