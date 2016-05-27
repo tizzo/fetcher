@@ -247,8 +247,8 @@ class SiteTest extends PHPUnit_Framework_TestCase {
     $site->ensureWorkingDirectory();
     Phake::verify($system)->ensureFolderExists('/var/www/test');
     Phake::verify($system)->ensureFolderExists('/var/www/test/logs');
-    Phake::verify($system)->ensureFolderExists('/var/www/test/public_files', NULL, 'apache');
-    Phake::verify($system)->ensureFolderExists('/var/www/test/private_files', NULL, 'apache');
+    Phake::verify($system)->ensureFolderExists('/var/www/test/public_files', NULL, 'apache', 0775);
+    Phake::verify($system)->ensureFolderExists('/var/www/test/private_files', NULL, 'apache', 0775);
     Phake::verify($system)->ensureFileExists('/var/www/test/logs/access.log');
     Phake::verify($system)->ensureFileExists('/var/www/test/logs/mail.log');
     Phake::verify($system)->ensureFileExists('/var/www/test/logs/watchdog.log');
