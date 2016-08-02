@@ -93,16 +93,16 @@ class RsyncFileSync implements FileSynchronizerInterface {
     );
     $site['log'](dt('Remote file path information:'), 'ok');
     $remote_status_result = drush_invoke_process('@' . $site['name'] . '.' . $site['environment.remote'], 'status', $args, $commandline_options);
-    $remote_root_path = $remote_status_result['object']['Drupal root'];
-    $remote_public_files = $remote_status_result['object']['File directory path'];
-    $remote_private_files = !empty($remote_status_result['object']['Private file directory path']) ? $remote_status_result['object']['Private file directory path'] : '';
+    $remote_root_path = $remote_status_result['object']['root'];
+    $remote_public_files = $remote_status_result['object']['files'];
+    $remote_private_files = !empty($remote_status_result['object']['private']) ? $remote_status_result['object']['private'] : '';
 
     $site['log'](dt('Local file path information:'), 'ok');
     $localAlias = $site['site.code_directory'] . '#' . $site['site'];
     $local_status_result = drush_invoke_process($localAlias, 'status', $args, $commandline_options);
-    $local_root_path = $local_status_result['object']['Drupal root'];
-    $local_public_files = $local_status_result['object']['File directory path'];
-    $local_private_files = !empty($local_status_result['object']['Private file directory path']) ? $local_status_result['object']['Private file directory path'] : '';
+    $local_root_path = $local_status_result['object']['root'];
+    $local_public_files = $local_status_result['object']['files'];
+    $local_private_files = !empty($local_status_result['object']['private']) ? $local_status_result['object']['private'] : '';
 
     if (!empty($remote_public_files) && !empty($local_public_files) && $sync_public) {
       // This should create an rsync command to run via process. It should look
