@@ -1,4 +1,4 @@
-<Directory /var/www/html/<?php print $site_name; ?>/webroot/>
+<Directory <?php print $docroot; ?> >
   Options -Indexes
   Options +FollowSymLinks
   AllowOverride All
@@ -16,9 +16,9 @@
     Allow from 127.0.0.1
   </Files>
 </Directory>
-<VirtualHost *:80>
+<VirtualHost *:<?php print $port; ?>>
   ServerName <?php print $hostname . PHP_EOL; ?>
-  DocumentRoot /var/www/html/<?php print $site_name; ?>/webroot
+  DocumentRoot <?php print $docroot . PHP_EOL; ?>
   LogLevel warn
   ServerSignature Off
 </VirtualHost>

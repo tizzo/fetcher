@@ -76,7 +76,7 @@ class Apache2 implements ServerInterface {
         'docroot' => $site['site.webroot'],
         'port' => $site['server.port'],
       );
-      $content = \drush_fetcher_get_asset('drupal.' . $site['version'] . '.vhost', $vars);
+      $content = \drush_fetcher_get_asset('drupal.vhost', $vars);
       $site['system']->writeFile($site['server.host_conf_path'], $content);
     }
   }
