@@ -2,8 +2,6 @@
 
 All objects are lazy loaded and then a single object is reused after instantiation unless otherwise specified.  Genearally the class used is specified by another key with the pattern '[object key] class'.
 
-TODO: Find a good way to expose database options as command line arguments where appropriate.
-
 ## Fetcher Array Access keys ##
   - 'build_hook_file.path' - The path to a file within the site that can be included to load additional build hooks.
   - 'code_fetcher' - The instantiated code fetcher object.
