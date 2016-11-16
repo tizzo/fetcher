@@ -115,6 +115,7 @@ function fetcher_drush_command() {
     'options' => array(
       'suppress' => 'Suppress output from subcommand.',
       'timeout' => 'The amount of time (in seconds) to allow the command to run before declaring it a failure, defaults to 3600.',
+      'site-filters' => 'Filter out sites on which to run this command based on returned values.',
     ),
   );
 
@@ -467,7 +468,7 @@ function drush_fetcher_run_command($command) {
 
   $process_exit_code = 0;
 
-  $sites = drush_fetcher_get_sites_for_host();
+  $sites = drush_fetcher_get_sites_for_host(drush_get_option('site-filters', ''));
 
   $failures = array();
   foreach ($sites as $site) {
@@ -655,12 +656,11 @@ function fetcher_fetcher_option_key_mapping() {
  * This will return only sites that appear on a server with a given hostname
  * and of for those sites only environments that are on that host.
  */
-function drush_fetcher_get_sites_for_host() {
+function drush_fetcher_get_sites_for_host($filters = array()) {
 
   if (!$site_info_list = drush_cache_get('fetcher_site_info_list_for_host')->data) {
-    // TODO: How do we tell fetcher to do the filtering?
     $site_info_list = drush_fetcher_get_info_fetcher()->listLocalSites();
-    drush_cache_set('fetcher_site_info_list_for_host', $site_info_list);
+    drush_cache_set('fetcher_site_info_list_for_host', $site_info_list, 'default', strtotime('+1 day'));
   }
 
   $sites = array();
@@ -683,6 +683,70 @@ function drush_fetcher_get_sites_for_host() {
         $sites[] = $site;
       }
     }
+  }
+  return drush_fetcher_filter_sites_list($sites, $filters);
+}
+
+/**
+ * Filter the site list by the filters passed.
+ *
+ * @param array $sites
+ *  An array of site objects
+ * @param string|array $filters
+ *  An array of arrays with keys 'key', 'value', and 'operator'.
+ *  This will ensure the at the property at key has the relationship
+ *  to 'value' that is defined by the 'operator'.
+ *  If this is a string, then it will be converted to an array and should
+ *  in the form "[key1][operator1][value1],[key2][operator2][value2], ..."
+ *
+ * @return array
+ *  An array of site objects having been filtered
+ */
+function drush_fetcher_filter_sites_list($sites, $filters) {
+  // Put the filters array into hte proper format.
+  // This might be necessary of this was passed from the drush parameter.
+  if (!empty($filters) && !is_array($filters)) {
+    $filters = explode(',', $filters);
+    $operators = array('=', '!=');
+
+    if (!empty($filters)) {
+      array_walk($filters, function(&$value, $key) use ($operators) {
+        foreach ($operators as $operator) {
+          if ($values = explode($operator, $value)) {
+            break;
+          }
+        }
+
+        // Only filters placed into the expected format will work.
+        if (!empty($values) && count($values) > 1) {
+          $value = array(
+            'key' => array_shift($values),
+            'value' => array_shift($values),
+            'operator' => $operator,
+          );
+        }
+      });
+    }
+  }
+
+  // Fitler the sites array.
+  if (!empty($filters)) {
+    $sites = array_filter($sites, function($site) use ($filters) {
+      foreach ($filters as $filter) {
+        switch (gettype($site[$filter['key']])) {
+          case 'array':
+            // If this array key is an array itself then 'equals' checks
+            // if the value is in the array.
+            $result = in_array($filter['value'], $site[$filter['key']]);
+            break;
+          default:
+            $result = $filter['value'] === $site[$filter['key']];
+            break;
+        }
+      }
+      return (($result && $filter['operator'] === '=') ||
+              (!$result && $filter['operator'] === '!='));
+    });
   }
   return $sites;
 }
