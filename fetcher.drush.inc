@@ -257,7 +257,7 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   if ($name) {
     if ($site->fetchInfo() == FALSE) {
       drush_set_error('Site does not exist');
-      exit();
+      exit(1);
     }
   }
 
