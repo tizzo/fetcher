@@ -256,7 +256,10 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   // to the infoFetcher if no site_info.yaml was already found.
   // This only make sense if we have a name to call with.
   if ($name) {
-    $site->fetchInfo();
+    if ($site->fetchInfo() == FALSE) {
+      drush_set_error('Site does not exist');
+      exit(1);
+    }
   }
 
   // Now we re-apply configuration keys form the context because anything
