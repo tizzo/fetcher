@@ -585,8 +585,9 @@ class Site extends Pimple implements SiteInterface {
     });
 
     $this['user confirm'] = $this->protect(function($message) use ($site) {
-      $site['log']($message . ' (Y/N) Y');
-      return TRUE;
+      $site['log']($message . ' (Y/N) N');
+      $line = readline();
+      return strtoupper(substr($line, 0, 1)) == 'Y';
     });
 
     $this['print'] = $this->protect(function($message) {
