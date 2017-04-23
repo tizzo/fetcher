@@ -45,6 +45,8 @@ TODO: Find a good way to expose database options as command line arguments where
   - 'server.disable_site_command' - The command to run to disable a site on the server (e.g. `a2dissite sitename` on ubutnu.
   - 'server.enable_site_command' - The command to run to enable a site on the server (e.g. `a2ensite sitename` on ubutnu.
   - 'server.port' - The port to listen on for this virtualhost.
+  - 'server.sapi' - The supported sapi (apache supports fpm and mod_php).
+  - 'server.fpm_url' - The host and port to proxy requests to if the `server.sapi` key is set to `fpm`.
   - 'server.restart_command' - The command to run to reload configuration (e.g. `service apache2 restart`).
   - 'server.user' - The user that the webserver runs as (e.g. `apache2` runs as `www-data` on Ubuntu).
   - 'settings_file.path' - The path to the site's settings.php file.
