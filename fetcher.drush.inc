@@ -213,10 +213,12 @@ function fetcher_find_site_info_path_from_name_or_cwd($name) {
  *   The name of the site to load.
  * @param $conf
  *   An array of configuration with which to populate the site.
+ * @param $fetch_info
+ *   Whether we should fetch info about this site from an info provider.
  * @return
  *   An instantiated and configured \Fetcher\Site object.
  */
-function fetcher_get_site($name = FALSE, $conf = array()) {
+function fetcher_get_site($name = FALSE, $conf = array(), $fetch_info = TRUE) {
 
   // If we have an alias or no name at all try to find a site_info.yml file.
   if (!$name || strpos($name, '@') === 0) {
@@ -255,7 +257,7 @@ function fetcher_get_site($name = FALSE, $conf = array()) {
   // Next we fetch information specific to the site, that includes calls
   // to the infoFetcher if no site_info.yaml was already found.
   // This only make sense if we have a name to call with.
-  if ($name) {
+  if ($name && $fetch_info) {
     if ($site->fetchInfo() == FALSE) {
       drush_set_error('Site does not exist');
       exit(1);
@@ -301,7 +303,7 @@ function drush_fetcher_create($site_name = FALSE, $version = '7') {
   $conf['code_fetcher.class'] = 'Fetcher\CodeFetcher\Download';
 
   // Build a new site object.
-  $site = fetcher_get_site($site_name, $conf);
+  $site = fetcher_get_site($site_name, $conf, FALSE);
 
   $site['configurators'] = array_merge($site['configurators'], array('\Fetcher\Configurator\DrupalVersion'));
   $site->runConfigurators();
