@@ -1,7 +1,8 @@
-<Directory /var/www/html/<?php print $site_name; ?>/webroot/>
+<Directory <?php print $docroot; ?> >
   Options -Indexes
   Options +FollowSymLinks
   AllowOverride All
+  Require all granted
 
   # Not a part of Drupal's stock .htaccess but added as a measure of security.
   <FilesMatch "(^LICENSE|CHANGELOG|MAINTAINERS|INSTALL|UPGRADE|API|README).*\.txt$">
@@ -16,9 +17,12 @@
     Allow from 127.0.0.1
   </Files>
 </Directory>
-<VirtualHost *:80>
+<VirtualHost *:<?php print $port; ?>>
   ServerName <?php print $hostname . PHP_EOL; ?>
-  DocumentRoot /var/www/html/<?php print $site_name; ?>/webroot
+  DocumentRoot <?php print $docroot . PHP_EOL; ?>
+  <FilesMatch \.php$>
+    SetHandler proxy:fcgi://<?php print $fpm_url . PHP_EOL; ?>
+  </FilesMatch>
   LogLevel warn
   ServerSignature Off
 </VirtualHost>

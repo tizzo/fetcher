@@ -2,6 +2,7 @@
   Options -Indexes
   Options +FollowSymLinks
   AllowOverride All
+  Require all granted
 
   # Not a part of Drupal's stock .htaccess but added as a measure of security.
   <FilesMatch "(^LICENSE|CHANGELOG|MAINTAINERS|INSTALL|UPGRADE|API|README).*\.txt$">
