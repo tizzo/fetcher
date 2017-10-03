@@ -490,8 +490,8 @@ function drush_fetcher_run_command($command) {
       '@command' => $command,
     );
     drush_log(dt('Processing `@command` on @name in environment `@environment` at path `@webroot` with uri `@uri`.', $keys), 'ok');
-    $process_command = 'drush ' . $site['site.webroot'] . '#' . $site['hostname'] . ' ' . $command . ' ' . implode(' ', $command_options);
-
+    $process_command = 'drush ' . $site['site.webroot'] . '#' . $site['hostname'] . ' ' . $command . ' ' . $site['name'] . ' ' . implode(' ', $command_options);
+    
     // We use Process() rather than drush_invoke_process() because it won't let us capture exit codes
     // other than 1 and 0.
     $process = new \Symfony\Component\Process\Process($process_command);
