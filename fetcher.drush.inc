@@ -71,6 +71,7 @@ function fetcher_drush_command() {
       'name' => 'The name of a site to install on this server.',
     ),
     'options' => array(
+      'branch' => 'The branch you would like to fetch',
       'sql-sync' => 'Whether to syncronize the database with a selected remote environment.',
       'file-sync' => array(
         'description' => 'Whether to syncronize the `public` or `private` files with the selected remote environment. This accepts options but defaults to both.',
@@ -376,7 +377,9 @@ function drush_fetcher_fetch($site_name = FALSE) {
     // Add the db sync task to the stack.
     $site->addSubTask('ensure_site', 'sync_db');
   }
-  // TODO: Deprecate this function all the task running function instead.
+  if ($branch = drush_get_option('branch', FALSE)) {
+    $site['branch'] = $branch;
+  }
   if (!drush_fetcher_ensure_site($site)) {
     drush_set_error(dt('Provisioning and synchronizing the site has failed.'));
     return FALSE;
@@ -870,5 +873,3 @@ function drush_fetcher_log_exception_information(Exception $e) {
   );
   drush_set_error(1, dt('@error on line @line of @file.', $args));
 }
-
-
