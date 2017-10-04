@@ -458,6 +458,7 @@ function drush_fetcher_delete($site_name) {
   }
   try {
     $site = fetcher_get_site($site_name);
+    $site['system']->setPermissions($site['site.directory'], 0755);
     $site->runTask('remove_site');
   }
   catch (Exception $e) {
