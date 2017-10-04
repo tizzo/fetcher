@@ -8,22 +8,31 @@ use \Fetcher\SiteInterface,
 class Drush implements ConfiguratorInterface {
 
   static public function configure(SiteInterface $site) {
-    // Note, this conifgurator is only intended for use with drush.
-    $conf['name.global'] = $site->share(function($c) {
-      return \drush_prompt(\dt('Please specify a site name'));
-    });
-    $conf['log.function'] = 'drush_log';
+    $drushOverrides = array();
 
-    $conf['user prompt'] = $site->protect(function($message) {
+    $drushOverrides['user prompt'] = $site->protect(function($message) {
       return \drush_prompt(\dt($message));
     });
 
-    $conf['user confirm'] = $site->protect(function($message) {
+    $drushOverrides['user confirm'] = $site->protect(function($message) {
+      print 'running drush confirm';
       return \drush_confirm(\dt($message));
     });
 
-    $conf['print'] = $site->protect(function($message) {
+    $drushOverrides['print'] = $site->protect(function($message) {
       \drush_print($message);
+    });
+
+    $drushOverrides['log.function'] = 'drush_log';
+    $drushOverrides['log function'] = 'drush_log';
+
+    foreach ($drushOverrides as $key => $value) {
+      $site[$key] = $value;
+    }
+
+    // Note, this conifgurator is only intended for use with drush.
+    $conf['name.global'] = $site->share(function($c) {
+      return \drush_prompt(\dt('Please specify a site name'));
     });
 
     // Get the environment for this operation.
@@ -52,8 +61,6 @@ class Drush implements ConfiguratorInterface {
       }
       return $value;
     };
-    // TODO: This should move or we should retitle this class drush - this isn't a prompt.
-    $conf['log function'] = 'drush_log';
     $site->setDefaultConfigurations($conf);
   }
 }
